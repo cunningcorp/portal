@@ -338,7 +338,13 @@ $("#sendLink").onclick = async () => {
   $("#sendLink").disabled = true;
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: window.location.href.split("#")[0] },
+    options: {
+      emailRedirectTo: window.location.href.split("#")[0],
+      // Defence in depth. Open signups are disabled at the project level too,
+      // but this makes the portal itself incapable of minting a new user even
+      // if that toggle is ever flipped back on.
+      shouldCreateUser: false,
+    },
   });
   $("#sendLink").disabled = false;
   $("#authMsg").textContent = error
