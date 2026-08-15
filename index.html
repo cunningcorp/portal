@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Signal — Cunning Corp</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='9' fill='none' stroke='%238E8BD8' stroke-width='2'/><circle cx='16' cy='7' r='2.6' fill='%23C8A24C'/></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+/* ==========================================================================
+   Cunning Corp house palette and type. Locked values from the Brand Handbook:
+   Plum #241B30 base·night · Plum Deep #191220 gradient floor · Gold #C8A24C the
+   light · Gold Soft #E3C57E highlight · Periwinkle #8E8BD8 accent·play ·
+   Paper #FAF6EE light ground. Division accents, one muted tone each:
+   Terracotta #C0593B Aubrey North · Slate #2C3E5D Publications ·
+   Teal #1F5F5B Productions.
+
+   Glamour Absolute and Graphik are declared below but not committed to this
+   repo — drop the woff2 files into /fonts and they take over automatically.
+   Until then Recoleta and a system sans carry it.
+   ========================================================================== */
+
+@font-face{font-family:'Glamour Absolute Extended';font-weight:400;font-display:swap;
+  src:url(fonts/GlamourAbsoluteExtended-400.woff2) format('woff2')}
+@font-face{font-family:'Glamour Absolute';font-weight:400;font-display:swap;
+  src:url(fonts/GlamourAbsolute-400.woff2) format('woff2')}
+@font-face{font-family:'Graphik';font-weight:400;font-display:swap;
+  src:url(fonts/Graphik-400.woff2) format('woff2')}
+@font-face{font-family:'Graphik';font-weight:600;font-display:swap;
+  src:url(fonts/Graphik-600.woff2) format('woff2')}
+@font-face{font-family:'Recoleta';font-weight:300;font-display:swap;
+  src:url(fonts/Recoleta-300.woff2) format('woff2')}
+
+:root{
+  color-scheme: dark;
+
+  /* core */
+  --plum-deep:#191220; --plum:#241B30; --plum-lift:#2c2239;
+  --gold:#C8A24C; --gold-soft:#E3C57E; --peri:#8E8BD8; --paper:#FAF6EE;
+
+  /* derived surfaces */
+  --bg:var(--plum-deep); --panel:var(--plum); --panel-2:var(--plum-lift);
+  --line:#372c47; --line-soft:#2a2036;
+  --ink:var(--paper); --mute:#B7AEC2; --dim:#7d7290;
+
+  /* semantics, drawn from division accents */
+  --up:var(--gold); --down:#C0593B; --warn:var(--peri);
+
+  /* platform colours: data encoding only, deliberately outside the brand */
+  --yt:#ff4e45; --ig:#e1477e; --fb:#4a8cff; --tt:#25e5d0;
+
+  --font-display:'Glamour Absolute Extended','Glamour Absolute','Recoleta',Georgia,serif;
+  --font-head:'Recoleta',Georgia,serif;
+  --font-body:'Graphik',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:14px/1.55 var(--font-body);-webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1100px 620px at 78% -12%, rgba(142,139,216,.13), transparent 62%),
+    radial-gradient(760px 460px at 4% 4%, rgba(200,162,76,.06), transparent 60%),
+    var(--bg);
+  background-attachment:fixed}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+.hide{display:none !important}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+/* ---------- shell ---------- */
+header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:1rem;
+  padding:.8rem 1.5rem;background:rgba(25,18,32,.82);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line-soft)}
+.brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-display);
+  font-size:1.02rem;letter-spacing:.03em}
+.brand .sub{font-family:var(--font-body);font-size:.72rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--dim);padding-left:.6rem;border-left:1px solid var(--line)}
+.mark{width:17px;height:17px;flex:none}
+.spacer{flex:1}
+.btn{background:transparent;border:1px solid var(--line);color:var(--mute);
+  padding:.42rem .85rem;border-radius:8px;transition:.15s;font-size:.86rem}
+.btn:hover{border-color:#4a3c5e;color:var(--ink)}
+/* one glow per layout: the primary action gets the periwinkle */
+.btn.primary{background:var(--peri);border-color:var(--peri);color:var(--plum-deep);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07);color:var(--plum-deep)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+main{padding:1.5rem;max-width:1500px;margin:0 auto}
+
+/* ---------- range tabs ---------- */
+.rangebar{display:flex;gap:.3rem;background:rgba(36,27,48,.7);border:1px solid var(--line-soft);
+  border-radius:9px;padding:.2rem}
+.rangebar button{background:none;border:0;color:var(--dim);padding:.28rem .68rem;
+  border-radius:6px;font-size:.8rem}
+.rangebar button[aria-pressed="true"]{background:var(--panel-2);color:var(--ink)}
+
+/* ---------- kpi ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.85rem;margin-bottom:1.25rem}
+.kpi{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r);padding:1rem 1.1rem}
+.kpi .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.kpi .value{font-family:var(--font-head);font-size:2rem;font-weight:300;letter-spacing:-.015em;
+  margin:.3rem 0 .15rem;font-variant-numeric:tabular-nums;color:var(--paper)}
+.kpi .sub{font-size:.79rem;color:var(--mute);font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+
+/* ---------- panels ---------- */
+.grid{display:grid;gap:1rem}
+.cols-2{grid-template-columns:1.55fr 1fr}
+@media(max-width:1050px){.cols-2{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r);
+  padding:1.1rem 1.2rem;margin-bottom:1rem}
+.panel h2{margin:0 0 .15rem;font-family:var(--font-head);font-size:1.05rem;font-weight:300;
+  letter-spacing:-.01em;color:var(--paper)}
+.panel .hint{margin:0 0 .9rem;font-size:.78rem;color:var(--dim);max-width:62ch}
+.chartbox{position:relative;height:270px}
+
+/* ---------- account cards ---------- */
+.accounts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.85rem}
+.acct{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:10px;padding:.9rem;
+  border-left:3px solid var(--line);transition:.15s}
+.acct:hover{border-color:#4a3c5e}
+.acct[data-p="youtube"]{border-left-color:var(--yt)}
+.acct[data-p="instagram"]{border-left-color:var(--ig)}
+.acct[data-p="facebook"]{border-left-color:var(--fb)}
+.acct[data-p="tiktok"]{border-left-color:var(--tt)}
+.acct .head{display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem}
+.acct img{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--line);flex:none}
+.acct .nm{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .hd{font-size:.73rem;color:var(--dim)}
+.acct .row{display:flex;justify-content:space-between;font-size:.82rem;padding:.17rem 0;
+  font-variant-numeric:tabular-nums}
+.acct .row span:first-child{color:var(--mute)}
+
+/* ---------- table ---------- */
+.tablewrap{overflow:auto;max-height:520px;border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{position:sticky;top:0;background:var(--panel);text-align:left;font-weight:400;color:var(--dim);
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;padding:.55rem .6rem;
+  border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+th:hover{color:var(--mute)}
+td{padding:.55rem .6rem;border-bottom:1px solid var(--line-soft);vertical-align:middle;
+  font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--panel-2)}
+td.t{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:normal}
+td.t a:hover{color:var(--gold-soft)}
+.pill{display:inline-block;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;
+  padding:.14rem .45rem;border-radius:5px;background:var(--line);color:var(--mute)}
+.pill.youtube{background:rgba(255,78,69,.15);color:#ff8079}
+.pill.instagram{background:rgba(225,71,126,.15);color:#ef7fa5}
+.pill.facebook{background:rgba(74,140,255,.15);color:#87b1ff}
+.pill.tiktok{background:rgba(37,229,208,.14);color:#65eddd}
+.thumb{width:52px;height:30px;object-fit:cover;border-radius:4px;background:var(--line)}
+
+/* ---------- sync health ---------- */
+.sync{display:flex;align-items:center;gap:.6rem;padding:.45rem 0;font-size:.83rem;
+  border-bottom:1px solid var(--line-soft)}
+.sync:last-child{border-bottom:0}
+.led{width:7px;height:7px;border-radius:50%;flex:none}
+.led.ok{background:var(--gold);box-shadow:0 0 0 3px rgba(200,162,76,.14)}
+.led.error{background:var(--down);box-shadow:0 0 0 3px rgba(192,89,59,.14)}
+.led.running{background:var(--peri)} .led.skipped{background:var(--dim)}
+.sync .when{margin-left:auto;color:var(--dim);font-size:.77rem}
+
+/* ---------- auth ---------- */
+#gate{min-height:100vh;display:grid;place-items:center;padding:1.5rem}
+.authcard{width:100%;max-width:25rem;background:var(--panel);border:1px solid var(--line-soft);
+  border-radius:16px;padding:2.25rem}
+.authcard .mk{display:flex;align-items:center;gap:.6rem;margin-bottom:1.6rem}
+.authcard .wm{font-family:var(--font-display);font-size:.95rem;letter-spacing:.05em}
+.authcard h1{margin:0 0 .4rem;font-family:var(--font-head);font-size:1.65rem;font-weight:300;
+  letter-spacing:-.02em;color:var(--paper)}
+.authcard p{margin:0 0 1.5rem;color:var(--mute);font-size:.87rem}
+input[type=email]{width:100%;padding:.68rem .85rem;background:var(--plum-deep);
+  border:1px solid var(--line);border-radius:8px;color:var(--ink);font:inherit;margin-bottom:.7rem}
+input[type=email]::placeholder{color:var(--dim)}
+input[type=email]:focus{outline:0;border-color:var(--peri)}
+.msg{font-size:.83rem;margin-top:.9rem;color:var(--mute);min-height:1.2em}
+
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--dim)}
+.empty h3{margin:0 0 .4rem;font-family:var(--font-head);font-weight:300;color:var(--mute);font-size:1.1rem}
+.connectrow{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:1.1rem}
+.toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:var(--panel-2);
+  border:1px solid var(--line);padding:.6rem 1rem;border-radius:9px;font-size:.85rem;z-index:50;
+  box-shadow:0 10px 34px rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH GATE ================= -->
+<div id="gate">
+  <div class="authcard">
+    <div class="mk">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/>
+      </svg>
+      <span class="wm">CUNNING CORP</span>
+    </div>
+    <h1>Signal</h1>
+    <p>Every channel, one view. Sign in with a link sent to your email.</p>
+    <input type="email" id="email" placeholder="you@cunningcorp.com" autocomplete="email">
+    <button class="btn primary" id="sendLink" style="width:100%">Send sign-in link</button>
+    <div class="msg" id="authMsg"></div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app" class="hide">
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/>
+      </svg>
+      SIGNAL <span class="sub">Cunning Corp</span>
+    </div>
+    <div class="rangebar" id="range">
+      <button data-d="7">7d</button>
+      <button data-d="30" aria-pressed="true">30d</button>
+      <button data-d="90">90d</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="connectBtn">Connect account</button>
+    <button class="btn primary" id="syncBtn">Sync now</button>
+    <button class="btn" id="signOut">Sign out</button>
+  </header>
+
+  <main>
+    <div class="kpis" id="kpis"></div>
+
+    <div class="grid cols-2">
+      <div>
+        <div class="panel">
+          <h2>Audience</h2>
+          <p class="hint">Total followers per platform, from the daily snapshot.</p>
+          <div class="chartbox"><canvas id="chFollowers"></canvas></div>
+        </div>
+        <div class="panel">
+          <h2>Daily views</h2>
+          <p class="hint">Views recorded each day. TikTok is derived from snapshot deltas, so it needs two days of history before it appears.</p>
+          <div class="chartbox"><canvas id="chViews"></canvas></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h2>Accounts</h2>
+          <p class="hint">Latest totals and 7-day movement.</p>
+          <div class="accounts" id="accounts"></div>
+        </div>
+        <div class="panel">
+          <h2>Sync health</h2>
+          <p class="hint">Last collector run per account.</p>
+          <div id="sync"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Posts</h2>
+      <p class="hint">Most recent content across every connected account. Click a column to sort.</p>
+      <div class="tablewrap">
+        <table id="posts">
+          <thead><tr>
+            <th data-k="thumb"></th>
+            <th data-k="platform">Platform</th>
+            <th data-k="account">Account</th>
+            <th data-k="title">Title</th>
+            <th data-k="published_at">Published</th>
+            <th data-k="views">Views</th>
+            <th data-k="likes">Likes</th>
+            <th data-k="comments">Comments</th>
+            <th data-k="engagement_pct">Eng %</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* ============================ config ============================ */
+const SUPABASE_URL = "https://qeafetctmtnqonhwhhlw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_gs_WsU5HUAs49uF6-A5Wog_Mvo62byI";
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* Platform colours are data encoding, not brand. Swapping these for house
+   tones would make four series indistinguishable on one axis. */
+const COLOR = { youtube:"#ff4e45", instagram:"#e1477e", facebook:"#4a8cff", tiktok:"#25e5d0" };
+const LABEL = { youtube:"YouTube", instagram:"Instagram", facebook:"Facebook", tiktok:"TikTok" };
+
+let RANGE = 30;
+let charts = {};
+let postRows = [];
+let sortKey = "published_at", sortDir = -1;
+
+/* ============================ helpers ============================ */
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+
+const fmt = (n) => {
+  if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
+  n = Number(n);
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,"") + "B";
+  if (a >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,"") + "M";
+  if (a >= 1e4) return (n/1e3).toFixed(0) + "K";
+  return n.toLocaleString();
+};
+const signed = (n) => (n === null || n === undefined) ? "—" : (n > 0 ? "+" : "") + fmt(n);
+const cls = (n) => n > 0 ? "up" : n < 0 ? "down" : "";
+const daysAgoISO = (d) => { const x = new Date(); x.setUTCDate(x.getUTCDate() - d); return x.toISOString().slice(0,10); };
+const shortDate = (s) => s ? new Date(s).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—";
+const ago = (s) => {
+  if (!s) return "never";
+  const m = Math.round((Date.now() - new Date(s)) / 60000);
+  if (m < 60) return `${m}m ago`;
+  if (m < 1440) return `${Math.round(m/60)}h ago`;
+  return `${Math.round(m/1440)}d ago`;
+};
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+function toast(text, ms = 3800) {
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+/* ============================ auth ============================ */
+$("#sendLink").onclick = async () => {
+  const email = $("#email").value.trim();
+  if (!email) return ($("#authMsg").textContent = "Enter an email address.");
+  $("#sendLink").disabled = true;
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.href.split("#")[0] },
+  });
+  $("#sendLink").disabled = false;
+  $("#authMsg").textContent = error
+    ? error.message
+    : "Link sent. Check your inbox, then come back to this tab.";
+};
+$("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
+$("#signOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+/* ============================ data load ============================ */
+async function load() {
+  const since = daysAgoISO(RANGE);
+
+  const [ovRes, serRes, dailyRes, postRes, syncRes] = await Promise.all([
+    sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
+    sb.from("social_account_series").select("*").gte("day", since).order("day"),
+    sb.from("social_daily_totals").select("*").gte("day", since).order("day"),
+    sb.from("social_top_posts").select("*").order("published_at", { ascending:false, nullsFirst:false }).limit(150),
+    sb.from("social_sync_health").select("*"),
+  ]);
+
+  const err = [ovRes, serRes, dailyRes, postRes, syncRes].find((r) => r.error);
+  if (err) { toast(`Query failed: ${err.error.message}`); return; }
+
+  const overview = ovRes.data ?? [];
+  renderKpis(overview, dailyRes.data ?? []);
+  renderAccounts(overview);
+  renderFollowers(serRes.data ?? []);
+  renderViews(dailyRes.data ?? []);
+  renderSync(syncRes.data ?? []);
+  postRows = postRes.data ?? [];
+  renderPosts();
+
+  if (!overview.length) showEmptyState();
+}
+
+function showEmptyState() {
+  $("#kpis").innerHTML = `<div class="panel empty" style="grid-column:1/-1">
+    <h3>Nothing connected yet</h3>
+    <div>Link a platform to start collecting. Nothing is pulled until you do.</div>
+    <div class="connectrow">
+      <button class="btn" data-connect="youtube">Connect YouTube</button>
+      <button class="btn" data-connect="meta">Connect Instagram &amp; Facebook</button>
+      <button class="btn" data-connect="tiktok">Connect TikTok</button>
+    </div></div>`;
+  $$("[data-connect]").forEach((b) => b.onclick = () => connect(b.dataset.connect));
+}
+
+/* ============================ render: KPIs ============================ */
+function renderKpis(ov, daily) {
+  const sum = (k) => ov.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+  const metricSum = (m) => daily.filter((d) => d.metric === m)
+                                .reduce((a, d) => a + (Number(d.value) || 0), 0);
+
+  const followers = sum("followers");
+  const d7 = sum("followers_delta_7d");
+  const d28 = sum("followers_delta_28d");
+  const views = metricSum("views");
+  const watch = metricSum("watch_time_minutes");
+  const gained = metricSum("followers_gained");
+
+  const cards = [
+    { label:"Total followers", value:fmt(followers),
+      sub:`<span class="${cls(d7)}">${signed(d7)}</span> in 7d · <span class="${cls(d28)}">${signed(d28)}</span> in 28d` },
+    { label:`Views (${RANGE}d)`, value:fmt(views),
+      sub: views ? `${fmt(Math.round(views/RANGE))} a day on average` : "waiting on first sync" },
+    { label:`New followers (${RANGE}d)`, value:signed(gained),
+      sub:"summed across every platform" },
+    { label:`Watch time (${RANGE}d)`, value: watch ? fmt(Math.round(watch/60)) + " h" : "—",
+      sub:"YouTube only" },
+    { label:"Accounts", value:String(ov.length),
+      sub: ov.map((r) => LABEL[r.platform]).filter((v,i,a) => a.indexOf(v)===i).join(" · ") || "none yet" },
+  ];
+
+  $("#kpis").innerHTML = cards.map((c) =>
+    `<div class="kpi"><div class="label">${c.label}</div>
+     <div class="value">${c.value}</div><div class="sub">${c.sub}</div></div>`).join("");
+}
+
+/* ============================ render: accounts ============================ */
+function renderAccounts(ov) {
+  if (!ov.length) { $("#accounts").innerHTML = `<div class="empty">Nothing connected.</div>`; return; }
+  $("#accounts").innerHTML = ov.map((a) => `
+    <div class="acct" data-p="${esc(a.platform)}">
+      <div class="head">
+        <img src="${esc(a.avatar_url || "")}" alt="" onerror="this.style.visibility='hidden'">
+        <div style="min-width:0">
+          <div class="nm">${esc(a.display_name || a.handle || a.account_id)}</div>
+          <div class="hd">${LABEL[a.platform] ?? a.platform}${a.handle ? " · " + esc(a.handle) : ""}</div>
+        </div>
+      </div>
+      <div class="row"><span>Followers</span><strong>${fmt(a.followers)}</strong></div>
+      <div class="row"><span>7d</span><strong class="${cls(a.followers_delta_7d)}">${signed(a.followers_delta_7d)}${
+        a.followers_pct_7d != null ? ` (${a.followers_pct_7d}%)` : ""}</strong></div>
+      <div class="row"><span>Lifetime views</span><strong>${fmt(a.total_views)}</strong></div>
+      <div class="row"><span>Posts</span><strong>${fmt(a.total_posts)}</strong></div>
+      <div class="row"><span>As of</span><strong>${a.as_of ? shortDate(a.as_of) : "no data"}</strong></div>
+    </div>`).join("");
+}
+
+/* ============================ render: charts ============================ */
+const AXIS = {
+  grid:{ color:"#2a2036", drawTicks:false },
+  border:{ display:false },
+  ticks:{ color:"#7d7290", font:{ size:11 }, maxRotation:0, autoSkipPadding:18 },
+};
+const BASE_OPTS = {
+  responsive:true, maintainAspectRatio:false,
+  interaction:{ mode:"index", intersect:false },
+  plugins:{
+    legend:{ labels:{ color:"#B7AEC2", boxWidth:9, boxHeight:9, usePointStyle:true, font:{ size:11 } } },
+    tooltip:{ backgroundColor:"#2c2239", borderColor:"#372c47", borderWidth:1,
+              titleColor:"#FAF6EE", bodyColor:"#B7AEC2", padding:10, displayColors:true },
+  },
+  scales:{ x:AXIS, y:{ ...AXIS, beginAtZero:false,
+           ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } } },
+};
+
+function pivot(rows, dayKey, groupKey, valueKey) {
+  const days = [...new Set(rows.map((r) => r[dayKey]))].sort();
+  const groups = [...new Set(rows.map((r) => r[groupKey]))];
+  const index = new Map(rows.map((r) => [`${r[dayKey]}|${r[groupKey]}`, Number(r[valueKey]) || 0]));
+  return { days, groups, get:(d,g) => index.has(`${d}|${g}`) ? index.get(`${d}|${g}`) : null };
+}
+
+function renderFollowers(series) {
+  const agg = {};
+  for (const r of series) {
+    const k = `${r.day}|${r.platform}`;
+    agg[k] = (agg[k] ?? 0) + (Number(r.followers) || 0);
+  }
+  const rows = Object.entries(agg).map(([k,v]) => {
+    const [day, platform] = k.split("|");
+    return { day, platform, followers:v };
+  });
+  const { days, groups, get } = pivot(rows, "day", "platform", "followers");
+
+  charts.f?.destroy();
+  charts.f = new Chart($("#chFollowers"), {
+    type:"line",
+    data:{
+      labels: days.map(shortDate),
+      datasets: groups.map((g) => ({
+        label: LABEL[g] ?? g,
+        data: days.map((d) => get(d,g)),
+        borderColor: COLOR[g] ?? "#8E8BD8",
+        backgroundColor: (COLOR[g] ?? "#8E8BD8") + "1f",
+        borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true, fill:true,
+      })),
+    },
+    options: BASE_OPTS,
+  });
+}
+
+function renderViews(daily) {
+  const rows = daily.filter((d) => d.metric === "views");
+  const { days, groups, get } = pivot(rows, "day", "platform", "value");
+
+  charts.v?.destroy();
+  charts.v = new Chart($("#chViews"), {
+    type:"bar",
+    data:{
+      labels: days.map(shortDate),
+      datasets: groups.map((g) => ({
+        label: LABEL[g] ?? g,
+        data: days.map((d) => get(d,g) ?? 0),
+        backgroundColor: COLOR[g] ?? "#8E8BD8",
+        borderRadius:2, borderSkipped:false,
+      })),
+    },
+    options:{ ...BASE_OPTS,
+      scales:{ x:{ ...AXIS, stacked:true },
+               y:{ ...BASE_OPTS.scales.y, stacked:true, beginAtZero:true } } },
+  });
+}
+
+/* ============================ render: posts ============================ */
+const NUMERIC_COLS = new Set(["views","likes","comments","shares","saves","engagements","engagement_pct","duration_secs"]);
+
+function renderPosts() {
+  const rows = [...postRows].sort((a,b) => {
+    const x = a[sortKey], y = b[sortKey];
+    if (x === y) return 0;
+    if (x === null || x === undefined) return 1;   // nulls always sink
+    if (y === null || y === undefined) return -1;
+    if (sortKey === "published_at") return (new Date(x) - new Date(y)) * sortDir;
+    if (NUMERIC_COLS.has(sortKey)) return (Number(x) - Number(y)) * sortDir;
+    return String(x).localeCompare(String(y)) * sortDir;
+  });
+
+  const tb = $("#posts tbody");
+  if (!rows.length) {
+    tb.innerHTML = `<tr><td colspan="9" class="empty">No posts collected yet.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = rows.map((p) => `
+    <tr>
+      <td>${p.thumbnail_url ? `<img class="thumb" src="${esc(p.thumbnail_url)}" alt="" loading="lazy">` : ""}</td>
+      <td><span class="pill ${esc(p.platform)}">${LABEL[p.platform] ?? p.platform}</span></td>
+      <td class="t">${esc(p.account || p.handle || "")}</td>
+      <td class="t">${p.permalink
+        ? `<a href="${esc(p.permalink)}" target="_blank" rel="noopener">${esc(p.title || p.caption || "(untitled)")}</a>`
+        : esc(p.title || p.caption || "(untitled)")}</td>
+      <td>${shortDate(p.published_at)}</td>
+      <td>${fmt(p.views)}</td>
+      <td>${fmt(p.likes)}</td>
+      <td>${fmt(p.comments)}</td>
+      <td>${p.engagement_pct != null ? p.engagement_pct + "%" : "—"}</td>
+    </tr>`).join("");
+}
+
+$$("#posts th[data-k]").forEach((th) => th.onclick = () => {
+  const k = th.dataset.k;
+  if (!k || k === "thumb") return;
+  if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; }
+  renderPosts();
+});
+
+/* ============================ render: sync ============================ */
+function renderSync(rows) {
+  if (!rows.length) { $("#sync").innerHTML = `<div class="empty">No syncs have run yet.</div>`; return; }
+  $("#sync").innerHTML = rows
+    .sort((a,b) => new Date(b.started_at) - new Date(a.started_at))
+    .map((r) => `
+      <div class="sync" title="${esc(r.message || "")}">
+        <span class="led ${esc(r.status)}"></span>
+        <span class="pill ${esc(r.platform)}">${LABEL[r.platform] ?? r.platform}</span>
+        <span style="color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${esc(r.display_name || "—")}${r.status === "error" ? " · " + esc((r.message||"").slice(0,60)) : ""}
+        </span>
+        <span class="when">${ago(r.started_at)}</span>
+      </div>`).join("");
+}
+
+/* ============================ actions ============================ */
+async function connect(platform) {
+  const { data:{ session } } = await sb.auth.getSession();
+  const res = await fetch(
+    `${SUPABASE_URL}/functions/v1/oauth-start?platform=${platform}`,
+    { headers:{ Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY } },
+  );
+  const body = await res.json();
+  if (body.url) window.open(body.url, "_blank", "noopener");
+  else toast(body.error || "Could not start the connect flow.");
+}
+
+$("#connectBtn").onclick = () => {
+  const p = prompt("Connect which platform?\n\n  youtube\n  meta   (Instagram + Facebook)\n  tiktok", "youtube");
+  if (p) connect(p.trim().toLowerCase());
+};
+
+$("#syncBtn").onclick = async () => {
+  const btn = $("#syncBtn");
+  btn.disabled = true; btn.textContent = "Syncing…";
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/sync-all`, {
+      method:"POST",
+      headers:{ Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY },
+    });
+    const body = await res.json();
+    toast(body.failed ? `Sync finished with ${body.failed} failing collector(s) — see Sync health.` : "Sync complete.");
+  } catch (e) {
+    toast(`Sync failed: ${e.message}`);
+  } finally {
+    btn.disabled = false; btn.textContent = "Sync now";
+    await load();
+  }
+};
+
+$$("#range button").forEach((b) => b.onclick = () => {
+  $$("#range button").forEach((x) => x.removeAttribute("aria-pressed"));
+  b.setAttribute("aria-pressed", "true");
+  RANGE = Number(b.dataset.d);
+  load();
+});
+
+/* ============================ boot ============================ */
+let booted = false;
+
+function applySession(session) {
+  const signedIn = !!session;
+  $("#gate").classList.toggle("hide", signedIn);
+  $("#app").classList.toggle("hide", !signedIn);
+  if (signedIn && !booted) { booted = true; load(); }
+  if (!signedIn) booted = false;
+}
+
+// Fires on INITIAL_SESSION, SIGNED_IN and after a magic link lands.
+sb.auth.onAuthStateChange((_event, session) => applySession(session));
+
+applySession((await sb.auth.getSession()).data.session);
+</script>
+</body>
+</html>
