@@ -29,7 +29,7 @@ pg_cron ───daily──▶ sync-all ──▶ sync-youtube │ sync-meta �
                                        └──▶ platform APIs ──▶ social.* tables
 ```
 
-Everything deployed is mirrored in `supabase/` — four migrations and six edge functions,
+Everything deployed is mirrored in `supabase/` — four migrations and seven edge functions,
 extracted verbatim from the live project. Treat those files as the source of truth and
 redeploy from them; do not hand-edit the remote and let the two drift.
 
@@ -154,4 +154,7 @@ alone; the design pass can revisit them.
 - `SETUP.md` — schema reference and the full API credential path for all three platforms,
   including approval requirements and known blockers
 - `supabase/migrations/` — the four migrations, in order
-- `supabase/functions/` — all six functions as deployed
+- `supabase/functions/` — all seven functions as deployed
+- `CREDENTIALS.md` — the three developer consoles and the connect → probe → fix loop
+- `probe` — read-only diagnostic; returns raw API payloads, writes nothing. Use it before
+  trusting any parser.
