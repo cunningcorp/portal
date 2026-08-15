@@ -28,7 +28,29 @@ cd ~/Documents/GitHub/portal
 git push -u origin main
 ```
 
-**Check:** the repo shows two commits and 17 files including `index.html`, `CNAME`,
+**If the push is rejected** with `! [rejected] main -> main (fetch first)`, the repo was
+created with a README (or .gitignore, or licence) and the remote has a commit yours
+doesn't build on. Check what's actually there before doing anything:
+
+```bash
+git fetch origin
+git log --oneline origin/main
+git ls-tree -r --name-only origin/main
+```
+
+If that shows a single "Initial commit" containing only `README.md`, it's GitHub's
+auto-generated stub and there is nothing to preserve — replace it:
+
+```bash
+git push --force-with-lease origin main
+```
+
+`--force-with-lease` rather than `--force`: it aborts if the remote moved since your
+fetch, so you can't silently destroy someone else's work. Don't reach for `git pull
+--rebase` here — both sides add a `README.md`, so you'd be resolving a conflict against a
+two-line placeholder for no reason.
+
+**Check:** the repo shows three commits and 23 files including `index.html`, `CNAME`,
 `supabase/`.
 
 ---
