@@ -24,3 +24,8 @@ verify_jwt = true
 
 [functions.oauth-callback]
 verify_jwt = false
+
+# probe is a read-only diagnostic: it calls the upstream platform APIs and returns their
+# raw response shape, writing nothing to the database.
+[functions.probe]
+verify_jwt = true

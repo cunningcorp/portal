@@ -104,26 +104,35 @@ alone; the design pass can revisit them.
    missed, the next day's delta silently absorbs two days of movement. It should either
    divide across the gap or record nothing.
 
+**Security hygiene**
+
+6. `sync-meta` and `probe` pass the Meta access token as an `&access_token=` query
+   parameter. This is the convention Meta's own docs use and the token never reaches a
+   client — but secrets in URLs are far more likely to end up in proxy and platform logs
+   than secrets in headers. The Graph API accepts `Authorization: Bearer <token>`. Worth
+   converting both, in one pass so they stay consistent. Nothing is leaking today; this is
+   reducing the blast radius of a log you don't control.
+
 **Structure**
 
-6. `shared.ts` is byte-identical across the three collectors. Deliberate for now — they
+7. `shared.ts` is byte-identical across the three collectors. Deliberate for now — they
    import it relatively and collapsing it naively breaks redeploys — but an import map or
    a published module would be cleaner.
-7. No tests of any kind.
-8. No CI. Deploys are manual.
-9. No cron job exists yet. `pg_cron` and `pg_net` are enabled and the SQL is written out in
+8. No tests of any kind.
+9. No CI. Deploys are manual.
+10. No cron job exists yet. `pg_cron` and `pg_net` are enabled and the SQL is written out in
    `SETUP.md`, but nothing is scheduled. If you create one, capture it in a migration so
    it's reproducible.
 
 **Frontend**
 
-10. Platform selection on connect uses `window.prompt()`. It works; it's ugly.
-11. Charts render empty with no explanation when there's no data for a range. An empty
+11. Platform selection on connect uses `window.prompt()`. It works; it's ugly.
+12. Charts render empty with no explanation when there's no data for a range. An empty
     state per chart would save confusion during the weeks before history builds up.
-12. The posts table caps at 150 rows with no pagination.
-13. Accessibility is thin: sortable table headers aren't keyboard reachable, there's no
+13. The posts table caps at 150 rows with no pagination.
+14. Accessibility is thin: sortable table headers aren't keyboard reachable, there's no
     `aria-sort`, no focus-visible styling, and toasts aren't announced.
-14. One inline `onerror` handler on avatar images.
+15. One inline `onerror` handler on avatar images.
 
 ---
 
