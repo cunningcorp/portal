@@ -106,4 +106,5 @@ references them relatively, so they live wherever the handbook was authored.
 ## Related
 
 - Schema, collectors and API credential setup: `SETUP.md`
-- Edge function source: `supabase functions download <name>` against `qeafetctmtnqonhwhhlw`
+- `supabase/migrations/` and `supabase/functions/` — the deployed schema and collectors, mirrored in-repo
+- `CLAUDE.md` — handover brief for the polish pass
