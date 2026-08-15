@@ -55,7 +55,12 @@ Miss the second one and channel totals work while every per-day chart stays empt
 **b. Auth platform.** Left menu → **Google Auth Platform** → **Get started** if it prompts.
 
 - **Branding:** app name `Signal`, your support email, your contact email.
-- **Audience:** **External**. Under *Test users* → **Add users** → your Google account.
+- **Audience:** this depends on where the project lives, and it matters more than it looks.
+  - Project inside the **cunningcorp.com organisation** and the channel is on a
+    `@cunningcorp.com` account → leave it **Internal**. There is no *Test users* section and
+    no publishing status, and that's correct, not a missing step.
+  - Channel on a personal Gmail or another domain → **Make external**, then *Test users* →
+    **Add users** → that account. Internal means org members only and will refuse anything else.
 - **Data access → Add or remove scopes** → add:
   - `https://www.googleapis.com/auth/youtube.readonly`
   - `https://www.googleapis.com/auth/yt-analytics.readonly`
@@ -66,11 +71,15 @@ Miss the second one and channel totals work while every per-day chart stays empt
 - **Authorised redirect URIs → Add URI** → paste the callback URL above
 - **Create** → copy the client ID and secret into Supabase.
 
-**One thing that will bite you in about a week.** While the app's publishing status is
-*Testing*, Google expires refresh tokens after **7 days**. Your syncs will work, then
-silently start failing with `invalid_grant`. Fix it before it happens: **Audience** →
-**Publish app**. These two scopes are read-only and non-sensitive for your own channel, so
+**The one that bites a week later — External apps only.** While an External app's
+publishing status is *Testing*, Google expires refresh tokens after **7 days**. Syncs work,
+then start failing with `invalid_grant`, and it reads like the code broke. Fix it before it
+happens: **Audience → Publish app**. Both scopes are read-only and non-sensitive, so
 publishing doesn't trigger a review queue.
+
+**Internal apps are exempt.** No publishing status, no test users, no 7-day expiry. If the
+Audience page says Internal and offers you none of those things, that is the good outcome —
+skip this step entirely.
 
 **Quota:** 10,000 units a day. A full sync of one channel is roughly 10. Not a concern.
 
