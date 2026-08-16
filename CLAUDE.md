@@ -1,9 +1,9 @@
 # Signal — handover brief
 
-You are picking up a partly proven internal analytics portal. YouTube runs end to end
-against the live API and has real data in the database. Instagram is built but unconnected.
-Facebook and TikTok have never executed against a real API at all. Your job is to finish
-proving it, then make it solid. A visual design pass is happening separately and later —
+You are picking up a partly proven internal analytics portal. YouTube and Instagram both
+run end to end against live APIs and have real data in the database. Facebook and TikTok
+have never executed against a real API at all. Your job is to finish proving it, then make
+it solid. A visual design pass is happening separately and later —
 do not spend your effort there.
 
 Read this whole file before writing code.
@@ -40,7 +40,7 @@ redeploy from them; do not hand-edit the remote and let the two drift.
 | Collector | Status |
 |---|---|
 | `sync-youtube` | **Proven.** Ran against the live channel. All eight analytics metrics mapped without a rename; 42 posts, 33 days of daily metrics and a snapshot landed correctly. |
-| `sync-instagram` | Built from current docs, never executed. Business Login for Instagram. |
+| `sync-instagram` | **Proven.** Business Login for Instagram, no Facebook Page. Profile, 29 days of daily reach, eight 28-day rolling totals and 38 posts with per-post metrics all landed. `follows_and_unfollows` returns nothing below 100 followers — Meta's threshold, not a fault. |
 | `sync-meta` | Never executed. No Facebook Page exists to test against. |
 | `sync-tiktok` | Never executed. |
 
