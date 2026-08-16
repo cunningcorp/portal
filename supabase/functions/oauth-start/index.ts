@@ -3,6 +3,15 @@
 //
 //   GET /functions/v1/oauth-start?platform=youtube
 //   -> { "url": "https://accounts.google.com/o/oauth2/v2/auth?..." }
+//
+// Platforms:
+//   youtube    Google OAuth
+//   instagram  Business Login for Instagram (no Facebook Page required)
+//   meta       Facebook Login for Business (Pages, and Page-linked Instagram)
+//   tiktok     TikTok Login Kit
+//
+// instagram and meta are genuinely different products, not two names for one thing.
+// They use different app credentials, different hosts and different scopes.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -20,6 +29,10 @@ const SCOPES = {
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/yt-analytics.readonly",
   ].join(" "),
+  instagram: [
+    "instagram_business_basic",
+    "instagram_business_manage_insights",
+  ].join(","),
   meta: [
     "pages_show_list",
     "pages_read_engagement",
@@ -44,7 +57,7 @@ Deno.serve(async (req: Request) => {
   const redirectTo = url.searchParams.get("redirect_to");
 
   if (!(platform in SCOPES)) {
-    return json({ error: "platform must be one of: youtube, meta, tiktok" }, 400);
+    return json({ error: `platform must be one of: ${Object.keys(SCOPES).join(", ")}` }, 400);
   }
 
   const base = Deno.env.get("SUPABASE_URL")!;
@@ -71,6 +84,18 @@ Deno.serve(async (req: Request) => {
       access_type: "offline",
       prompt: "consent",
       include_granted_scopes: "true",
+      state,
+    });
+  } else if (platform === "instagram") {
+    // Business Login for Instagram. Note the Instagram app id, which is NOT the
+    // Meta app id -- it lives under Instagram -> API setup with Instagram login.
+    const id = Deno.env.get("INSTAGRAM_APP_ID");
+    if (!id) return json({ error: "INSTAGRAM_APP_ID secret is not set" }, 500);
+    authUrl = "https://www.instagram.com/oauth/authorize?" + new URLSearchParams({
+      client_id: id,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: SCOPES.instagram,
       state,
     });
   } else if (platform === "meta") {

@@ -13,6 +13,12 @@ verify_jwt = true
 [functions.sync-meta]
 verify_jwt = true
 
+# sync-instagram uses Business Login for Instagram on graph.instagram.com and
+# requires no Facebook Page. That is what separates it from sync-meta, which
+# reads Instagram through a Page access token on graph.facebook.com.
+[functions.sync-instagram]
+verify_jwt = true
+
 [functions.sync-tiktok]
 verify_jwt = true
 

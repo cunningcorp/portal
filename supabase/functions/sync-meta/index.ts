@@ -1,17 +1,24 @@
-// sync-meta -- Instagram Business + Facebook Page metrics via the Meta Graph API.
+// sync-meta -- Facebook Pages, and Instagram accounts that are linked to a Page,
+// via the Facebook Graph API (host: graph.facebook.com).
+//
+// Scope boundary with sync-instagram, which matters:
+//   sync-meta       reads Instagram through a PAGE access token. Requires the
+//                   Instagram account to be linked to a Facebook Page.
+//   sync-instagram  reads Instagram through Business Login for Instagram on
+//                   graph.instagram.com. No Page required.
+// An Instagram account belongs to exactly one of them, decided by how it was
+// connected and recorded in credentials.extra.login. This function skips any
+// account marked 'instagram_login' so the two never fight over the same row.
 //
 // Account rows:
-//   platform='instagram', external_id = IG Business Account ID
 //   platform='facebook',  external_id = Page ID
-// Credentials: access_token = long-lived Page access token (IG business accounts are
-// read through the Page token of their linked Page). extra.page_id optional.
-//
+//   platform='instagram', external_id = IG Business Account ID (Page-linked only)
 // Optional secret: META_API_VERSION (defaults to v25.0)
 //
-// Note on metrics: Meta deprecated `impressions`, `plays` and `profile_views` across
-// all versions from 21 Apr 2025. `views` is the replacement everywhere, so that is
-// what this collector stores. Metric requests are individually fault-tolerant --
-// if Meta retires one, the rest of the sync still lands.
+// Note on metrics: Meta deprecated `impressions`, `plays` and `profile_views`
+// across all versions from 21 Apr 2025. `views` is the replacement everywhere.
+// Metric requests are individually fault-tolerant -- if Meta retires one, the
+// rest of the sync still lands.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {
@@ -90,33 +97,29 @@ async function syncInstagram(sb: any, account: Account, token: string) {
   const since = unix(daysAgo(29));
   const until = unix(today());
 
-  // Time-series account insights
   const ts = await tryFetch(
-    `${GRAPH}/${id}/insights?metric=reach,follower_count&period=day&since=${since}&until=${until}&access_token=${token}`,
+    `${GRAPH}/${id}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${token}`,
     `ig timeseries ${id}`,
   );
-  if (ts) rows += await writeDaily(sb, foldTimeseries(account.id, ts, { follower_count: "followers_gained" }));
+  if (ts) rows += await writeDaily(sb, foldTimeseries(account.id, ts));
 
-  // total_value insights (views, engagement) -- these require metric_type=total_value
   for (const metric of ["views", "accounts_engaged", "total_interactions"]) {
     const tv = await tryFetch(
       `${GRAPH}/${id}/insights?metric=${metric}&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${token}`,
       `ig ${metric} ${id}`,
     );
-    if (!tv) continue;
-    const total = tv.data?.[0]?.total_value?.value;
-    if (total !== undefined) {
+    const total = tv?.data?.[0]?.total_value?.value;
+    if (typeof total === "number") {
       rows += await writeDaily(sb, [{
         account_id: account.id,
         metric_date: today(),
         metric: `${metric}_28d`,
-        value: Number(total),
+        value: total,
         updated_at: new Date().toISOString(),
       }]);
     }
   }
 
-  // Recent media + per-media insights
   const media = await tryFetch(
     `${GRAPH}/${id}/media?fields=id,caption,media_type,media_product_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count&limit=40&access_token=${token}`,
     `ig media ${id}`,
@@ -154,7 +157,7 @@ async function syncInstagram(sb: any, account: Account, token: string) {
       comments: bag.comments ?? num(m.comments_count),
       shares: bag.shares ?? null,
       saves: bag.saved ?? null,
-      raw: { ...bag, reach: bag.reach },
+      raw: bag,
     }, { onConflict: "post_id,captured_on" });
     rows += 2;
   }
@@ -246,9 +249,29 @@ async function syncFacebook(sb: any, account: Account, token: string) {
 Deno.serve(async (_req: Request) => {
   const sb = db();
   try {
-    const accounts = await activeAccounts(sb, ["instagram", "facebook"]);
+    const all = await activeAccounts(sb, ["instagram", "facebook"]);
+
+    // Hand back any Instagram account that came in through Business Login for
+    // Instagram. Its token is for graph.instagram.com and would fail here.
+    const { data: creds } = await sb
+      .from("credentials")
+      .select("account_id, extra")
+      .in("account_id", all.map((a) => a.id));
+    const igLogin = new Set(
+      (creds ?? []).filter((c: any) => c.extra?.login === "instagram_login").map((c: any) => c.account_id),
+    );
+    const accounts = all.filter((a) => !igLogin.has(a.id));
+    const skipped = all.length - accounts.length;
+
     if (!accounts.length) {
-      return json({ platform: "meta", results: [], note: "no active instagram/facebook accounts" });
+      return json({
+        platform: "meta",
+        results: [],
+        skipped_instagram_login: skipped,
+        note: skipped
+          ? "only Instagram Login accounts present; sync-instagram handles those"
+          : "no active facebook or page-linked instagram accounts",
+      });
     }
 
     const results = [];
@@ -268,7 +291,7 @@ Deno.serve(async (_req: Request) => {
         results.push({ account: a.display_name ?? a.external_id, platform: a.platform, status: "error", error: msg });
       }
     }
-    return json({ platform: "meta", api_version: V, results });
+    return json({ platform: "meta", api_version: V, skipped_instagram_login: skipped, results });
   } catch (e) {
     return json({ platform: "meta", error: e instanceof Error ? e.message : String(e) }, 500);
   }

@@ -1,4 +1,4 @@
-// oauth-callback -- the redirect target for all three platform consent flows.
+// oauth-callback -- the redirect target for every platform consent flow.
 //
 // verify_jwt is off because the provider redirects the browser here with no
 // Authorization header. Access is instead gated on a single-use `state` token
@@ -99,6 +99,68 @@ async function connectYouTube(db: SupabaseClient, code: string, redirectUri: str
   return connected;
 }
 
+// ---------------------------------------------------------------- Instagram
+// Business Login for Instagram. Three steps: code -> short-lived token (1 hour)
+// -> long-lived token (60 days). Skipping the exchange leaves you with a token
+// that dies before the first scheduled sync.
+async function connectInstagram(db: SupabaseClient, code: string, redirectUri: string) {
+  const appId = Deno.env.get("INSTAGRAM_APP_ID") ?? "";
+  const appSecret = Deno.env.get("INSTAGRAM_APP_SECRET") ?? "";
+
+  // Instagram appends "#_" to the code on the browser redirect. Left in place it
+  // produces an opaque "Invalid authorization code" from the token endpoint.
+  const clean = decodeURIComponent(code).replace(/#_$/, "");
+
+  const short = await post("https://api.instagram.com/oauth/access_token", new URLSearchParams({
+    client_id: appId,
+    client_secret: appSecret,
+    grant_type: "authorization_code",
+    redirect_uri: redirectUri,
+    code: clean,
+  }));
+  if (short.error_type || short.error_message) {
+    throw new Error(`${short.error_type ?? "error"}: ${short.error_message ?? ""}`);
+  }
+
+  const long = await get(
+    "https://graph.instagram.com/access_token?" + new URLSearchParams({
+      grant_type: "ig_exchange_token",
+      client_secret: appSecret,
+      access_token: short.access_token,
+    }),
+  );
+  const token = long.access_token ?? short.access_token;
+  const ttl = long.expires_in ?? 5_184_000; // 60 days
+
+  const me = await get(
+    `https://graph.instagram.com/${META_V}/me?` + new URLSearchParams({
+      fields: "user_id,username,name,account_type,profile_picture_url",
+      access_token: token,
+    }),
+  );
+
+  if (me.account_type && !/BUSINESS|CREATOR|MEDIA_CREATOR/i.test(me.account_type)) {
+    throw new Error(
+      `That Instagram account is ${me.account_type}. Insights need a Business or Creator account — switch it in the Instagram app, then reconnect.`,
+    );
+  }
+
+  return [await upsertAccount(db, {
+    platform: "instagram",
+    external_id: String(me.user_id ?? short.user_id),
+    handle: me.username ?? null,
+    display_name: me.name ?? me.username ?? null,
+    avatar_url: me.profile_picture_url ?? null,
+    profile_url: me.username ? `https://instagram.com/${me.username}` : null,
+  }, {
+    access_token: token,
+    expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
+    scopes: short.permissions ?? [],
+    // How sync-instagram claims this account and sync-meta knows to skip it.
+    extra: { login: "instagram_login", ig_user_id: String(me.user_id ?? short.user_id) },
+  })];
+}
+
 // --------------------------------------------------------------------- Meta
 async function connectMeta(db: SupabaseClient, code: string, redirectUri: string) {
   const appId = Deno.env.get("META_APP_ID") ?? "";
@@ -150,13 +212,13 @@ async function connectMeta(db: SupabaseClient, code: string, redirectUri: string
         profile_url: ig.username ? `https://instagram.com/${ig.username}` : null,
       }, {
         access_token: page.access_token,
-        extra: { page_id: page.id, ig_user_id: ig.id },
+        extra: { page_id: page.id, ig_user_id: ig.id, login: "facebook_login" },
       }));
     }
   }
 
   if (!connected.length) {
-    throw new Error("No Pages were granted. Instagram must be a Business or Creator account linked to a Facebook Page.");
+    throw new Error("No Pages were granted. If the Instagram account has no Facebook Page, use the instagram platform instead of meta.");
   }
   return connected;
 }
@@ -200,8 +262,8 @@ Deno.serve(async (req: Request) => {
   const state = url.searchParams.get("state");
   const providerError = url.searchParams.get("error_description") ?? url.searchParams.get("error");
 
-  if (providerError) return page("Connection cancelled", providerError, false);
-  if (!code || !state) return page("Missing parameters", "No authorisation code or state was returned.", false);
+  if (providerError) return page("Connection cancelled", text(providerError), false);
+  if (!code || !state) return page("Missing parameters", text("No authorisation code or state was returned."), false);
 
   const db = sb();
 
@@ -213,7 +275,10 @@ Deno.serve(async (req: Request) => {
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
 
-  if (!st) return page("Expired or invalid link", "That connect link has already been used or has expired. Start again from the portal.", false);
+  if (!st) {
+    return page("Expired or invalid link",
+      text("That connect link has already been used or has expired. Start again from the portal."), false);
+  }
 
   await db.from("oauth_states").update({ consumed_at: new Date().toISOString() }).eq("state", state);
 
@@ -221,21 +286,29 @@ Deno.serve(async (req: Request) => {
 
   try {
     let connected;
-    if (st.platform === "youtube") connected = await connectYouTube(db, code, redirectUri);
-    else if (st.platform === "meta") connected = await connectMeta(db, code, redirectUri);
-    else if (st.platform === "tiktok") connected = await connectTikTok(db, code, redirectUri);
+    if (st.platform === "youtube")        connected = await connectYouTube(db, code, redirectUri);
+    else if (st.platform === "instagram") connected = await connectInstagram(db, code, redirectUri);
+    else if (st.platform === "meta")      connected = await connectMeta(db, code, redirectUri);
+    else if (st.platform === "tiktok")    connected = await connectTikTok(db, code, redirectUri);
     else throw new Error(`unknown platform ${st.platform}`);
 
     if (st.redirect_to) {
-      return new Response(null, { status: 302, headers: { Location: `${st.redirect_to}#connected=${connected.length}` } });
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${st.redirect_to}#connected=${connected.length}` },
+      });
     }
 
     const list = connected
       .map((c) => `<li><strong>${esc(c.display_name ?? c.handle ?? "account")}</strong> <span>${esc(c.platform)}</span></li>`)
       .join("");
-    return page("Connected", `<p>${connected.length} account${connected.length === 1 ? "" : "s"} linked. Run a sync from the portal to pull the first numbers in.</p><ul>${list}</ul>`, true);
+    return page(
+      "Connected",
+      `<p>${connected.length} account${connected.length === 1 ? "" : "s"} linked. Run a sync to pull the first numbers in.</p><ul>${list}</ul>`,
+      true,
+    );
   } catch (e) {
-    return page("Could not connect", esc(e instanceof Error ? e.message : String(e)), false);
+    return page("Could not connect", text(e instanceof Error ? e.message : String(e)), false);
   }
 });
 
@@ -244,21 +317,27 @@ function esc(s: string) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-function page(title: string, body: string, ok: boolean) {
+/**
+ * Wrap plain text as escaped HTML. page() takes HTML, so callers must escape
+ * exactly once -- an earlier version escaped in both places and rendered provider
+ * errors as &amp;quot;, which is unhelpful precisely when you need to read them.
+ */
+const text = (s: string) => `<p>${esc(s)}</p>`;
+
+function page(title: string, bodyHtml: string, ok: boolean) {
   return new Response(
     `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><style>
 :root{color-scheme:dark}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0d10;color:#e7ebf0;
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#191220;color:#FAF6EE;
      font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-.card{max-width:32rem;padding:2.5rem;border:1px solid #1e242c;border-radius:14px;background:#11151a}
-h1{margin:0 0 .75rem;font-size:1.35rem;color:${ok ? "#5fd39a" : "#f2705f"}}
-p{margin:0 0 1rem;color:#9aa6b4}
-ul{margin:0;padding-left:1.1rem;color:#c8d2dd}
-li span{color:#7d8896;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-left:.4rem}
-code{color:#c8d2dd}
-</style></head><body><div class="card"><h1>${esc(title)}</h1>${body.startsWith("<") ? body : `<p>${esc(body)}</p>`}
-<p style="margin-top:1.5rem;font-size:.85rem">You can close this tab.</p></div></body></html>`,
+.card{max-width:34rem;padding:2.5rem;border:1px solid #372c47;border-radius:14px;background:#241B30}
+h1{margin:0 0 .75rem;font-size:1.35rem;font-weight:400;color:${ok ? "#C8A24C" : "#C0593B"}}
+p{margin:0 0 1rem;color:#B7AEC2;word-break:break-word}
+ul{margin:0;padding-left:1.1rem;color:#FAF6EE}
+li span{color:#7d7290;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;margin-left:.4rem}
+</style></head><body><div class="card"><h1>${esc(title)}</h1>${bodyHtml}
+<p style="margin-top:1.5rem;font-size:.85rem;color:#7d7290">You can close this tab.</p></div></body></html>`,
     { status: ok ? 200 : 400, headers: { "Content-Type": "text/html; charset=utf-8" } },
   );
 }

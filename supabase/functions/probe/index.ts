@@ -1,8 +1,8 @@
 // probe -- read-only diagnostic. Calls every endpoint the collectors depend on and
 // returns the RAW response shape, writing nothing to the database.
 //
-// This exists because the three collectors were written from API documentation, not
-// from observed responses. Before trusting a parser, point this at a real connected
+// This exists because the collectors were written from API documentation, not from
+// observed responses. Before trusting a parser, point this at a real connected
 // account and compare what actually comes back with what the collector assumes.
 //
 //   GET /functions/v1/probe?platform=youtube
@@ -40,14 +40,12 @@ const daysAgo = (n: number) => {
 const today = () => new Date().toISOString().slice(0, 10);
 const unix = (d: string) => Math.floor(new Date(`${d}T00:00:00Z`).getTime() / 1000);
 
-/** Mask anything that looks like a credential, wherever it appears. */
 const SECRET_KEY = /(access_token|refresh_token|client_secret|token|secret|password)/i;
 function redact(v: unknown): unknown {
   if (typeof v === "string") return v.length > 24 ? `${v.slice(0, 6)}…[${v.length} chars]` : v;
   return "[redacted]";
 }
 
-/** Trim arrays and mask secrets so the payload is readable at a glance. */
 function shape(v: unknown, full: boolean, depth = 0): unknown {
   if (v === null || typeof v !== "object") return v;
   if (Array.isArray(v)) {
@@ -64,7 +62,6 @@ function shape(v: unknown, full: boolean, depth = 0): unknown {
   return out;
 }
 
-/** Top-level key list — the fastest way to spot a renamed field. */
 function keysOf(v: unknown): string[] {
   if (Array.isArray(v)) return v.length ? [`[array of ${v.length}]`, ...keysOf(v[0])] : ["[empty array]"];
   if (v && typeof v === "object") return Object.keys(v as object);
@@ -105,7 +102,6 @@ async function run(calls: Call[], full: boolean) {
   return results;
 }
 
-// ------------------------------------------------------------ token handling
 async function googleToken(refresh: string) {
   const r = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -138,7 +134,6 @@ async function tiktokToken(refresh: string) {
   return j.access_token as string;
 }
 
-// --------------------------------------------------------------------- main
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
@@ -160,12 +155,16 @@ Deno.serve(async (req: Request) => {
   const { data: accounts, error: aErr } = await q.limit(1);
   if (aErr) return json({ error: `load account: ${aErr.message}` }, 500);
   if (!accounts?.length) {
-    return json({ error: `no active ${platform} account found. Connect one from the portal first.` }, 404);
+    return json({ error: `no active ${platform} account found. Connect one first.` }, 404);
   }
   const acct = accounts[0];
 
   const { data: cred } = await sb.from("credentials").select("*").eq("account_id", acct.id).maybeSingle();
   if (!cred) return json({ error: "account exists but has no stored credentials" }, 404);
+
+  // An Instagram account can be connected two entirely different ways. Probing it
+  // against the wrong host produces a confident, wrong failure.
+  const igLogin = (cred.extra as any)?.login === "instagram_login";
 
   try {
     let calls: Call[] = [];
@@ -182,23 +181,40 @@ Deno.serve(async (req: Request) => {
             ids: `channel==${acct.external_id}`, startDate: daysAgo(7), endDate: today(),
             metrics: "views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost,likes,comments,shares",
             dimensions: "day", sort: "day" })}`, init: auth,
-          note: "collector maps columnHeaders[].name to metric names; check none have been renamed or dropped" },
+          note: "collector maps columnHeaders[].name to metric names" },
         { label: "playlistItems (uploads)", url: `${D}/playlistItems?part=contentDetails&maxResults=3&playlistId=UU${acct.external_id.slice(2)}`, init: auth,
-          note: "uploads playlist id is the channel id with UC->UU; collector reads it from contentDetails instead" },
+          note: "uploads playlist id is the channel id with UC->UU" },
       ];
     }
 
-    if (platform === "instagram") {
+    if (platform === "instagram" && igLogin) {
+      // Business Login for Instagram -- graph.instagram.com, Instagram User token.
+      const t = cred.access_token;
+      const G = `https://graph.instagram.com/${META_V}`;
+      const since = unix(daysAgo(14)), until = unix(today());
+      const id = (cred.extra as any)?.ig_user_id ?? acct.external_id;
+      calls = [
+        { label: "me (profile)", url: `${G}/me?fields=user_id,username,name,account_type,profile_picture_url,followers_count,follows_count,media_count&access_token=${t}`,
+          note: "account_type must be BUSINESS or CREATOR for insights to exist at all" },
+        { label: "insights reach (time_series)", url: `${G}/${id}/insights?metric=reach&period=day&metric_type=time_series&since=${since}&until=${until}&access_token=${t}`,
+          note: "one of the few account metrics that still supports time_series" },
+        { label: "insights views (total_value)", url: `${G}/${id}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${t}`,
+          note: "views replaced impressions across all versions from 21 Apr 2025" },
+        { label: "insights follows_and_unfollows", url: `${G}/${id}/insights?metric=follows_and_unfollows&metric_type=total_value&breakdown=follow_type&period=day&since=${since}&until=${until}&access_token=${t}`,
+          note: "replaces the old follower_count metric; needs 100+ followers or it returns nothing" },
+        { label: "media", url: `${G}/${id}/media?fields=id,caption,media_type,media_product_type,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=3&access_token=${t}` },
+      ];
+    }
+
+    if (platform === "instagram" && !igLogin) {
+      // Page-linked Instagram -- graph.facebook.com, Page token.
       const t = cred.access_token;
       const G = `https://graph.facebook.com/${META_V}`;
       const since = unix(daysAgo(14)), until = unix(today());
       calls = [
-        { label: "ig profile", url: `${G}/${acct.external_id}?fields=username,name,profile_picture_url,followers_count,follows_count,media_count&access_token=${t}` },
-        { label: "ig insights (timeseries)", url: `${G}/${acct.external_id}/insights?metric=reach,follower_count&period=day&since=${since}&until=${until}&access_token=${t}`,
-          note: "collector folds values[].end_time into a date and values[].value into a number" },
-        { label: "ig insights views (total_value)", url: `${G}/${acct.external_id}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${t}`,
-          note: "views replaced impressions across all versions from 21 Apr 2025 — confirm it returns" },
-        { label: "ig media", url: `${G}/${acct.external_id}/media?fields=id,caption,media_type,media_product_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count&limit=3&access_token=${t}` },
+        { label: "ig profile (via Page token)", url: `${G}/${acct.external_id}?fields=username,name,followers_count,follows_count,media_count&access_token=${t}` },
+        { label: "ig insights reach", url: `${G}/${acct.external_id}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${t}` },
+        { label: "ig media", url: `${G}/${acct.external_id}/media?fields=id,caption,media_product_type,permalink,timestamp,like_count,comments_count&limit=3&access_token=${t}` },
       ];
     }
 
@@ -207,10 +223,10 @@ Deno.serve(async (req: Request) => {
       const G = `https://graph.facebook.com/${META_V}`;
       const since = unix(daysAgo(14)), until = unix(today());
       calls = [
-        { label: "page fields", url: `${G}/${acct.external_id}?fields=name,username,link,followers_count,fan_count,picture.type(large)&access_token=${t}` },
+        { label: "page fields", url: `${G}/${acct.external_id}?fields=name,username,link,followers_count,fan_count&access_token=${t}` },
         { label: "page insights", url: `${G}/${acct.external_id}/insights?metric=page_impressions_unique,page_post_engagements,page_video_views,page_fan_adds&period=day&since=${since}&until=${until}&access_token=${t}`,
           note: "Meta has retired many Page metrics; any that error here should come out of the collector's list" },
-        { label: "page posts", url: `${G}/${acct.external_id}/posts?fields=id,message,permalink_url,created_time,full_picture,shares,likes.summary(true).limit(0),comments.summary(true).limit(0)&limit=3&access_token=${t}` },
+        { label: "page posts", url: `${G}/${acct.external_id}/posts?fields=id,message,permalink_url,created_time,shares,likes.summary(true).limit(0),comments.summary(true).limit(0)&limit=3&access_token=${t}` },
       ];
     }
 
@@ -219,9 +235,9 @@ Deno.serve(async (req: Request) => {
       const auth = { Authorization: `Bearer ${tok}` };
       const A = "https://open.tiktokapis.com/v2";
       calls = [
-        { label: "user/info", url: `${A}/user/info/?fields=open_id,union_id,avatar_url,display_name,bio_description,profile_deep_link,username,follower_count,following_count,likes_count,video_count`,
+        { label: "user/info", url: `${A}/user/info/?fields=open_id,avatar_url,display_name,profile_deep_link,username,follower_count,following_count,likes_count,video_count`,
           init: { headers: auth },
-          note: "collector reads data.user.*; a scope you were not granted silently drops its field" },
+          note: "a scope you were not granted silently drops its field rather than erroring" },
         { label: "video/list", url: `${A}/video/list/?fields=id,title,video_description,duration,cover_image_url,share_url,create_time,like_count,comment_count,share_count,view_count`,
           init: { method: "POST", headers: { ...auth, "Content-Type": "application/json" }, body: JSON.stringify({ max_count: 3 }) },
           note: "collector reads data.videos[]" },
@@ -233,6 +249,7 @@ Deno.serve(async (req: Request) => {
     return json({
       probed_at: new Date().toISOString(),
       platform,
+      connected_via: platform === "instagram" ? (igLogin ? "instagram_login" : "facebook_login") : undefined,
       account: { id: acct.id, external_id: acct.external_id, handle: acct.handle, display_name: acct.display_name },
       meta_api_version: platform === "instagram" || platform === "facebook" ? META_V : undefined,
       wrote_anything: false,

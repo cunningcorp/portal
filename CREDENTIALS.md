@@ -25,7 +25,9 @@ Supabase dashboard → project **aubreynorth** → **Edge Functions** → **Secr
 |---|---|
 | `GOOGLE_CLIENT_ID` | Google Auth Platform → Clients |
 | `GOOGLE_CLIENT_SECRET` | same screen |
-| `META_APP_ID` | Meta app → App settings → Basic |
+| `INSTAGRAM_APP_ID` | Meta app → Instagram → API setup with Instagram login, section 1 |
+| `INSTAGRAM_APP_SECRET` | same screen |
+| `META_APP_ID` | Meta app → App settings → Basic — only for Facebook Pages |
 | `META_APP_SECRET` | same screen (click Show) |
 | `TIKTOK_CLIENT_KEY` | TikTok app → Basic information |
 | `TIKTOK_CLIENT_SECRET` | same screen |
@@ -85,33 +87,59 @@ skip this step entirely.
 
 ---
 
-## 2 · Instagram and Facebook
+## 2 · Instagram
 
-Prerequisites that are not negotiable, and worth confirming before you start:
-- The Instagram account is **Business or Creator**, not personal.
-- It is **linked to a Facebook Page**.
-- You are an admin of that Page.
+There are two entirely different Instagram products, and picking the wrong one wastes an
+evening. Which you need depends on one thing only:
 
-Instagram accounts that aren't Page-linked cannot be read by any API at any price.
+| Your Instagram account | Product | Collector |
+|---|---|---|
+| Linked to a Facebook Page | Instagram API with **Facebook Login** | `sync-meta` |
+| **Not** linked to a Page | Instagram API with **Instagram Login** | `sync-instagram` |
+
+Cunning Corp's account is not Page-linked, so everything below is the **Instagram Login**
+path. It requires no Facebook Page and no Page admin role.
+
+Prerequisite: the account must be **Business or Creator**, not personal. Insights do not
+exist on personal accounts under any API. Switching is free and reversible, in the
+Instagram app under Settings → Account type and tools.
 
 **a. App.** [developers.facebook.com](https://developers.facebook.com) → **My Apps** →
-**Create App** → use case **Other** → type **Business** → name it `Signal`.
+**Create app** → name `Signal` → use case **Other** → type **Business** → **Create app**.
 
-**b. Login product.** Dashboard → **Add product** → **Facebook Login for Business** → Set up.
-Then **Facebook Login for Business → Settings** → under *Client OAuth settings*, paste the
-callback URL into **Valid OAuth Redirect URIs** → **Save changes**.
+**b. Instagram product.** Dashboard → **Add product** → **Instagram** → **Set up**. You
+land on **API setup with Instagram login**, which has three numbered sections.
 
-**c. Secrets.** **App settings → Basic** → copy App ID and App Secret into Supabase.
+**c. Redirect URI.** Section **3 — Set up Instagram business login** → **Business login
+settings** → **OAuth redirect URIs** → add the callback URL from the top of this file →
+**Save**.
 
-**d. Leave it in Development mode.** It works fully for Pages you hold a role on, which is
-all you need. App Review and Business Verification are only required to read accounts you
-don't administer.
+**d. Credentials.** Section **1 — Generate access tokens** shows **Instagram app ID** and
+**Instagram app secret**. These are *not* the App ID and App Secret under App settings →
+Basic. Different values entirely, and using the wrong pair produces an authentication
+error that doesn't explain itself.
 
-**Expect some metrics to fail, by design.** Meta retired `impressions`, `plays` and
-`profile_views` across all API versions in April 2025 — `views` replaced them everywhere.
-The collector requests a list and tolerates individual failures rather than dying, so a
-partial result here is information, not a bug. The probe output tells you exactly which
-ones still return.
+**e. Tester access.** App dashboard → **App roles → Roles** → **Add people** →
+**Instagram Tester** → your Instagram account. Then accept the invite at instagram.com →
+Settings → **Apps and websites** → **Tester invites**. Without this the consent screen
+refuses the account while the app is in development.
+
+Scopes requested: `instagram_business_basic`, `instagram_business_manage_insights`.
+
+**Token lifecycle, worth understanding.** The consent code buys a short-lived token good
+for one hour. `oauth-callback` immediately exchanges it for a long-lived token good for
+60 days, and `sync-instagram` refreshes that in place once it comes within 14 days of
+expiry. There is no separate refresh token. If a long-lived token is ever allowed to
+actually expire it cannot be recovered — you reconnect. So a portal left unsynced for two
+months needs a manual reconnect, which the daily cron exists to prevent.
+
+**Metrics that no longer exist.** Meta retired `impressions`, `plays` and `profile_views`
+across all API versions in April 2025; `views` replaced them. The account-level
+`follower_count` metric is also gone from this API — `follows_and_unfollows` with a
+`follow_type` breakdown replaces it, and returns nothing at all below 100 followers. The
+collector requests metrics one at a time and tolerates individual failures, because a
+single unsupported metric in a combined request fails the entire call with the famously
+unhelpful "An unknown error has occurred."
 
 ---
 
@@ -148,7 +176,7 @@ on two separate days.
 Do this per platform, one at a time.
 
 **Connect.** Open the portal, sign in, **Connect account**, type the platform
-(`youtube`, `meta`, `tiktok`). Approve the consent screen. One Meta connect picks up every
+(`youtube`, `instagram`, `meta`, `tiktok`). Approve the consent screen. One Meta connect picks up every
 Page you administer plus each linked Instagram account in a single pass.
 
 **Probe before you sync.** There is a read-only `probe` function that calls every endpoint
@@ -161,7 +189,6 @@ BASE="https://qeafetctmtnqonhwhhlw.supabase.co/functions/v1"
 
 curl -s "$BASE/probe?platform=youtube"   -H "Authorization: Bearer $TOKEN" | jq .
 curl -s "$BASE/probe?platform=instagram" -H "Authorization: Bearer $TOKEN" | jq .
-curl -s "$BASE/probe?platform=facebook"  -H "Authorization: Bearer $TOKEN" | jq .
 curl -s "$BASE/probe?platform=tiktok"    -H "Authorization: Bearer $TOKEN" | jq .
 ```
 

@@ -4,16 +4,27 @@
 // Invoke with the service role key:
 //   curl -X POST "$SUPABASE_URL/functions/v1/sync-all" \
 //        -H "Authorization: Bearer $SERVICE_ROLE_KEY"
+//
+// sync-instagram and sync-meta are both listed and both safe to run: they claim
+// different accounts. sync-instagram takes the ones connected through Business
+// Login for Instagram, sync-meta takes Facebook Pages and any Page-linked
+// Instagram. A collector with nothing to claim returns an empty result rather
+// than an error, so an unused platform stays quiet instead of showing red.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const COLLECTORS = ["sync-youtube", "sync-meta", "sync-tiktok"] as const;
+const COLLECTORS = [
+  "sync-youtube",
+  "sync-instagram",
+  "sync-meta",
+  "sync-tiktok",
+] as const;
 
 Deno.serve(async (req: Request) => {
   const base = Deno.env.get("SUPABASE_URL")!;
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  // Allow ?only=sync-youtube to run a single collector.
+  // ?only=sync-youtube runs a single collector.
   const only = new URL(req.url).searchParams.get("only");
   const targets = only ? COLLECTORS.filter((c) => c === only) : [...COLLECTORS];
 
