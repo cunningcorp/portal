@@ -9,16 +9,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
 /* ==========================================================================
-   Cunning Corp house palette and type. Locked values from the Brand Handbook:
+   Cunning Corp house palette and type, per the Brand Handbook:
    Plum #241B30 base·night · Plum Deep #191220 gradient floor · Gold #C8A24C the
    light · Gold Soft #E3C57E highlight · Periwinkle #8E8BD8 accent·play ·
-   Paper #FAF6EE light ground. Division accents, one muted tone each:
-   Terracotta #C0593B Aubrey North · Slate #2C3E5D Publications ·
-   Teal #1F5F5B Productions.
+   Paper #FAF6EE light ground. Division accents: Terracotta #C0593B Aubrey North ·
+   Slate #2C3E5D Publications · Teal #1F5F5B Productions.
 
-   Glamour Absolute and Graphik are declared below but not committed to this
-   repo — drop the woff2 files into /fonts and they take over automatically.
-   Until then Recoleta and a system sans carry it.
+   Glamour Absolute and Graphik are declared but not committed — drop the woff2
+   files into /fonts and they take over. Until then Recoleta and a system sans.
    ========================================================================== */
 
 @font-face{font-family:'Glamour Absolute Extended';font-weight:400;font-display:swap;
@@ -34,22 +32,14 @@
 
 :root{
   color-scheme: dark;
-
-  /* core */
   --plum-deep:#191220; --plum:#241B30; --plum-lift:#2c2239;
   --gold:#C8A24C; --gold-soft:#E3C57E; --peri:#8E8BD8; --paper:#FAF6EE;
-
-  /* derived surfaces */
   --bg:var(--plum-deep); --panel:var(--plum); --panel-2:var(--plum-lift);
   --line:#372c47; --line-soft:#2a2036;
   --ink:var(--paper); --mute:#B7AEC2; --dim:#7d7290;
-
-  /* semantics, drawn from division accents */
   --up:var(--gold); --down:#C0593B; --warn:var(--peri);
-
   /* platform colours: data encoding only, deliberately outside the brand */
   --yt:#ff4e45; --ig:#e1477e; --fb:#4a8cff; --tt:#25e5d0;
-
   --font-display:'Glamour Absolute Extended','Glamour Absolute','Recoleta',Georgia,serif;
   --font-head:'Recoleta',Georgia,serif;
   --font-body:'Graphik',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
@@ -65,12 +55,12 @@ body{margin:0;color:var(--ink);font:14px/1.55 var(--font-body);-webkit-font-smoo
 a{color:inherit}
 button{font:inherit;cursor:pointer}
 .hide{display:none !important}
-.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+:focus-visible{outline:2px solid var(--peri);outline-offset:2px;border-radius:4px}
 
 /* ---------- shell ---------- */
-header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:1rem;
-  padding:.8rem 1.5rem;background:rgba(25,18,32,.82);backdrop-filter:blur(12px);
+header.top{position:sticky;top:0;z-index:20;background:rgba(25,18,32,.86);backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line-soft)}
+.bar{display:flex;align-items:center;gap:1rem;padding:.8rem 1.5rem;max-width:1500px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:.6rem;font-family:var(--font-display);
   font-size:1.02rem;letter-spacing:.03em}
 .brand .sub{font-family:var(--font-body);font-size:.72rem;letter-spacing:.14em;
@@ -80,13 +70,20 @@ header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:
 .btn{background:transparent;border:1px solid var(--line);color:var(--mute);
   padding:.42rem .85rem;border-radius:8px;transition:.15s;font-size:.86rem}
 .btn:hover{border-color:#4a3c5e;color:var(--ink)}
-/* one glow per layout: the primary action gets the periwinkle */
 .btn.primary{background:var(--peri);border-color:var(--peri);color:var(--plum-deep);font-weight:600}
-.btn.primary:hover{filter:brightness(1.07);color:var(--plum-deep)}
+.btn.primary:hover{filter:brightness(1.07)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- tabs ---------- */
+nav.tabs{display:flex;gap:.15rem;padding:0 1.5rem;max-width:1500px;margin:0 auto;overflow-x:auto}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);
+  padding:.55rem .85rem;font-size:.87rem;white-space:nowrap;transition:.15s}
+nav.tabs button:hover{color:var(--mute)}
+nav.tabs button[aria-selected="true"]{color:var(--paper);border-bottom-color:var(--peri)}
+nav.tabs button .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:.45rem;
+  vertical-align:middle}
 main{padding:1.5rem;max-width:1500px;margin:0 auto}
 
-/* ---------- range tabs ---------- */
 .rangebar{display:flex;gap:.3rem;background:rgba(36,27,48,.7);border:1px solid var(--line-soft);
   border-radius:9px;padding:.2rem}
 .rangebar button{background:none;border:0;color:var(--dim);padding:.28rem .68rem;
@@ -94,7 +91,7 @@ main{padding:1.5rem;max-width:1500px;margin:0 auto}
 .rangebar button[aria-pressed="true"]{background:var(--panel-2);color:var(--ink)}
 
 /* ---------- kpi ---------- */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.85rem;margin-bottom:1.25rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:.85rem;margin-bottom:1.25rem}
 .kpi{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--r);padding:1rem 1.1rem}
 .kpi .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
 .kpi .value{font-family:var(--font-head);font-size:2rem;font-weight:300;letter-spacing:-.015em;
@@ -110,8 +107,16 @@ main{padding:1.5rem;max-width:1500px;margin:0 auto}
   padding:1.1rem 1.2rem;margin-bottom:1rem}
 .panel h2{margin:0 0 .15rem;font-family:var(--font-head);font-size:1.05rem;font-weight:300;
   letter-spacing:-.01em;color:var(--paper)}
-.panel .hint{margin:0 0 .9rem;font-size:.78rem;color:var(--dim);max-width:62ch}
+.panel .hint{margin:0 0 .9rem;font-size:.78rem;color:var(--dim);max-width:70ch}
 .chartbox{position:relative;height:270px}
+.chartbox.tall{height:300px}
+
+/* ---------- rolling totals ---------- */
+.totals{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.6rem}
+.tot{background:var(--panel-2);border:1px solid var(--line-soft);border-radius:9px;padding:.7rem .8rem}
+.tot .n{font-family:var(--font-head);font-size:1.3rem;font-weight:300;color:var(--paper);
+  font-variant-numeric:tabular-nums}
+.tot .l{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-top:.15rem}
 
 /* ---------- account cards ---------- */
 .accounts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.85rem}
@@ -134,9 +139,12 @@ main{padding:1.5rem;max-width:1500px;margin:0 auto}
 .tablewrap{overflow:auto;max-height:520px;border-radius:8px}
 table{width:100%;border-collapse:collapse;font-size:.84rem}
 th{position:sticky;top:0;background:var(--panel);text-align:left;font-weight:400;color:var(--dim);
-  font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;padding:.55rem .6rem;
-  border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
-th:hover{color:var(--mute)}
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;padding:0;
+  border-bottom:1px solid var(--line);white-space:nowrap}
+th button{width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;
+  padding:.55rem .6rem}
+th button:hover{color:var(--mute)}
+th[aria-sort] button{color:var(--paper)}
 td{padding:.55rem .6rem;border-bottom:1px solid var(--line-soft);vertical-align:middle;
   font-variant-numeric:tabular-nums}
 tbody tr:hover{background:var(--panel-2)}
@@ -175,12 +183,13 @@ input[type=email]::placeholder{color:var(--dim)}
 input[type=email]:focus{outline:0;border-color:var(--peri)}
 .msg{font-size:.83rem;margin-top:.9rem;color:var(--mute);min-height:1.2em}
 
-.empty{text-align:center;padding:2.5rem 1rem;color:var(--dim)}
+.empty{text-align:center;padding:2.2rem 1rem;color:var(--dim);font-size:.86rem}
 .empty h3{margin:0 0 .4rem;font-family:var(--font-head);font-weight:300;color:var(--mute);font-size:1.1rem}
 .connectrow{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:1.1rem}
 .toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:var(--panel-2);
   border:1px solid var(--line);padding:.6rem 1rem;border-radius:9px;font-size:.85rem;z-index:50;
   box-shadow:0 10px 34px rgba(0,0,0,.5)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -199,83 +208,40 @@ input[type=email]:focus{outline:0;border-color:var(--peri)}
     <p>Every channel, one view. Sign in with a link sent to your email.</p>
     <input type="email" id="email" placeholder="you@cunningcorp.com" autocomplete="email">
     <button class="btn primary" id="sendLink" style="width:100%">Send sign-in link</button>
-    <div class="msg" id="authMsg"></div>
+    <div class="msg" id="authMsg" role="status"></div>
   </div>
 </div>
 
 <!-- ================= APP ================= -->
 <div id="app" class="hide">
   <header class="top">
-    <div class="brand">
-      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
-        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/>
-      </svg>
-      SIGNAL <span class="sub">Cunning Corp</span>
+    <div class="bar">
+      <div class="brand">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+          <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/>
+        </svg>
+        SIGNAL <span class="sub">Cunning Corp</span>
+      </div>
+      <div class="rangebar" id="range" role="group" aria-label="Date range">
+        <button data-d="7">7d</button>
+        <button data-d="30" aria-pressed="true">30d</button>
+        <button data-d="90">90d</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" id="connectBtn">Connect account</button>
+      <button class="btn primary" id="syncBtn">Sync now</button>
+      <button class="btn" id="signOut">Sign out</button>
     </div>
-    <div class="rangebar" id="range">
-      <button data-d="7">7d</button>
-      <button data-d="30" aria-pressed="true">30d</button>
-      <button data-d="90">90d</button>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn" id="connectBtn">Connect account</button>
-    <button class="btn primary" id="syncBtn">Sync now</button>
-    <button class="btn" id="signOut">Sign out</button>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Platform"></nav>
   </header>
 
   <main>
-    <div class="kpis" id="kpis"></div>
-
-    <div class="grid cols-2">
-      <div>
-        <div class="panel">
-          <h2>Audience</h2>
-          <p class="hint">Total followers per platform, from the daily snapshot.</p>
-          <div class="chartbox"><canvas id="chFollowers"></canvas></div>
-        </div>
-        <div class="panel">
-          <h2>Daily views</h2>
-          <p class="hint">Views recorded each day. TikTok is derived from snapshot deltas, so it needs two days of history before it appears.</p>
-          <div class="chartbox"><canvas id="chViews"></canvas></div>
-        </div>
-      </div>
-      <div>
-        <div class="panel">
-          <h2>Accounts</h2>
-          <p class="hint">Latest totals and 7-day movement.</p>
-          <div class="accounts" id="accounts"></div>
-        </div>
-        <div class="panel">
-          <h2>Sync health</h2>
-          <p class="hint">Last collector run per account.</p>
-          <div id="sync"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Posts</h2>
-      <p class="hint">Most recent content across every connected account. Click a column to sort.</p>
-      <div class="tablewrap">
-        <table id="posts">
-          <thead><tr>
-            <th data-k="thumb"></th>
-            <th data-k="platform">Platform</th>
-            <th data-k="account">Account</th>
-            <th data-k="title">Title</th>
-            <th data-k="published_at">Published</th>
-            <th data-k="views">Views</th>
-            <th data-k="likes">Likes</th>
-            <th data-k="comments">Comments</th>
-            <th data-k="engagement_pct">Eng %</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+    <div id="view"></div>
   </main>
 </div>
+
+<div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -283,22 +249,39 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 /* ============================ config ============================ */
 const SUPABASE_URL = "https://qeafetctmtnqonhwhhlw.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gs_WsU5HUAs49uF6-A5Wog_Mvo62byI";
-
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* Platform colours are data encoding, not brand. Swapping these for house
-   tones would make four series indistinguishable on one axis. */
+/* Platform colours are data encoding, not brand. Four muted house tones on one
+   axis would be indistinguishable, and the charts would stop working. */
 const COLOR = { youtube:"#ff4e45", instagram:"#e1477e", facebook:"#4a8cff", tiktok:"#25e5d0" };
 const LABEL = { youtube:"YouTube", instagram:"Instagram", facebook:"Facebook", tiktok:"TikTok" };
 
-let RANGE = 30;
+/* Friendly names for metrics the collectors write. Anything not listed is
+   humanised automatically, so a new metric appears without a code change. */
+const METRIC_LABEL = {
+  views:"Views", reach:"Reach", likes:"Likes", comments:"Comments", shares:"Shares",
+  saves:"Saves", replies:"Replies", engagements:"Engagements",
+  watch_time_minutes:"Watch time (min)", avg_view_duration_secs:"Avg view duration (s)",
+  followers_gained:"Followers gained", followers_lost:"Followers lost",
+  accounts_engaged:"Accounts engaged", total_interactions:"Total interactions",
+};
+
+/* What each platform does not provide, stated plainly rather than left as a hole. */
+const CAVEAT = {
+  instagram:"Instagram reports views only as a rolling 28-day total, so there is no daily views series — reach is the daily metric it does provide.",
+  youtube:"YouTube analytics lag two to three days, so the right-hand end of every daily chart trails today.",
+  tiktok:"TikTok's free API returns cumulative totals only. Daily movement is derived by differencing snapshots, so it needs two days of history before anything appears.",
+  facebook:"Meta has retired many Page metrics. Whatever still returns data is shown; the rest are skipped rather than shown as zero.",
+};
+
+let RANGE = 30, TAB = "overview";
 let charts = {};
-let postRows = [];
+let DATA = { overview:[], series:[], daily:[], posts:[], sync:[] };
 let sortKey = "published_at", sortDir = -1;
 
 /* ============================ helpers ============================ */
-const $  = (s) => document.querySelector(s);
-const $$ = (s) => [...document.querySelectorAll(s)];
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 const fmt = (n) => {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
@@ -322,13 +305,25 @@ const ago = (s) => {
 };
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
   ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const titleise = (s) => String(s).replace(/_/g," ").replace(/^./, (c) => c.toUpperCase());
+
+/** Rolling totals are stored with a _28d suffix against a single date. */
+const isRolling = (m) => m.endsWith("_28d");
+const metricLabel = (m) => {
+  const base = m.replace(/_28d$/, "");
+  return METRIC_LABEL[base] ?? titleise(base);
+};
 
 function toast(text, ms = 3800) {
-  const el = document.createElement("div");
-  el.className = "toast";
+  const el = $("#toast");
   el.textContent = text;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), ms);
+  el.classList.remove("hide");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add("hide"), ms);
+}
+
+function destroyCharts() {
+  for (const k of Object.keys(charts)) { charts[k]?.destroy(); delete charts[k]; }
 }
 
 /* ============================ auth ============================ */
@@ -340,9 +335,8 @@ $("#sendLink").onclick = async () => {
     email,
     options: {
       emailRedirectTo: window.location.href.split("#")[0],
-      // Defence in depth. Open signups are disabled at the project level too,
-      // but this makes the portal itself incapable of minting a new user even
-      // if that toggle is ever flipped back on.
+      // Defence in depth. Open signups are disabled at the project level too, but
+      // this makes the portal itself incapable of minting a user.
       shouldCreateUser: false,
     },
   });
@@ -354,85 +348,198 @@ $("#sendLink").onclick = async () => {
 $("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
 $("#signOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
-/* ============================ data load ============================ */
+/* ============================ data ============================ */
 async function load() {
   const since = daysAgoISO(RANGE);
-
-  const [ovRes, serRes, dailyRes, postRes, syncRes] = await Promise.all([
+  const [ov, ser, day, post, syn] = await Promise.all([
     sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
     sb.from("social_account_series").select("*").gte("day", since).order("day"),
     sb.from("social_daily_totals").select("*").gte("day", since).order("day"),
-    sb.from("social_top_posts").select("*").order("published_at", { ascending:false, nullsFirst:false }).limit(150),
+    sb.from("social_top_posts").select("*").order("published_at", { ascending:false, nullsFirst:false }).limit(200),
     sb.from("social_sync_health").select("*"),
   ]);
-
-  const err = [ovRes, serRes, dailyRes, postRes, syncRes].find((r) => r.error);
+  const err = [ov, ser, day, post, syn].find((r) => r.error);
   if (err) { toast(`Query failed: ${err.error.message}`); return; }
 
-  const overview = ovRes.data ?? [];
-  renderKpis(overview, dailyRes.data ?? []);
-  renderAccounts(overview);
-  renderFollowers(serRes.data ?? []);
-  renderViews(dailyRes.data ?? []);
-  renderSync(syncRes.data ?? []);
-  postRows = postRes.data ?? [];
-  renderPosts();
-
-  if (!overview.length) showEmptyState();
+  DATA = {
+    overview: ov.data ?? [], series: ser.data ?? [], daily: day.data ?? [],
+    posts: post.data ?? [], sync: syn.data ?? [],
+  };
+  renderTabs();
+  render();
 }
 
-function showEmptyState() {
-  $("#kpis").innerHTML = `<div class="panel empty" style="grid-column:1/-1">
-    <h3>Nothing connected yet</h3>
-    <div>Link a platform to start collecting. Nothing is pulled until you do.</div>
-    <div class="connectrow">
-      <button class="btn" data-connect="youtube">Connect YouTube</button>
-      <button class="btn" data-connect="meta">Connect Instagram &amp; Facebook</button>
-      <button class="btn" data-connect="tiktok">Connect TikTok</button>
-    </div></div>`;
+const platforms = () => [...new Set(DATA.overview.map((r) => r.platform))].sort();
+
+/* ============================ tabs ============================ */
+function renderTabs() {
+  const list = platforms();
+  if (TAB !== "overview" && !list.includes(TAB)) TAB = "overview";
+  $("#tabs").innerHTML = [
+    `<button role="tab" data-tab="overview" aria-selected="${TAB === "overview"}">Overview</button>`,
+    ...list.map((p) =>
+      `<button role="tab" data-tab="${esc(p)}" aria-selected="${TAB === p}">
+         <span class="dot" style="background:${COLOR[p] ?? "#8E8BD8"}"></span>${LABEL[p] ?? p}
+       </button>`),
+  ].join("");
+  $$("#tabs button").forEach((b) => b.onclick = () => { TAB = b.dataset.tab; renderTabs(); render(); });
+}
+
+function render() {
+  destroyCharts();
+  $("#view").innerHTML = TAB === "overview" ? overviewHtml() : platformHtml(TAB);
+  if (TAB === "overview") overviewCharts(); else platformCharts(TAB);
+  wireTable();
   $$("[data-connect]").forEach((b) => b.onclick = () => connect(b.dataset.connect));
 }
 
-/* ============================ render: KPIs ============================ */
-function renderKpis(ov, daily) {
+/* ============================ overview ============================ */
+/* Only metrics that genuinely compare across platforms belong here. Views and
+   watch time do not — YouTube reports them daily, Instagram only as 28-day
+   totals, TikTok not at all. Those live on the platform tabs instead. */
+function overviewHtml() {
+  const ov = DATA.overview;
+  if (!ov.length) {
+    return `<div class="panel empty">
+      <h3>Nothing connected yet</h3>
+      <div>Link a platform to start collecting. Nothing is pulled until you do.</div>
+      <div class="connectrow">
+        <button class="btn" data-connect="youtube">Connect YouTube</button>
+        <button class="btn" data-connect="instagram">Connect Instagram</button>
+        <button class="btn" data-connect="tiktok">Connect TikTok</button>
+      </div></div>`;
+  }
+
+  const since = daysAgoISO(RANGE);
   const sum = (k) => ov.reduce((a, r) => a + (Number(r[k]) || 0), 0);
-  const metricSum = (m) => daily.filter((d) => d.metric === m)
-                                .reduce((a, d) => a + (Number(d.value) || 0), 0);
-
   const followers = sum("followers");
-  const d7 = sum("followers_delta_7d");
-  const d28 = sum("followers_delta_28d");
-  const views = metricSum("views");
-  const watch = metricSum("watch_time_minutes");
-  const gained = metricSum("followers_gained");
+  const d7 = sum("followers_delta_7d"), d28 = sum("followers_delta_28d");
+  const inRange = DATA.posts.filter((p) => p.published_at && p.published_at.slice(0,10) >= since);
+  const eng = inRange.reduce((a,p) => a + (Number(p.engagements)||0), 0);
+  const vws = inRange.reduce((a,p) => a + (Number(p.views)||0), 0);
+  const rate = vws ? ((eng / vws) * 100).toFixed(2) + "%" : "—";
 
-  const cards = [
-    { label:"Total followers", value:fmt(followers),
-      sub:`<span class="${cls(d7)}">${signed(d7)}</span> in 7d · <span class="${cls(d28)}">${signed(d28)}</span> in 28d` },
-    { label:`Views (${RANGE}d)`, value:fmt(views),
-      sub: views ? `${fmt(Math.round(views/RANGE))} a day on average` : "waiting on first sync" },
-    { label:`New followers (${RANGE}d)`, value:signed(gained),
-      sub:"summed across every platform" },
-    { label:`Watch time (${RANGE}d)`, value: watch ? fmt(Math.round(watch/60)) + " h" : "—",
-      sub:"YouTube only" },
-    { label:"Accounts", value:String(ov.length),
-      sub: ov.map((r) => LABEL[r.platform]).filter((v,i,a) => a.indexOf(v)===i).join(" · ") || "none yet" },
+  const kpis = [
+    { l:"Total followers", v:fmt(followers),
+      s:`<span class="${cls(d7)}">${signed(d7)}</span> in 7d · <span class="${cls(d28)}">${signed(d28)}</span> in 28d` },
+    { l:`Posts published (${RANGE}d)`, v:String(inRange.length),
+      s: inRange.length ? `${(inRange.length / (RANGE/7)).toFixed(1)} a week` : "nothing in this window" },
+    { l:`Engagement rate (${RANGE}d)`, v:rate, s:`${fmt(eng)} interactions on ${fmt(vws)} views` },
+    { l:"Platforms", v:String(platforms().length),
+      s: platforms().map((p) => LABEL[p] ?? p).join(" · ") },
+    { l:"Accounts", v:String(ov.length),
+      s: ov.filter((a) => a.as_of).length + " with data" },
   ];
 
-  $("#kpis").innerHTML = cards.map((c) =>
-    `<div class="kpi"><div class="label">${c.label}</div>
-     <div class="value">${c.value}</div><div class="sub">${c.sub}</div></div>`).join("");
+  return `
+  <div class="kpis">${kpis.map((c) =>
+    `<div class="kpi"><div class="label">${c.l}</div><div class="value">${c.v}</div>
+     <div class="sub">${c.s}</div></div>`).join("")}</div>
+
+  <div class="grid cols-2">
+    <div>
+      <div class="panel">
+        <h2>Audience</h2>
+        <p class="hint">Followers per platform, from the daily snapshot. This is the one number every
+          platform reports the same way, which is why it's the only chart on this tab.</p>
+        <div class="chartbox tall"><canvas id="chFollowers"></canvas></div>
+      </div>
+      ${postsPanel(DATA.posts, "Top posts", "Every account, most recent first. Click a column to sort.")}
+    </div>
+    <div>
+      <div class="panel">
+        <h2>Accounts</h2>
+        <p class="hint">Latest totals and 7-day movement.</p>
+        <div class="accounts">${ov.map(acctCard).join("")}</div>
+      </div>
+      <div class="panel">
+        <h2>Sync health</h2>
+        <p class="hint">Last collector run per account.</p>
+        ${syncHtml()}
+      </div>
+    </div>
+  </div>`;
 }
 
-/* ============================ render: accounts ============================ */
-function renderAccounts(ov) {
-  if (!ov.length) { $("#accounts").innerHTML = `<div class="empty">Nothing connected.</div>`; return; }
-  $("#accounts").innerHTML = ov.map((a) => `
+/* ============================ platform tab ============================ */
+/* Data-driven: renders whatever metrics the platform actually returned, so a
+   newly connected platform needs no code here. */
+function platformHtml(p) {
+  const ov = DATA.overview.filter((r) => r.platform === p);
+  const rows = DATA.daily.filter((d) => d.platform === p);
+  const posts = DATA.posts.filter((r) => r.platform === p);
+
+  const daily = {}, rolling = {};
+  for (const r of rows) (isRolling(r.metric) ? rolling : daily)[r.metric] ??= [];
+  for (const r of rows) (isRolling(r.metric) ? rolling : daily)[r.metric].push(r);
+
+  const sum = (k) => ov.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+  const d7 = sum("followers_delta_7d"), d28 = sum("followers_delta_28d");
+  const dailyTotal = (m) => (daily[m] ?? []).reduce((a,r) => a + Number(r.value || 0), 0);
+
+  const kpis = [
+    { l:"Followers", v:fmt(sum("followers")),
+      s:`<span class="${cls(d7)}">${signed(d7)}</span> in 7d · <span class="${cls(d28)}">${signed(d28)}</span> in 28d` },
+    { l:"Lifetime views", v:fmt(sum("total_views")), s:"as reported by the platform" },
+    { l:"Posts", v:fmt(sum("total_posts")), s:`${posts.length} collected in detail` },
+  ];
+  if (daily.views) kpis.push({ l:`Views (${RANGE}d)`, v:fmt(dailyTotal("views")),
+    s:`${fmt(Math.round(dailyTotal("views")/RANGE))} a day on average` });
+  if (daily.reach) kpis.push({ l:`Reach (${RANGE}d)`, v:fmt(dailyTotal("reach")),
+    s:"unique accounts, not impressions" });
+  if (daily.watch_time_minutes) kpis.push({ l:`Watch time (${RANGE}d)`,
+    v:fmt(Math.round(dailyTotal("watch_time_minutes")/60)) + " h", s:"total across all videos" });
+
+  const rollingKeys = Object.keys(rolling).sort();
+  const dailyKeys = Object.keys(daily).sort();
+
+  return `
+  <div class="kpis">${kpis.map((c) =>
+    `<div class="kpi"><div class="label">${c.l}</div><div class="value">${c.v}</div>
+     <div class="sub">${c.s}</div></div>`).join("")}</div>
+
+  <div class="grid cols-2">
+    <div>
+      <div class="panel">
+        <h2>Daily activity</h2>
+        <p class="hint">${esc(CAVEAT[p] ?? "")}</p>
+        ${dailyKeys.length
+          ? `<div class="chartbox tall"><canvas id="chDaily"></canvas></div>`
+          : `<div class="empty">No daily series from this platform yet.</div>`}
+      </div>
+      ${postsPanel(posts, "Posts", `Content from ${LABEL[p] ?? p}. Click a column to sort.`)}
+    </div>
+    <div>
+      ${rollingKeys.length ? `
+      <div class="panel">
+        <h2>Last 28 days</h2>
+        <p class="hint">Rolling totals. The platform reports these as a single figure rather than
+          per day, so they can't be charted over time.</p>
+        <div class="totals">${rollingKeys.map((m) =>
+          `<div class="tot"><div class="n">${fmt(rolling[m].at(-1)?.value)}</div>
+           <div class="l">${esc(metricLabel(m))}</div></div>`).join("")}</div>
+      </div>` : ""}
+      <div class="panel">
+        <h2>Audience</h2>
+        <p class="hint">Followers over time.</p>
+        <div class="chartbox"><canvas id="chPlatFollowers"></canvas></div>
+      </div>
+      <div class="panel">
+        <h2>Accounts</h2>
+        <div class="accounts">${ov.map(acctCard).join("")}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================ shared pieces ============================ */
+function acctCard(a) {
+  return `
     <div class="acct" data-p="${esc(a.platform)}">
       <div class="head">
-        <img src="${esc(a.avatar_url || "")}" alt="" onerror="this.style.visibility='hidden'">
+        <img src="${esc(a.avatar_url || "")}" alt="" loading="lazy">
         <div style="min-width:0">
-          <div class="nm">${esc(a.display_name || a.handle || a.account_id)}</div>
+          <div class="nm">${esc(a.display_name || a.handle || "account")}</div>
           <div class="hd">${LABEL[a.platform] ?? a.platform}${a.handle ? " · " + esc(a.handle) : ""}</div>
         </div>
       </div>
@@ -442,105 +549,47 @@ function renderAccounts(ov) {
       <div class="row"><span>Lifetime views</span><strong>${fmt(a.total_views)}</strong></div>
       <div class="row"><span>Posts</span><strong>${fmt(a.total_posts)}</strong></div>
       <div class="row"><span>As of</span><strong>${a.as_of ? shortDate(a.as_of) : "no data"}</strong></div>
-    </div>`).join("");
+    </div>`;
 }
 
-/* ============================ render: charts ============================ */
-const AXIS = {
-  grid:{ color:"#2a2036", drawTicks:false },
-  border:{ display:false },
-  ticks:{ color:"#7d7290", font:{ size:11 }, maxRotation:0, autoSkipPadding:18 },
-};
-const BASE_OPTS = {
-  responsive:true, maintainAspectRatio:false,
-  interaction:{ mode:"index", intersect:false },
-  plugins:{
-    legend:{ labels:{ color:"#B7AEC2", boxWidth:9, boxHeight:9, usePointStyle:true, font:{ size:11 } } },
-    tooltip:{ backgroundColor:"#2c2239", borderColor:"#372c47", borderWidth:1,
-              titleColor:"#FAF6EE", bodyColor:"#B7AEC2", padding:10, displayColors:true },
-  },
-  scales:{ x:AXIS, y:{ ...AXIS, beginAtZero:false,
-           ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } } },
-};
+const COLS = [
+  { k:"thumb", t:"", n:false },
+  { k:"platform", t:"Platform", n:false },
+  { k:"account", t:"Account", n:false },
+  { k:"title", t:"Title", n:false },
+  { k:"published_at", t:"Published", n:false },
+  { k:"views", t:"Views", n:true },
+  { k:"likes", t:"Likes", n:true },
+  { k:"comments", t:"Comments", n:true },
+  { k:"engagement_pct", t:"Eng %", n:true },
+];
 
-function pivot(rows, dayKey, groupKey, valueKey) {
-  const days = [...new Set(rows.map((r) => r[dayKey]))].sort();
-  const groups = [...new Set(rows.map((r) => r[groupKey]))];
-  const index = new Map(rows.map((r) => [`${r[dayKey]}|${r[groupKey]}`, Number(r[valueKey]) || 0]));
-  return { days, groups, get:(d,g) => index.has(`${d}|${g}`) ? index.get(`${d}|${g}`) : null };
+function postsPanel(rows, heading, hint) {
+  return `<div class="panel">
+    <h2>${esc(heading)}</h2>
+    <p class="hint">${esc(hint)}</p>
+    <div class="tablewrap"><table id="posts">
+      <thead><tr>${COLS.map((c) =>
+        `<th ${sortKey === c.k ? `aria-sort="${sortDir === 1 ? "ascending" : "descending"}"` : ""}>
+           ${c.k === "thumb" ? "" : `<button data-k="${c.k}">${c.t}</button>`}</th>`).join("")}</tr></thead>
+      <tbody>${postRows(rows)}</tbody>
+    </table></div>
+  </div>`;
 }
 
-function renderFollowers(series) {
-  const agg = {};
-  for (const r of series) {
-    const k = `${r.day}|${r.platform}`;
-    agg[k] = (agg[k] ?? 0) + (Number(r.followers) || 0);
-  }
-  const rows = Object.entries(agg).map(([k,v]) => {
-    const [day, platform] = k.split("|");
-    return { day, platform, followers:v };
-  });
-  const { days, groups, get } = pivot(rows, "day", "platform", "followers");
-
-  charts.f?.destroy();
-  charts.f = new Chart($("#chFollowers"), {
-    type:"line",
-    data:{
-      labels: days.map(shortDate),
-      datasets: groups.map((g) => ({
-        label: LABEL[g] ?? g,
-        data: days.map((d) => get(d,g)),
-        borderColor: COLOR[g] ?? "#8E8BD8",
-        backgroundColor: (COLOR[g] ?? "#8E8BD8") + "1f",
-        borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true, fill:true,
-      })),
-    },
-    options: BASE_OPTS,
-  });
-}
-
-function renderViews(daily) {
-  const rows = daily.filter((d) => d.metric === "views");
-  const { days, groups, get } = pivot(rows, "day", "platform", "value");
-
-  charts.v?.destroy();
-  charts.v = new Chart($("#chViews"), {
-    type:"bar",
-    data:{
-      labels: days.map(shortDate),
-      datasets: groups.map((g) => ({
-        label: LABEL[g] ?? g,
-        data: days.map((d) => get(d,g) ?? 0),
-        backgroundColor: COLOR[g] ?? "#8E8BD8",
-        borderRadius:2, borderSkipped:false,
-      })),
-    },
-    options:{ ...BASE_OPTS,
-      scales:{ x:{ ...AXIS, stacked:true },
-               y:{ ...BASE_OPTS.scales.y, stacked:true, beginAtZero:true } } },
-  });
-}
-
-/* ============================ render: posts ============================ */
-const NUMERIC_COLS = new Set(["views","likes","comments","shares","saves","engagements","engagement_pct","duration_secs"]);
-
-function renderPosts() {
-  const rows = [...postRows].sort((a,b) => {
+function postRows(rows) {
+  const numeric = new Set(COLS.filter((c) => c.n).map((c) => c.k));
+  const sorted = [...rows].sort((a,b) => {
     const x = a[sortKey], y = b[sortKey];
     if (x === y) return 0;
     if (x === null || x === undefined) return 1;   // nulls always sink
     if (y === null || y === undefined) return -1;
     if (sortKey === "published_at") return (new Date(x) - new Date(y)) * sortDir;
-    if (NUMERIC_COLS.has(sortKey)) return (Number(x) - Number(y)) * sortDir;
+    if (numeric.has(sortKey)) return (Number(x) - Number(y)) * sortDir;
     return String(x).localeCompare(String(y)) * sortDir;
   });
-
-  const tb = $("#posts tbody");
-  if (!rows.length) {
-    tb.innerHTML = `<tr><td colspan="9" class="empty">No posts collected yet.</td></tr>`;
-    return;
-  }
-  tb.innerHTML = rows.map((p) => `
+  if (!sorted.length) return `<tr><td colspan="${COLS.length}" class="empty">No posts collected yet.</td></tr>`;
+  return sorted.map((p) => `
     <tr>
       <td>${p.thumbnail_url ? `<img class="thumb" src="${esc(p.thumbnail_url)}" alt="" loading="lazy">` : ""}</td>
       <td><span class="pill ${esc(p.platform)}">${LABEL[p.platform] ?? p.platform}</span></td>
@@ -556,17 +605,19 @@ function renderPosts() {
     </tr>`).join("");
 }
 
-$$("#posts th[data-k]").forEach((th) => th.onclick = () => {
-  const k = th.dataset.k;
-  if (!k || k === "thumb") return;
-  if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; }
-  renderPosts();
-});
+function wireTable() {
+  $$("#posts th button").forEach((b) => b.onclick = () => {
+    const k = b.dataset.k;
+    if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; }
+    render();
+  });
+}
 
-/* ============================ render: sync ============================ */
-function renderSync(rows) {
-  if (!rows.length) { $("#sync").innerHTML = `<div class="empty">No syncs have run yet.</div>`; return; }
-  $("#sync").innerHTML = rows
+function syncHtml() {
+  const rows = DATA.sync;
+  if (!rows.length) return `<div class="empty">No syncs have run yet.</div>`;
+  return rows
+    .slice()
     .sort((a,b) => new Date(b.started_at) - new Date(a.started_at))
     .map((r) => `
       <div class="sync" title="${esc(r.message || "")}">
@@ -579,20 +630,117 @@ function renderSync(rows) {
       </div>`).join("");
 }
 
+/* ============================ charts ============================ */
+const AXIS = {
+  grid:{ color:"#2a2036", drawTicks:false },
+  border:{ display:false },
+  ticks:{ color:"#7d7290", font:{ size:11 }, maxRotation:0, autoSkipPadding:18 },
+};
+const BASE = {
+  responsive:true, maintainAspectRatio:false,
+  interaction:{ mode:"index", intersect:false },
+  plugins:{
+    legend:{ labels:{ color:"#B7AEC2", boxWidth:9, boxHeight:9, usePointStyle:true, font:{ size:11 } } },
+    tooltip:{ backgroundColor:"#2c2239", borderColor:"#372c47", borderWidth:1,
+              titleColor:"#FAF6EE", bodyColor:"#B7AEC2", padding:10 },
+  },
+  scales:{ x:AXIS, y:{ ...AXIS, ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } } },
+};
+
+function followerSeries(rows) {
+  const agg = {};
+  for (const r of rows) {
+    const k = `${r.day}|${r.platform}`;
+    agg[k] = (agg[k] ?? 0) + (Number(r.followers) || 0);
+  }
+  const days = [...new Set(rows.map((r) => r.day))].sort();
+  const groups = [...new Set(rows.map((r) => r.platform))];
+  return { days, groups, get:(d,g) => agg[`${d}|${g}`] ?? null };
+}
+
+function overviewCharts() {
+  const el = $("#chFollowers");
+  if (!el) return;
+  const { days, groups, get } = followerSeries(DATA.series);
+  charts.f = new Chart(el, {
+    type:"line",
+    data:{ labels: days.map(shortDate),
+      datasets: groups.map((g) => ({
+        label: LABEL[g] ?? g,
+        data: days.map((d) => get(d,g)),
+        borderColor: COLOR[g] ?? "#8E8BD8",
+        backgroundColor: (COLOR[g] ?? "#8E8BD8") + "1f",
+        borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true, fill:true,
+      })) },
+    options: BASE,
+  });
+}
+
+function platformCharts(p) {
+  const rows = DATA.daily.filter((d) => d.platform === p && !isRolling(d.metric));
+  const el = $("#chDaily");
+  if (el && rows.length) {
+    const days = [...new Set(rows.map((r) => r.day))].sort();
+    const metrics = [...new Set(rows.map((r) => r.metric))].sort();
+    const idx = new Map(rows.map((r) => [`${r.day}|${r.metric}`, Number(r.value) || 0]));
+    // Headline metric as bars, everything else as thin lines on a second axis.
+    const head = metrics.includes("views") ? "views" : metrics.includes("reach") ? "reach" : metrics[0];
+    const rest = metrics.filter((m) => m !== head && !/^avg_/.test(m));
+    const ramp = ["#8E8BD8","#C8A24C","#E3C57E","#B7AEC2","#C0593B","#1F5F5B","#2C3E5D"];
+
+    charts.d = new Chart(el, {
+      data:{ labels: days.map(shortDate), datasets:[
+        { type:"bar", label: metricLabel(head), yAxisID:"y",
+          data: days.map((d) => idx.get(`${d}|${head}`) ?? 0),
+          backgroundColor: COLOR[p] ?? "#8E8BD8", borderRadius:2, borderSkipped:false, order:3 },
+        ...rest.map((m, i) => ({
+          type:"line", label: metricLabel(m), yAxisID:"y1",
+          data: days.map((d) => idx.get(`${d}|${m}`) ?? 0),
+          borderColor: ramp[i % ramp.length], borderWidth:1.5,
+          pointRadius:0, pointHoverRadius:3, tension:.3, order:1,
+        })),
+      ] },
+      options:{ ...BASE, scales:{
+        x:AXIS,
+        y:{ ...AXIS, beginAtZero:true, ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } },
+        y1:{ ...AXIS, position:"right", beginAtZero:true, grid:{ display:false },
+             ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } },
+      } },
+    });
+  }
+
+  const fel = $("#chPlatFollowers");
+  if (fel) {
+    const rows2 = DATA.series.filter((r) => r.platform === p);
+    const { days, get } = followerSeries(rows2);
+    charts.pf = new Chart(fel, {
+      type:"line",
+      data:{ labels: days.map(shortDate), datasets:[{
+        label:"Followers",
+        data: days.map((d) => get(d, p)),
+        borderColor: COLOR[p] ?? "#8E8BD8",
+        backgroundColor: (COLOR[p] ?? "#8E8BD8") + "1f",
+        borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true, fill:true,
+      }] },
+      options:{ ...BASE, plugins:{ ...BASE.plugins, legend:{ display:false } } },
+    });
+  }
+}
+
 /* ============================ actions ============================ */
 async function connect(platform) {
   const { data:{ session } } = await sb.auth.getSession();
-  const res = await fetch(
-    `${SUPABASE_URL}/functions/v1/oauth-start?platform=${platform}`,
-    { headers:{ Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY } },
-  );
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/oauth-start?platform=${platform}`,
+    { headers:{ Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY } });
   const body = await res.json();
   if (body.url) window.open(body.url, "_blank", "noopener");
   else toast(body.error || "Could not start the connect flow.");
 }
 
 $("#connectBtn").onclick = () => {
-  const p = prompt("Connect which platform?\n\n  youtube\n  meta   (Instagram + Facebook)\n  tiktok", "youtube");
+  const p = prompt(
+    "Connect which platform?\n\n  youtube\n  instagram  (no Facebook Page needed)\n  meta       (Facebook Pages)\n  tiktok",
+    TAB === "overview" ? "youtube" : TAB);
   if (p) connect(p.trim().toLowerCase());
 };
 
@@ -624,7 +772,6 @@ $$("#range button").forEach((b) => b.onclick = () => {
 
 /* ============================ boot ============================ */
 let booted = false;
-
 function applySession(session) {
   const signedIn = !!session;
   $("#gate").classList.toggle("hide", signedIn);
@@ -632,10 +779,7 @@ function applySession(session) {
   if (signedIn && !booted) { booted = true; load(); }
   if (!signedIn) booted = false;
 }
-
-// Fires on INITIAL_SESSION, SIGNED_IN and after a magic link lands.
-sb.auth.onAuthStateChange((_event, session) => applySession(session));
-
+sb.auth.onAuthStateChange((_e, session) => applySession(session));
 applySession((await sb.auth.getSession()).data.session);
 </script>
 </body>

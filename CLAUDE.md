@@ -156,12 +156,20 @@ alone; the design pass can revisit them.
 **Frontend**
 
 11. Platform selection on connect uses `window.prompt()`. It works; it's ugly.
-12. Charts render empty with no explanation when there's no data for a range. An empty
-    state per chart would save confusion during the weeks before history builds up.
-13. The posts table caps at 150 rows with no pagination.
-14. Accessibility is thin: sortable table headers aren't keyboard reachable, there's no
-    `aria-sort`, no focus-visible styling, and toasts aren't announced.
-15. One inline `onerror` handler on avatar images.
+12. The posts table caps at 200 rows with no pagination.
+13. Tab state is not in the URL, so a particular platform view can't be linked or
+    survive a refresh.
+14. Everything renders by string concatenation into `innerHTML`. Fine at this size and
+    every interpolation goes through `esc()`, but it is the first thing that will strain
+    if the page grows.
+
+The layout is overview-plus-tabs. The overview deliberately carries only metrics that
+compare across platforms — followers, posting cadence, engagement rate. Views and watch
+time are not on it, because YouTube reports them daily, Instagram only as 28-day totals
+and TikTok not at all; putting them on shared axes would invent an equivalence that isn't
+there. Each platform tab is data-driven: it reads whatever metrics that platform actually
+returned, splits them into daily series and `_28d` rolling totals, and renders
+accordingly. A newly connected platform populates its own tab with no code change.
 
 ---
 
