@@ -29,7 +29,7 @@ pg_cron ───daily──▶ sync-all ──▶ sync-youtube │ sync-instagr
                                        └──▶ platform APIs ──▶ social.* tables
 ```
 
-Everything deployed is mirrored in `supabase/` — seven migrations and nine edge functions,
+Everything deployed is mirrored in `supabase/` — eight migrations and nine edge functions,
 extracted verbatim from the live project. Treat those files as the source of truth and
 redeploy from them; do not hand-edit the remote and let the two drift.
 
@@ -39,7 +39,7 @@ redeploy from them; do not hand-edit the remote and let the two drift.
 
 | Collector | Status |
 |---|---|
-| `sync-youtube` | **Proven, both modes.** OAuth: all eight analytics metrics mapped without a rename; 42 posts, 33 days of daily metrics. Public-only: 9 posts and channel totals for a Brand Account with no OAuth at all. |
+| `sync-youtube` | **Proven.** Two channels, one a Brand Account, both on `public:key+analytics`: all eight analytics metrics mapped without a rename, plus channel totals and per-video stats from the API key. |
 | `sync-instagram` | **Proven.** Business Login for Instagram, no Facebook Page. Profile, 29 days of daily reach, eight 28-day rolling totals and 38 posts with per-post metrics all landed. `follows_and_unfollows` returns nothing below 100 followers — Meta's threshold, not a fault. |
 | `sync-meta` | Never executed. No Facebook Page exists to test against. Correctly skips Instagram Login accounts, so it sits quiet rather than erroring. |
 | `sync-tiktok` | Never executed. |
@@ -65,47 +65,46 @@ Two findings from the YouTube run that generalise:
 
 ---
 
-## Why YouTube has two access modes
+## How YouTube access works, and why it looks odd
 
 A Google account owns exactly one channel directly. Every other channel is a **Brand
-Account** — a separate identity the account manages rather than is. Three consequences,
-all discovered the hard way:
+Account** — a separate identity the account manages rather than is. Three consequences:
 
 - `channels.list?mine=true` returns one channel per authentication, never all of them.
 - `managedByMe=true` exists but needs a content owner ID, which only YouTube CMS partners
   have. Not available however many channels you run.
-- A Brand Account **cannot authorise an Internal OAuth app at all**. Google rejects it with
-  `403 org_internal`, because Brand Accounts are not members of the Workspace organisation.
-  No configuration changes this.
+- A Brand Account cannot authorise an **Internal** OAuth app. Google rejects it with
+  `403 org_internal`, because Brand Accounts are not Workspace members.
 
-So `sync-youtube` picks a mode per channel:
+That last point forced the design. Going External is the only route, and an app requesting
+the **sensitive** `youtube.readonly` scope cannot go External without Google verification.
+So the split is by what the data actually is:
 
-| Mode | Trigger | Gets | Misses |
-|---|---|---|---|
-| `oauth` | a refresh token exists | everything, including private Analytics and unlisted videos | — |
-| `public` | no refresh token, `YOUTUBE_API_KEY` set | channel totals, public uploads, per-video views/likes/comments | Analytics: daily views, watch time, subscribers gained |
+| Data | How | Scope needed |
+|---|---|---|
+| Channel totals, uploads, per-video views/likes/comments | API key, `channels.list?id=` | none — it's public |
+| Daily views, watch time, subscribers gained | OAuth, YouTube Analytics API | `yt-analytics.readonly`, non-sensitive |
 
-**The mode never downgrades.** A channel with a refresh token always takes the OAuth path,
-so registering public-only channels cannot cost an existing channel its Analytics or its
-unlisted videos. That ordering is deliberate — don't invert it.
+With no sensitive scope the consent screen publishes without review, and Brand Accounts can
+consent like anything else. Confirmed working: a Brand Account channel reports
+`public:key+analytics` with all eight metrics.
 
-`add-youtube-channel` registers a public-only channel from a handle, resolving it through
-`channels.list?forHandle=` with the API key.
+**Consequences to respect if you touch this:**
 
-**The unfinished half.** Brand Accounts could have Analytics too. The only thing forcing
-the app to stay Internal is that `youtube.readonly` is a **sensitive** scope, and going
-External with it would demand Google verification. But that scope now only fetches public
-data, which the API key already covers. Drop `youtube.readonly`, keep the non-sensitive
-`yt-analytics.readonly`, and the app can go External and publish without review — at which
-point Brand Accounts can consent and get daily figures like any other channel. The work is:
-move the OAuth path's Data API calls onto the API key, remove the scope, switch Audience to
-External, publish, reconnect. Roughly twenty minutes, and it strictly reduces what the app
-is permitted to do.
-
-**A caveat on subscriber counts either way.** `statistics.subscriberCount` is the shortened
-public figure — exact below 1,000, then rounded to three significant figures. Channels that
-hide their subscriber count report 0, so the collector stores `null` rather than a
-misleading zero.
+- `sync-youtube` reports its mode per channel. `public:key+analytics` is full access;
+  `public:key` alone means that channel has no token and no daily figures.
+- **Never re-add `youtube.readonly`.** It buys nothing the API key doesn't already
+  provide, and re-adding it would force verification and lock Brand Accounts out again.
+- Under analytics-only scope, no endpoint reports *which* channel just consented. So
+  `oauth-start` requires a target (`?handle=` or `?account=`), recorded on the state row,
+  and `oauth-callback` proves the consenting identity can read that channel's analytics
+  before storing the token. Do not remove that probe — it caught a channel registered from
+  a mistyped handle that belonged to a stranger, which would otherwise have been stored
+  silently and shown as ours.
+- Register channels with `add-youtube-channel?handle=@x` or `?id=UC...`. Handles are
+  ambiguous; the channel ID from the Studio URL is authoritative.
+- `subscriberCount` is the shortened public figure: exact below 1,000, then rounded to
+  three significant figures. Channels hiding the count report 0, so it's stored as `null`.
 
 ---
 
@@ -240,7 +239,7 @@ accordingly. A newly connected platform populates its own tab with no code chang
   connect → probe → fix → sync loop. Supersedes `SETUP.md` where they disagree.
 - `SETUP.md` — schema reference and longer-form background
 - `GO-LIVE.md` — hosting, Squarespace DNS, Pages and Supabase auth
-- `supabase/migrations/` — the seven migrations, in order
+- `supabase/migrations/` — the eight migrations, in order
 - `supabase/functions/` — all nine functions as deployed
 - `CREDENTIALS.md` — the three developer consoles and the connect → probe → fix loop
 - `probe` — read-only diagnostic; returns raw API payloads, writes nothing. Use it before

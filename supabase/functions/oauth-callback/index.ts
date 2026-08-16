@@ -64,7 +64,26 @@ async function upsertAccount(
 }
 
 // ------------------------------------------------------------------ YouTube
-async function connectYouTube(db: SupabaseClient, code: string, redirectUri: string) {
+// Analytics-only scope, so there is no endpoint that reports which channel just
+// consented -- channels.list?mine=true needed the sensitive youtube.readonly scope we
+// deliberately dropped. oauth-start therefore records the intended channel on the state
+// row, and this verifies the consenting identity can genuinely read that channel's
+// analytics before storing anything. Picking the wrong entry at Google's account chooser
+// now fails loudly instead of silently attaching the token to the wrong channel.
+async function connectYouTube(
+  db: SupabaseClient, code: string, redirectUri: string, accountId: string | null,
+) {
+  if (!accountId) {
+    throw new Error(
+      "No target channel recorded for this connect flow. Start it with " +
+      "oauth-start?platform=youtube&handle=@yourchannel",
+    );
+  }
+
+  const { data: acct } = await db
+    .from("accounts").select("id, external_id, display_name, handle").eq("id", accountId).maybeSingle();
+  if (!acct) throw new Error("the target channel no longer exists");
+
   const tok = await post("https://oauth2.googleapis.com/token", new URLSearchParams({
     code,
     client_id: Deno.env.get("GOOGLE_CLIENT_ID") ?? "",
@@ -73,36 +92,45 @@ async function connectYouTube(db: SupabaseClient, code: string, redirectUri: str
     grant_type: "authorization_code",
   }));
   if (!tok.refresh_token) {
-    throw new Error("Google returned no refresh_token. Revoke the app at myaccount.google.com/permissions and connect again.");
+    throw new Error(
+      "Google returned no refresh_token. Revoke the app at myaccount.google.com/permissions and connect again.",
+    );
   }
 
-  const chans = await get(
-    `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true&access_token=${tok.access_token}`,
+  // Proof of ownership: ask for one day of analytics for this specific channel.
+  // A 403 here means the identity that consented does not own it.
+  const day = new Date(Date.now() - 3 * 86400_000).toISOString().slice(0, 10);
+  const probe = await fetch(
+    "https://youtubeanalytics.googleapis.com/v2/reports?" + new URLSearchParams({
+      ids: `channel==${acct.external_id}`,
+      startDate: day, endDate: day, metrics: "views",
+    }),
+    { headers: { Authorization: `Bearer ${tok.access_token}` } },
   );
-  const connected = [];
-  for (const ch of chans.items ?? []) {
-    connected.push(await upsertAccount(db, {
-      platform: "youtube",
-      external_id: ch.id,
-      handle: ch.snippet?.customUrl ?? null,
-      display_name: ch.snippet?.title ?? null,
-      avatar_url: ch.snippet?.thumbnails?.high?.url ?? null,
-      profile_url: `https://www.youtube.com/channel/${ch.id}`,
-    }, {
-      access_token: tok.access_token,
-      refresh_token: tok.refresh_token,
-      expires_at: new Date(Date.now() + (tok.expires_in ?? 3600) * 1000).toISOString(),
-      scopes: (tok.scope ?? "").split(" ").filter(Boolean),
-    }));
+  if (!probe.ok) {
+    const detail = (await probe.text()).slice(0, 300);
+    throw new Error(
+      `That Google identity cannot read analytics for ${acct.display_name ?? acct.external_id}. ` +
+      `You may have picked the wrong entry at the account chooser — pick the one matching ` +
+      `this channel and try again. (${probe.status}: ${detail})`,
+    );
   }
-  if (!connected.length) throw new Error("No YouTube channel found on that Google account.");
-  return connected;
+
+  return [await upsertAccount(db, {
+    platform: "youtube",
+    external_id: acct.external_id,
+  }, {
+    access_token: tok.access_token,
+    refresh_token: tok.refresh_token,
+    expires_at: new Date(Date.now() + (tok.expires_in ?? 3600) * 1000).toISOString(),
+    scopes: (tok.scope ?? "").split(" ").filter(Boolean),
+  })];
 }
 
 // ---------------------------------------------------------------- Instagram
 // Business Login for Instagram. Three steps: code -> short-lived token (1 hour)
-// -> long-lived token (60 days). Skipping the exchange leaves you with a token
-// that dies before the first scheduled sync.
+// -> long-lived token (60 days). Skipping the exchange leaves a token that dies
+// before the first scheduled sync.
 async function connectInstagram(db: SupabaseClient, code: string, redirectUri: string) {
   const appId = Deno.env.get("INSTAGRAM_APP_ID") ?? "";
   const appSecret = Deno.env.get("INSTAGRAM_APP_SECRET") ?? "";
@@ -286,7 +314,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     let connected;
-    if (st.platform === "youtube")        connected = await connectYouTube(db, code, redirectUri);
+    if (st.platform === "youtube")        connected = await connectYouTube(db, code, redirectUri, st.account_id ?? null);
     else if (st.platform === "instagram") connected = await connectInstagram(db, code, redirectUri);
     else if (st.platform === "meta")      connected = await connectMeta(db, code, redirectUri);
     else if (st.platform === "tiktok")    connected = await connectTikTok(db, code, redirectUri);
@@ -318,9 +346,9 @@ function esc(s: string) {
 }
 
 /**
- * Wrap plain text as escaped HTML. page() takes HTML, so callers must escape
- * exactly once -- an earlier version escaped in both places and rendered provider
- * errors as &amp;quot;, which is unhelpful precisely when you need to read them.
+ * Wrap plain text as escaped HTML. page() takes HTML, so callers must escape exactly
+ * once -- an earlier version escaped in both places and rendered provider errors as
+ * &amp;quot;, which is unhelpful precisely when you need to read them.
  */
 const text = (s: string) => `<p>${esc(s)}</p>`;
 

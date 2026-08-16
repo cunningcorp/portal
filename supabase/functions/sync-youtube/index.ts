@@ -1,26 +1,29 @@
-// sync-youtube -- channel totals, daily analytics and recent video metrics.
+// sync-youtube -- channel totals, recent video metrics, and daily analytics.
 //
-// Two access modes, chosen per channel by whether OAuth credentials exist:
+// Split by what the data actually is, not by how the channel was connected:
 //
-//   OAUTH       Full access. Channel stats, 35 days of YouTube Analytics, and the
-//               uploads playlist including unlisted videos. Requires the channel to
-//               have granted consent.
+//   PUBLIC     Channel totals and uploads. Read with an API key against
+//              channels.list?id= and videos.list?id=. No identity involved, so this
+//              works for every channel including Brand Accounts.
 //
-//   PUBLIC-ONLY API key against public endpoints. Channel stats and public uploads,
-//               but no Analytics -- daily views, watch time and subscribers gained
-//               are private data and OAuth-only.
+//   ANALYTICS  Daily views, watch time, subscribers gained. Genuinely private, so it
+//              needs OAuth from that specific channel. Skipped when absent.
 //
-// Public-only exists because a Google account owns one channel directly and manages
-// the rest as Brand Accounts, which are separate identities. channels.list?mine=true
-// returns one channel per authentication, and a Brand Account cannot authorise an
-// Internal app at all -- Google rejects it with 403 org_internal. An API key sidesteps
-// identity entirely for the data that is public anyway.
+// Why it is split this way. A Google account owns one channel directly and manages the
+// rest as Brand Accounts, which are separate identities. channels.list?mine=true returns
+// one channel per authentication, and a Brand Account cannot authorise an Internal app at
+// all (403 org_internal). Using an API key for public data removes identity from the part
+// that never needed it, and confines OAuth to the part that genuinely does.
 //
-// The mode is decided per channel and never downgrades: a channel with a refresh token
-// always takes the OAuth path, so adding public-only channels cannot cost an existing
-// channel its Analytics or its unlisted videos.
+// It also means the app no longer needs youtube.readonly, which is a *sensitive* scope
+// requiring Google verification to publish. yt-analytics.readonly alone is non-sensitive,
+// so the consent screen can go External without review -- which is the only way a Brand
+// Account can ever grant Analytics access.
 //
-// Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (oauth) · YOUTUBE_API_KEY (public)
+// If YOUTUBE_API_KEY is missing, channels holding a token fall back to reading public data
+// over OAuth, so an unset key degrades rather than breaks.
+//
+// Secrets: YOUTUBE_API_KEY · GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (analytics only)
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import {
@@ -31,7 +34,6 @@ import {
 const DATA_API = "https://www.googleapis.com/youtube/v3";
 const ANALYTICS_API = "https://youtubeanalytics.googleapis.com/v2/reports";
 
-// YouTube Analytics metric -> our metric name
 const METRIC_MAP: Record<string, string> = {
   views: "views",
   estimatedMinutesWatched: "watch_time_minutes",
@@ -74,20 +76,30 @@ function parseIso8601Duration(d?: string): number | null {
   return (+(days ?? 0)) * 86400 + (+(h ?? 0)) * 3600 + (+(min ?? 0)) * 60 + (+(s ?? 0));
 }
 
-/** Channel snapshot + profile refresh. Identical either way; only auth differs. */
-async function collectChannel(sb: any, account: Account, ch: any) {
+// ------------------------------------------------------------------- PUBLIC
+async function collectPublic(sb: any, account: Account, suffix: string, auth: HeadersInit) {
+  let rows = 0;
+
+  const chRes = await fetchJson(
+    `${DATA_API}/channels?part=snippet,statistics,contentDetails&id=${account.external_id}${suffix}`,
+    { headers: auth },
+  );
+  const ch = chRes.items?.[0];
+  if (!ch) throw new Error(`channel ${account.external_id} not found or not public`);
+
   const st = ch.statistics ?? {};
   await sb.from("account_snapshots").upsert({
     account_id: account.id,
     captured_on: today(),
-    // subscriberCount is the shortened public figure: exact below 1,000, then rounded
-    // to three significant figures (1,234 -> 1230). hiddenSubscriberCount channels
-    // report 0, so it is stored as null rather than a misleading zero.
+    // subscriberCount is the shortened public figure: exact below 1,000, then rounded to
+    // three significant figures. Channels hiding the count report 0, so store null rather
+    // than a misleading zero.
     followers: st.hiddenSubscriberCount ? null : num(st.subscriberCount),
     total_views: num(st.viewCount),
     total_posts: num(st.videoCount),
     raw: st,
   }, { onConflict: "account_id,captured_on" });
+  rows++;
 
   await sb.from("accounts").update({
     display_name: ch.snippet?.title ?? account.display_name,
@@ -96,12 +108,9 @@ async function collectChannel(sb: any, account: Account, ch: any) {
     profile_url: `https://www.youtube.com/channel/${account.external_id}`,
   }).eq("id", account.id);
 
-  return 1;
-}
+  const uploads = ch.contentDetails?.relatedPlaylists?.uploads;
+  if (!uploads) return rows;
 
-/** Uploads playlist -> posts and post_metrics. auth is a header bag or empty for API key. */
-async function collectVideos(sb: any, account: Account, uploads: string, suffix: string, auth: HeadersInit) {
-  let rows = 0;
   const pl = await fetchJson(
     `${DATA_API}/playlistItems?part=contentDetails&maxResults=50&playlistId=${uploads}${suffix}`,
     { headers: auth },
@@ -144,77 +153,43 @@ async function collectVideos(sb: any, account: Account, uploads: string, suffix:
   return rows;
 }
 
-// ------------------------------------------------------------------- OAUTH
-async function syncOauth(sb: any, account: Account, refresh: string) {
-  let rows = 0;
-  const token = await accessToken(sb, account, refresh);
-  const auth = { Authorization: `Bearer ${token}` };
-
-  const chRes = await fetchJson(
-    `${DATA_API}/channels?part=snippet,statistics,contentDetails&id=${account.external_id}`,
-    { headers: auth },
-  );
-  const ch = chRes.items?.[0];
-  if (!ch) throw new Error(`channel ${account.external_id} not visible to this token`);
-  rows += await collectChannel(sb, account, ch);
-
-  // Daily analytics, 35 days so late-arriving figures get corrected.
+// ---------------------------------------------------------------- ANALYTICS
+async function collectAnalytics(sb: any, account: Account, token: string) {
   const qs = new URLSearchParams({
     ids: `channel==${account.external_id}`,
-    startDate: daysAgo(35),
+    startDate: daysAgo(35),   // 35 days so late-arriving figures get corrected
     endDate: today(),
     metrics: Object.keys(METRIC_MAP).join(","),
     dimensions: "day",
     sort: "day",
   });
-  try {
-    const rep = await fetchJson(`${ANALYTICS_API}?${qs}`, { headers: auth });
-    const cols: string[] = (rep.columnHeaders ?? []).map((c: any) => c.name);
-    const dayIdx = cols.indexOf("day");
-    const daily: any[] = [];
-    for (const row of rep.rows ?? []) {
-      cols.forEach((col, i) => {
-        if (i === dayIdx) return;
-        const name = METRIC_MAP[col];
-        if (!name) return;
-        daily.push({
-          account_id: account.id,
-          metric_date: row[dayIdx],
-          metric: name,
-          value: Number(row[i] ?? 0),
-          updated_at: new Date().toISOString(),
-        });
+  const rep = await fetchJson(`${ANALYTICS_API}?${qs}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const cols: string[] = (rep.columnHeaders ?? []).map((c: any) => c.name);
+  const dayIdx = cols.indexOf("day");
+  const daily: any[] = [];
+  for (const row of rep.rows ?? []) {
+    cols.forEach((col, i) => {
+      if (i === dayIdx) return;
+      const name = METRIC_MAP[col];
+      if (!name) return;
+      daily.push({
+        account_id: account.id,
+        metric_date: row[dayIdx],
+        metric: name,
+        value: Number(row[i] ?? 0),
+        updated_at: new Date().toISOString(),
       });
-    }
-    for (const batch of chunk(daily, 500)) {
-      await sb.from("daily_metrics").upsert(batch, { onConflict: "account_id,metric_date,metric" });
-      rows += batch.length;
-    }
-  } catch (e) {
-    // Needs yt-analytics.readonly and channel ownership. Public stats are already
-    // saved, so degrade rather than fail the whole run.
-    console.warn(`analytics skipped for ${account.external_id}: ${e}`);
+    });
   }
 
-  const uploads = ch.contentDetails?.relatedPlaylists?.uploads;
-  if (uploads) rows += await collectVideos(sb, account, uploads, "", auth);
-  return rows;
-}
-
-// ------------------------------------------------------------- PUBLIC ONLY
-async function syncPublic(sb: any, account: Account, apiKey: string) {
   let rows = 0;
-  const suffix = `&key=${apiKey}`;
-
-  const chRes = await fetchJson(
-    `${DATA_API}/channels?part=snippet,statistics,contentDetails&id=${account.external_id}${suffix}`,
-  );
-  const ch = chRes.items?.[0];
-  if (!ch) throw new Error(`channel ${account.external_id} not found or not public`);
-  rows += await collectChannel(sb, account, ch);
-
-  const uploads = ch.contentDetails?.relatedPlaylists?.uploads;
-  if (uploads) rows += await collectVideos(sb, account, uploads, suffix, {});
+  for (const batch of chunk(daily, 500)) {
+    await sb.from("daily_metrics").upsert(batch, { onConflict: "account_id,metric_date,metric" });
+    rows += batch.length;
+  }
   return rows;
 }
 
@@ -222,27 +197,48 @@ async function syncPublic(sb: any, account: Account, apiKey: string) {
 async function syncChannel(sb: any, account: Account, apiKey: string | undefined) {
   const runId = await startRun(sb, "youtube", account.id);
   let rows = 0;
-  let mode = "unknown";
+  const modes: string[] = [];
   try {
     const cred = await credentialFor(sb, account.id);
-    if (cred?.refresh_token) {
-      mode = "oauth";
-      rows = await syncOauth(sb, account, cred.refresh_token);
-    } else if (apiKey) {
-      mode = "public";
-      rows = await syncPublic(sb, account, apiKey);
+    const token = cred?.refresh_token ? await accessToken(sb, account, cred.refresh_token) : null;
+
+    // Public data. API key preferred; fall back to the token so a missing key degrades.
+    if (apiKey) {
+      rows += await collectPublic(sb, account, `&key=${apiKey}`, {});
+      modes.push("public:key");
+    } else if (token) {
+      rows += await collectPublic(sb, account, "", { Authorization: `Bearer ${token}` });
+      modes.push("public:oauth");
     } else {
       await finishRun(sb, runId, "skipped", 0,
-        "no OAuth credentials and YOUTUBE_API_KEY is not set");
+        "no YOUTUBE_API_KEY and no OAuth credentials");
       return { account: account.display_name ?? account.external_id, status: "skipped", mode: "none" };
     }
+
+    // Private analytics, only where the channel has consented.
+    if (token) {
+      try {
+        rows += await collectAnalytics(sb, account, token);
+        modes.push("analytics");
+      } catch (e) {
+        // Needs yt-analytics.readonly and channel ownership. Public data is already
+        // saved, so degrade rather than fail the run.
+        console.warn(`analytics skipped for ${account.external_id}: ${e}`);
+        modes.push("analytics:failed");
+      }
+    }
+
+    const mode = modes.join("+");
     await finishRun(sb, runId, "ok", rows,
-      mode === "public" ? "public data only; no Analytics without OAuth" : undefined);
+      token ? undefined : "public data only; Analytics needs OAuth from this channel");
     return { account: account.display_name ?? account.external_id, status: "ok", mode, rows };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     await finishRun(sb, runId, "error", rows, msg);
-    return { account: account.display_name ?? account.external_id, status: "error", mode, error: msg };
+    return {
+      account: account.display_name ?? account.external_id,
+      status: "error", mode: modes.join("+") || "none", error: msg,
+    };
   }
 }
 
