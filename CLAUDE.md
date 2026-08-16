@@ -3,8 +3,9 @@
 You are picking up a partly proven internal analytics portal. YouTube and Instagram both
 run end to end against live APIs and have real data in the database. Facebook and TikTok
 have never executed against a real API at all. Your job is to finish proving it, then make
-it solid. A visual design pass is happening separately and later —
-do not spend your effort there.
+it solid. A visual design pass runs from `DESIGN-BRIEF.md`
+— do not spend engineering effort on visuals, but expect the design pass to hand you a
+token sheet and prototypes to implement.
 
 Read this whole file before writing code.
 

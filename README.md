@@ -132,4 +132,5 @@ references them relatively, so they live wherever the handbook was authored.
 - `GO-LIVE.md` — step-by-step deploy: repo, Squarespace DNS, Pages, Supabase auth
 - Schema, collectors and API credential setup: `SETUP.md`
 - `supabase/migrations/` and `supabase/functions/` — the deployed schema and collectors, mirrored in-repo
-- `CLAUDE.md` — handover brief for the polish pass
+- `DESIGN-BRIEF.md` — full audit and spec for the design pass: data contract, required IA, token rules
+- `CLAUDE.md` — handover brief for the engineering polish pass
