@@ -29,7 +29,7 @@ pg_cron ───daily──▶ sync-all ──▶ sync-youtube │ sync-instagr
                                        └──▶ platform APIs ──▶ social.* tables
 ```
 
-Everything deployed is mirrored in `supabase/` — six migrations and eight edge functions,
+Everything deployed is mirrored in `supabase/` — seven migrations and eight edge functions,
 extracted verbatim from the live project. Treat those files as the source of truth and
 redeploy from them; do not hand-edit the remote and let the two drift.
 
@@ -41,7 +41,7 @@ redeploy from them; do not hand-edit the remote and let the two drift.
 |---|---|
 | `sync-youtube` | **Proven.** Ran against the live channel. All eight analytics metrics mapped without a rename; 42 posts, 33 days of daily metrics and a snapshot landed correctly. |
 | `sync-instagram` | **Proven.** Business Login for Instagram, no Facebook Page. Profile, 29 days of daily reach, eight 28-day rolling totals and 38 posts with per-post metrics all landed. `follows_and_unfollows` returns nothing below 100 followers — Meta's threshold, not a fault. |
-| `sync-meta` | Never executed. No Facebook Page exists to test against. |
+| `sync-meta` | Never executed. No Facebook Page exists to test against. Correctly skips Instagram Login accounts, so it sits quiet rather than erroring. |
 | `sync-tiktok` | Never executed. |
 
 For anything unproven, the order is: connect the account, run `probe`, read the actual
@@ -149,9 +149,13 @@ alone; the design pass can revisit them.
    a published module would be cleaner.
 8. No tests of any kind.
 9. No CI. Deploys are manual.
-10. No cron job exists yet. `pg_cron` and `pg_net` are enabled and the SQL is written out in
-   `SETUP.md`, but nothing is scheduled. If you create one, capture it in a migration so
-   it's reproducible.
+10. The daily cron runs `sync-all` at 03:15 UTC, reading the service role key from Vault
+   by name so no secret sits in `cron.job` or in this repo. Two things it depends on:
+   the Vault secret `signal_service_role_key` must exist in the target project, and
+   `timeout_milliseconds` must stay well above the real run time. pg_net defaults to 5
+   seconds; a full run takes about 40. The edge function survives pg_net hanging up, so
+   the data still lands — but the response is lost, and a failing sync then looks exactly
+   like a working one from the job's side. That is why it is set to 120s.
 
 **Frontend**
 
@@ -192,7 +196,7 @@ accordingly. A newly connected platform populates its own tab with no code chang
   connect → probe → fix → sync loop. Supersedes `SETUP.md` where they disagree.
 - `SETUP.md` — schema reference and longer-form background
 - `GO-LIVE.md` — hosting, Squarespace DNS, Pages and Supabase auth
-- `supabase/migrations/` — the six migrations, in order
+- `supabase/migrations/` — the seven migrations, in order
 - `supabase/functions/` — all eight functions as deployed
 - `CREDENTIALS.md` — the three developer consoles and the connect → probe → fix loop
 - `probe` — read-only diagnostic; returns raw API payloads, writes nothing. Use it before
