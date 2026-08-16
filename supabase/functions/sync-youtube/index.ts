@@ -229,6 +229,10 @@ async function syncChannel(sb: any, account: Account, apiKey: string | undefined
     }
 
     const mode = modes.join("+");
+    // Persist the access mode so the UI keys on a value, not a sentence (design
+    // handoff §6 request 3). A standalone "analytics" component means the channel
+    // has working YouTube Analytics; "public:key" alone (no token) never will.
+    await sb.from("accounts").update({ access_mode: mode }).eq("id", account.id);
     await finishRun(sb, runId, "ok", rows,
       token ? undefined : "public data only; Analytics needs OAuth from this channel");
     return { account: account.display_name ?? account.external_id, status: "ok", mode, rows };
