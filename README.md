@@ -19,7 +19,7 @@ index.html ──auth──▶ Supabase Auth (magic link)
            ──POST──▶ /functions/v1/sync-all      (runs the collectors)
            ──POST──▶ /functions/v1/oauth-start   (returns a consent URL)
 
-pg_cron ───daily──▶ sync-all ──▶ sync-youtube │ sync-meta │ sync-tiktok
+pg_cron ──03:15──▶ sync-all ──▶ sync-youtube │ sync-instagram │ sync-meta │ sync-tiktok
                                       └──▶ platform APIs ──▶ social.* tables
 ```
 
@@ -41,6 +41,29 @@ to compile, and a build step here would only add a way for it to break.
 
 If this ever grows past one page, port it to Astro the way `aubreynorth` is built and add
 the Pages workflow then.
+
+## Running it
+
+The daily cron calls `sync-all` at 03:15 UTC (07:15 Dubai) — late enough for YouTube's
+analytics to settle, early enough to be there before anyone looks. It reads the service
+role key from Vault by name, so neither `cron.job` nor this repo holds a secret.
+
+To run it by hand, or to check on it:
+
+```sql
+-- what is scheduled
+select jobname, schedule, active from cron.job;
+
+-- did the last few runs work
+select platform, status, rows_written, started_at, message
+from social.sync_runs order by started_at desc limit 10;
+```
+
+A full run across four collectors takes about 40 seconds. `pg_net`'s default 5 second
+timeout is far too short for that — the job sets `timeout_milliseconds := 120000`. Leave
+it well above the real run time: the edge function survives pg_net hanging up, so the data
+still lands, but the response is lost and a failing sync becomes indistinguishable from a
+working one.
 
 ## Security posture
 
