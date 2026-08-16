@@ -10,6 +10,12 @@ project_id = "qeafetctmtnqonhwhhlw"
 [functions.sync-youtube]
 verify_jwt = true
 
+# add-youtube-channel registers a YouTube channel for public-only tracking using an
+# API key, with no OAuth. Brand Accounts are separate identities that cannot authorise
+# an Internal app, so an API key is the only way to reach their public data.
+[functions.add-youtube-channel]
+verify_jwt = true
+
 [functions.sync-meta]
 verify_jwt = true
 

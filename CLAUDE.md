@@ -29,7 +29,7 @@ pg_cron ───daily──▶ sync-all ──▶ sync-youtube │ sync-instagr
                                        └──▶ platform APIs ──▶ social.* tables
 ```
 
-Everything deployed is mirrored in `supabase/` — seven migrations and eight edge functions,
+Everything deployed is mirrored in `supabase/` — seven migrations and nine edge functions,
 extracted verbatim from the live project. Treat those files as the source of truth and
 redeploy from them; do not hand-edit the remote and let the two drift.
 
@@ -39,7 +39,7 @@ redeploy from them; do not hand-edit the remote and let the two drift.
 
 | Collector | Status |
 |---|---|
-| `sync-youtube` | **Proven.** Ran against the live channel. All eight analytics metrics mapped without a rename; 42 posts, 33 days of daily metrics and a snapshot landed correctly. |
+| `sync-youtube` | **Proven, both modes.** OAuth: all eight analytics metrics mapped without a rename; 42 posts, 33 days of daily metrics. Public-only: 9 posts and channel totals for a Brand Account with no OAuth at all. |
 | `sync-instagram` | **Proven.** Business Login for Instagram, no Facebook Page. Profile, 29 days of daily reach, eight 28-day rolling totals and 38 posts with per-post metrics all landed. `follows_and_unfollows` returns nothing below 100 followers — Meta's threshold, not a fault. |
 | `sync-meta` | Never executed. No Facebook Page exists to test against. Correctly skips Instagram Login accounts, so it sits quiet rather than erroring. |
 | `sync-tiktok` | Never executed. |
@@ -62,6 +62,50 @@ Two findings from the YouTube run that generalise:
 - **Documentation lags the API.** Instagram's account-level `follower_count` metric no
   longer exists; `follows_and_unfollows` with a `follow_type` breakdown replaced it. That
   was caught by reading current docs rather than trusting the code. Assume more of this.
+
+---
+
+## Why YouTube has two access modes
+
+A Google account owns exactly one channel directly. Every other channel is a **Brand
+Account** — a separate identity the account manages rather than is. Three consequences,
+all discovered the hard way:
+
+- `channels.list?mine=true` returns one channel per authentication, never all of them.
+- `managedByMe=true` exists but needs a content owner ID, which only YouTube CMS partners
+  have. Not available however many channels you run.
+- A Brand Account **cannot authorise an Internal OAuth app at all**. Google rejects it with
+  `403 org_internal`, because Brand Accounts are not members of the Workspace organisation.
+  No configuration changes this.
+
+So `sync-youtube` picks a mode per channel:
+
+| Mode | Trigger | Gets | Misses |
+|---|---|---|---|
+| `oauth` | a refresh token exists | everything, including private Analytics and unlisted videos | — |
+| `public` | no refresh token, `YOUTUBE_API_KEY` set | channel totals, public uploads, per-video views/likes/comments | Analytics: daily views, watch time, subscribers gained |
+
+**The mode never downgrades.** A channel with a refresh token always takes the OAuth path,
+so registering public-only channels cannot cost an existing channel its Analytics or its
+unlisted videos. That ordering is deliberate — don't invert it.
+
+`add-youtube-channel` registers a public-only channel from a handle, resolving it through
+`channels.list?forHandle=` with the API key.
+
+**The unfinished half.** Brand Accounts could have Analytics too. The only thing forcing
+the app to stay Internal is that `youtube.readonly` is a **sensitive** scope, and going
+External with it would demand Google verification. But that scope now only fetches public
+data, which the API key already covers. Drop `youtube.readonly`, keep the non-sensitive
+`yt-analytics.readonly`, and the app can go External and publish without review — at which
+point Brand Accounts can consent and get daily figures like any other channel. The work is:
+move the OAuth path's Data API calls onto the API key, remove the scope, switch Audience to
+External, publish, reconnect. Roughly twenty minutes, and it strictly reduces what the app
+is permitted to do.
+
+**A caveat on subscriber counts either way.** `statistics.subscriberCount` is the shortened
+public figure — exact below 1,000, then rounded to three significant figures. Channels that
+hide their subscriber count report 0, so the collector stores `null` rather than a
+misleading zero.
 
 ---
 
@@ -197,7 +241,7 @@ accordingly. A newly connected platform populates its own tab with no code chang
 - `SETUP.md` — schema reference and longer-form background
 - `GO-LIVE.md` — hosting, Squarespace DNS, Pages and Supabase auth
 - `supabase/migrations/` — the seven migrations, in order
-- `supabase/functions/` — all eight functions as deployed
+- `supabase/functions/` — all nine functions as deployed
 - `CREDENTIALS.md` — the three developer consoles and the connect → probe → fix loop
 - `probe` — read-only diagnostic; returns raw API payloads, writes nothing. Use it before
   trusting any parser.

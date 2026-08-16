@@ -25,6 +25,7 @@ Supabase dashboard → project **aubreynorth** → **Edge Functions** → **Secr
 |---|---|
 | `GOOGLE_CLIENT_ID` | Google Auth Platform → Clients |
 | `GOOGLE_CLIENT_SECRET` | same screen |
+| `YOUTUBE_API_KEY` | Google Cloud → APIs & Services → Credentials → API key, restricted to YouTube Data API v3 |
 | `INSTAGRAM_APP_ID` | Meta app → Instagram → API setup with Instagram login, section 1 |
 | `INSTAGRAM_APP_SECRET` | same screen |
 | `META_APP_ID` | Meta app → App settings → Basic — only for Facebook Pages |
