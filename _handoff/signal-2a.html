@@ -1,0 +1,1499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Signal — Cunning Corp</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='9' fill='none' stroke='%238E8BD8' stroke-width='2'/><circle cx='16' cy='7' r='2.6' fill='%23C8A24C'/></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+/* ==========================================================================
+   Signal — direction 2a: scope rail + briefing header.
+
+   TOKENS. Two layers on purpose. The first block is the Cunning Corp Brand
+   Handbook palette, verbatim, and is the ONLY place a hex appears. Everything
+   after it is semantic — components reference --surface-raised, never --plum.
+   A palette change is therefore a one-line edit in the first block.
+
+   Handbook: Plum #241B30 base·night · Plum Deep #191220 gradient floor ·
+   Gold #C8A24C the light · Gold Soft #E3C57E highlight · Periwinkle #8E8BD8
+   accent·play · Paper #FAF6EE light ground. Division accents: Terracotta
+   #C0593B Aubrey North · Slate #2C3E5D Publications · Teal #1F5F5B Productions.
+
+   Two standing exceptions, unchanged from README.md:
+   1. Platform colours are data encoding, not brand. Four muted house tones on
+      one axis would be indistinguishable. Confined to chart strokes, pills and
+      the 3px account rule — never a surface, never a button.
+   2. Semantic states borrow from the palette rather than inventing colour.
+      Gold is the light, so gold is up. Terracotta is down. Periwinkle is
+      in-progress, and "one glow per layout" is held by reserving periwinkle
+      for the primary action alone.
+   ========================================================================== */
+
+@font-face{font-family:'Glamour Absolute Extended';font-weight:400;font-display:swap;
+  src:url(fonts/GlamourAbsoluteExtended-400.woff2) format('woff2')}
+@font-face{font-family:'Glamour Absolute';font-weight:400;font-display:swap;
+  src:url(fonts/GlamourAbsolute-400.woff2) format('woff2')}
+@font-face{font-family:'Graphik';font-weight:400;font-display:swap;
+  src:url(fonts/Graphik-400.woff2) format('woff2')}
+@font-face{font-family:'Graphik';font-weight:600;font-display:swap;
+  src:url(fonts/Graphik-600.woff2) format('woff2')}
+@font-face{font-family:'Recoleta';font-weight:300;font-display:swap;
+  src:url(fonts/Recoleta-300.woff2) format('woff2')}
+
+:root{
+  color-scheme: dark;
+
+  /* ---- brand palette · the only hex in the file ---- */
+  --brand-plum-deep:#191220; --brand-plum:#241B30; --brand-plum-lift:#2C2239;
+  --brand-plum-sunk:#140E1B;
+  --brand-gold:#C8A24C; --brand-gold-soft:#E3C57E; --brand-peri:#8E8BD8;
+  --brand-paper:#FAF6EE; --brand-terracotta:#C0593B;
+  --brand-line:#372C47; --brand-line-soft:#2A2036; --brand-line-strong:#4A3C5E;
+  --brand-mute:#B7AEC2; --brand-dim:#7D7290;
+  --plat-youtube:#FF4E45; --plat-instagram:#E1477E; --plat-facebook:#4A8CFF; --plat-tiktok:#25E5D0;
+
+  /* ---- surfaces ---- */
+  --surface-base:var(--brand-plum-deep);
+  --surface-raised:var(--brand-plum);
+  --surface-overlay:var(--brand-plum-lift);
+  --surface-sunken:var(--brand-plum-sunk);
+
+  /* ---- borders ---- */
+  --border-subtle:var(--brand-line-soft);
+  --border-default:var(--brand-line);
+  --border-strong:var(--brand-line-strong);
+
+  /* ---- content ---- */
+  --text-primary:var(--brand-paper);
+  --text-secondary:var(--brand-mute);
+  --text-tertiary:var(--brand-dim);
+  --text-on-accent:var(--brand-plum-deep);
+
+  /* ---- semantic state ---- */
+  --state-positive:var(--brand-gold);
+  --state-negative:var(--brand-terracotta);
+  --state-progress:var(--brand-peri);
+  --state-neutral:var(--brand-dim);
+
+  /* ---- data encoding ---- */
+  --data-youtube:var(--plat-youtube);
+  --data-instagram:var(--plat-instagram);
+  --data-facebook:var(--plat-facebook);
+  --data-tiktok:var(--plat-tiktok);
+
+  /* ---- availability · makes missing-by-design different from missing-because-broken ---- */
+  --avail-live:var(--brand-gold);
+  --avail-lagged:var(--brand-gold-soft);
+  --avail-rolling:var(--brand-peri);
+  --avail-absent:var(--brand-line-strong);
+  --avail-error:var(--brand-terracotta);
+
+  /* ---- type ---- */
+  --font-display:'Glamour Absolute Extended','Glamour Absolute','Recoleta',Georgia,serif;
+  --font-head:'Recoleta',Georgia,serif;
+  --font-body:'Graphik',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --text-micro:11px; --text-label:12px; --text-body:14px; --text-lead:16px;
+  --figure-sm:20px; --figure-md:28px; --figure-lg:40px;
+  --track-label:.12em; --track-display:.03em;
+
+  /* ---- scale ---- */
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:24px; --space-6:32px; --space-7:48px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+  --shadow-panel:0 1px 2px rgba(0,0,0,.3);
+  --shadow-overlay:0 18px 50px rgba(0,0,0,.55);
+  --dur-fast:120ms; --dur-base:200ms; --ease-out:cubic-bezier(.2,.7,.2,1);
+  --rail-w:248px;
+}
+
+*{box-sizing:border-box}
+body{margin:0;color:var(--text-primary);font:var(--text-body)/1.55 var(--font-body);
+  -webkit-font-smoothing:antialiased;background:var(--surface-base)}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+.hide{display:none !important}
+:focus-visible{outline:2px solid var(--state-progress);outline-offset:2px;border-radius:var(--radius-sm)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- auth gate ---------- */
+#gate{min-height:100vh;display:grid;place-items:center;padding:var(--space-5);
+  background:radial-gradient(900px 520px at 70% -10%, rgba(142,139,216,.13), transparent 62%),
+             radial-gradient(700px 420px at 5% 5%, rgba(200,162,76,.06), transparent 60%),
+             var(--surface-base)}
+.authcard{width:100%;max-width:25rem;background:var(--surface-raised);
+  border:1px solid var(--border-subtle);border-radius:16px;padding:2.25rem}
+.authcard .mk{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6)}
+.authcard .wm{font-family:var(--font-display);font-size:.95rem;letter-spacing:.05em}
+.authcard h1{margin:0 0 var(--space-2);font-family:var(--font-head);font-size:1.65rem;
+  font-weight:300;letter-spacing:-.02em;color:var(--text-primary)}
+.authcard p{margin:0 0 var(--space-5);color:var(--text-secondary);font-size:.87rem}
+.mark{width:17px;height:17px;flex:none}
+input[type=email],input[type=text]{width:100%;padding:.68rem .85rem;background:var(--surface-sunken);
+  border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);
+  font:inherit;margin-bottom:var(--space-2)}
+input::placeholder{color:var(--text-tertiary)}
+input:focus{outline:0;border-color:var(--state-progress)}
+.msg{font-size:.83rem;margin-top:var(--space-3);color:var(--text-secondary);min-height:1.2em}
+
+/* ---------- buttons ---------- */
+.btn{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);
+  padding:.42rem .85rem;border-radius:var(--radius-md);transition:var(--dur-fast);font-size:.86rem}
+.btn:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.btn.primary{background:var(--state-progress);border-color:var(--state-progress);
+  color:var(--text-on-accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.wide{width:100%;display:block;text-align:center}
+
+/* ---------- shell ---------- */
+#app{display:grid;grid-template-columns:var(--rail-w) 1fr;min-height:100vh}
+@media(max-width:900px){#app{grid-template-columns:1fr}.rail{position:static;height:auto}}
+
+/* ---------- rail · scope IS navigation ---------- */
+.rail{background:var(--surface-raised);border-right:1px solid var(--border-subtle);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.rail .brandrow{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-5)}
+.rail .wm{font-family:var(--font-display);font-size:15px;letter-spacing:var(--track-display)}
+.railnav{padding:0 var(--space-3);flex:1}
+.node{display:flex;align-items:center;gap:var(--space-3);width:100%;text-align:left;
+  padding:var(--space-2) var(--space-3);border:0;background:none;border-radius:var(--radius-md);
+  color:var(--text-secondary);font-size:var(--text-body);margin-bottom:2px;transition:var(--dur-fast)}
+.node:hover{background:var(--surface-overlay)}
+.node[aria-current="true"]{background:var(--surface-overlay);color:var(--text-primary);font-weight:600}
+.node .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.node .meta{font-size:var(--text-micro);color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+.node.child{padding-left:var(--space-6);font-size:var(--text-label);color:var(--text-tertiary)}
+.node.group{margin-top:var(--space-3)}
+.node.off{color:var(--text-tertiary);cursor:pointer}
+.node.off .meta{color:var(--state-progress)}
+.dot{width:6px;height:6px;border-radius:50%;flex:none}
+.dot.hollow{background:transparent;border:1px dashed var(--avail-absent)}
+.railfoot{padding:var(--space-5);border-top:1px solid var(--border-subtle)}
+.railfoot .when{display:flex;align-items:center;gap:var(--space-2);
+  font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--text-tertiary);margin-bottom:var(--space-2)}
+.railfoot p{font-size:var(--text-micro);color:var(--text-tertiary);margin:0 0 var(--space-4);line-height:1.5}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---------- scope bar ---------- */
+.scopebar{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-3) var(--space-5);
+  border-bottom:1px solid var(--border-subtle);background:var(--surface-raised);
+  position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);flex-wrap:wrap}
+.scopebar .k{font-size:var(--text-micro);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary)}
+.scopebar .v{font-family:var(--font-head);font-weight:300;font-size:var(--figure-sm);
+  color:var(--text-primary)}
+.scopebar .sub{font-size:var(--text-label);color:var(--text-tertiary)}
+.spacer{flex:1}
+.rangebar{display:flex;gap:.3rem;background:var(--surface-sunken);
+  border:1px solid var(--border-subtle);border-radius:9px;padding:.2rem}
+.rangebar button{background:none;border:0;color:var(--text-tertiary);
+  padding:.28rem .68rem;border-radius:var(--radius-sm);font-size:.8rem}
+.rangebar button[aria-pressed="true"]{background:var(--surface-overlay);color:var(--text-primary)}
+.chip{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--state-progress);border:1px solid var(--border-default);
+  border-radius:var(--radius-pill);padding:2px var(--space-3);background:none}
+
+/* ---------- briefing header ---------- */
+.briefing{padding:var(--space-6) var(--space-6) var(--space-5);border-bottom:1px solid var(--border-subtle)}
+.dateline{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap}
+.dateline .d{font-weight:600;font-size:var(--text-micro);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--brand-gold)}
+.dateline .s{font-size:var(--text-micro);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary)}
+.sep{width:4px;height:4px;border-radius:50%;background:var(--border-strong)}
+.lede{font-family:var(--font-head);font-weight:300;font-size:34px;line-height:1.24;
+  letter-spacing:-.015em;color:var(--text-primary);margin:0 0 var(--space-4);max-width:40ch;
+  text-wrap:pretty}
+.lede-sub{font-size:var(--text-lead);line-height:1.62;color:var(--text-secondary);
+  margin:0;max-width:74ch;text-wrap:pretty}
+
+/* ---------- panels ---------- */
+main{padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-4)}
+.panel{background:var(--surface-raised);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-panel)}
+.panel h2{margin:0 0 .15rem;font-family:var(--font-head);font-size:var(--figure-sm);
+  font-weight:300;letter-spacing:-.01em;color:var(--text-primary)}
+.panel .hint{margin:0 0 var(--space-4);font-size:var(--text-label);color:var(--text-tertiary);max-width:72ch}
+.phead{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-4)}
+.grid2{display:grid;grid-template-columns:1.55fr 1fr;gap:var(--space-4)}
+.grid11{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
+@media(max-width:1150px){.grid2,.grid11{grid-template-columns:1fr}}
+.chartbox{position:relative;height:260px}
+
+/* cadence badge — every panel says how often its data arrives */
+.cad{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  border:1px solid var(--border-default);border-radius:var(--radius-pill);
+  padding:2px var(--space-2);white-space:nowrap}
+.cad.live{color:var(--avail-live)} .cad.lag{color:var(--avail-lagged)}
+.cad.roll{color:var(--avail-rolling)} .cad.deriv{color:var(--avail-rolling)}
+
+/* ---------- kpis ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--space-4)}
+.kpi{background:var(--surface-raised);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-panel)}
+.kpi .label{font-size:var(--text-micro);text-transform:uppercase;
+  letter-spacing:var(--track-label);color:var(--text-tertiary)}
+.kpi .value{font-family:var(--font-head);font-size:var(--figure-lg);font-weight:300;
+  letter-spacing:-.02em;margin:var(--space-3) 0 var(--space-2);line-height:1;
+  font-variant-numeric:tabular-nums;color:var(--text-primary)}
+.kpi .sub{font-size:var(--text-label);color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.up{color:var(--state-positive)} .down{color:var(--state-negative)} .flat{color:var(--text-tertiary)}
+
+/* ---------- account cards ---------- */
+.accounts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-3)}
+.acct{background:var(--surface-overlay);border:1px solid var(--border-subtle);
+  border-left:3px solid var(--border-default);border-radius:var(--radius-md);
+  padding:var(--space-4);text-align:left;transition:var(--dur-fast);width:100%}
+.acct:hover{border-color:var(--border-strong)}
+.acct[data-p="youtube"]{border-left-color:var(--data-youtube)}
+.acct[data-p="instagram"]{border-left-color:var(--data-instagram)}
+.acct[data-p="facebook"]{border-left-color:var(--data-facebook)}
+.acct[data-p="tiktok"]{border-left-color:var(--data-tiktok)}
+.acct .top{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
+.acct img{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--border-default);flex:none}
+.acct .nm{font-weight:600;font-size:var(--text-body);color:var(--text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .hd{font-size:var(--text-micro);color:var(--text-tertiary);margin-bottom:var(--space-3)}
+.acct .big{font-family:var(--font-head);font-weight:300;font-size:var(--figure-sm);
+  color:var(--text-primary);font-variant-numeric:tabular-nums}
+.acct .meta{font-size:var(--text-micro);color:var(--text-tertiary);margin-top:var(--space-1)}
+
+/* ---------- availability matrix ---------- */
+.matrix{display:grid;font-size:var(--text-label)}
+.matrix .mh{text-align:center;padding:0 0 var(--space-2);border-bottom:1px solid var(--border-default);
+  font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase}
+.matrix .mm{padding:var(--space-2) var(--space-3) var(--space-2) 0;
+  border-bottom:1px solid var(--border-subtle);color:var(--text-secondary);white-space:nowrap}
+.matrix .mc{padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle);
+  display:flex;align-items:center;justify-content:center}
+.g{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.g.live{background:var(--avail-live)}
+.g.lag{border:1.5px solid var(--avail-lagged);
+  background:linear-gradient(90deg,var(--avail-lagged) 0 50%,transparent 50% 100%)}
+.g.roll{background:var(--avail-rolling)}
+.g.deriv{border:1.5px dashed var(--avail-rolling);background:transparent}
+.g.none{border:1px dashed var(--avail-absent);background:transparent}
+.g.err{background:var(--avail-error)}
+.g.off{width:9px;height:1px;border-radius:0;background:var(--border-strong)}
+.dim{opacity:.3}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-4);
+  padding-top:var(--space-3);border-top:1px solid var(--border-subtle)}
+.legend span{display:inline-flex;align-items:center;gap:var(--space-2);
+  font-size:var(--text-micro);color:var(--text-tertiary)}
+
+/* ---------- table ---------- */
+.tablewrap{overflow:auto;max-height:560px;border-radius:var(--radius-md)}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{position:sticky;top:0;background:var(--surface-raised);text-align:left;font-weight:400;
+  color:var(--text-tertiary);font-size:var(--text-micro);text-transform:uppercase;
+  letter-spacing:var(--track-label);padding:0;border-bottom:1px solid var(--border-default);white-space:nowrap}
+th button{width:100%;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:.55rem .6rem}
+th button:hover{color:var(--text-secondary)}
+th[aria-sort] button{color:var(--text-primary)}
+td{padding:.5rem .6rem;border-bottom:1px solid var(--border-subtle);vertical-align:middle;
+  font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--surface-overlay)}
+td.t{max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:normal}
+td.t a:hover{color:var(--brand-gold-soft)}
+.pill{display:inline-block;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;
+  padding:.14rem .45rem;border-radius:var(--radius-sm);background:var(--border-default);color:var(--text-secondary)}
+.pill.youtube{background:rgba(255,78,69,.15);color:#FF8079}
+.pill.instagram{background:rgba(225,71,126,.15);color:#EF7FA5}
+.pill.facebook{background:rgba(74,140,255,.15);color:#87B1FF}
+.pill.tiktok{background:rgba(37,229,208,.14);color:#65EDDD}
+.thumb{width:48px;height:28px;object-fit:cover;border-radius:var(--radius-sm);background:var(--border-default)}
+.filters{display:flex;gap:var(--space-2);flex-wrap:wrap}
+.filters button{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--text-tertiary);border:1px solid var(--border-default);background:none;
+  border-radius:var(--radius-pill);padding:2px var(--space-3)}
+.filters button[aria-pressed="true"]{color:var(--text-primary);border-color:var(--border-strong)}
+
+/* ---------- sync health ---------- */
+.sync{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;
+  font-size:var(--text-label);border-bottom:1px solid var(--border-subtle)}
+.sync:last-child{border-bottom:0}
+.led{width:7px;height:7px;border-radius:50%;flex:none}
+.led.ok{background:var(--state-positive);box-shadow:0 0 0 3px rgba(200,162,76,.14)}
+.led.error{background:var(--state-negative);box-shadow:0 0 0 3px rgba(192,89,59,.14)}
+.led.running{background:var(--state-progress);animation:pulse 1.4s ease-in-out infinite}
+.led.skipped{background:var(--state-neutral)}
+.sync .who{flex:1;min-width:0;color:var(--text-secondary);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.sync .when{color:var(--text-tertiary);font-size:var(--text-micro);white-space:nowrap}
+
+/* ---------- empty / skeleton ---------- */
+.empty{text-align:center;padding:var(--space-6) var(--space-4);color:var(--text-tertiary);
+  font-size:var(--text-label);border:1px dashed var(--border-default);border-radius:var(--radius-md)}
+.empty h3{margin:0 0 var(--space-2);font-family:var(--font-head);font-weight:300;
+  color:var(--text-secondary);font-size:1.1rem}
+.empty .g{margin:0 auto var(--space-3)}
+.connectrow{display:flex;gap:var(--space-2);flex-wrap:wrap;justify-content:center;margin-top:var(--space-4)}
+.sk{background:linear-gradient(90deg,var(--surface-overlay) 0%,var(--border-default) 50%,var(--surface-overlay) 100%);
+  background-size:320px 100%;animation:sh 1.2s linear infinite;border-radius:var(--radius-sm)}
+@keyframes sh{0%{background-position:-160px 0}100%{background-position:160px 0}}
+.sk.line{height:12px;margin-bottom:var(--space-2)}
+.sk.fig{height:38px;width:60%;margin:var(--space-3) 0}
+.sk.block{height:220px}
+@media(prefers-reduced-motion:reduce){.sk,.pulse,.led.running{animation:none}}
+
+/* ---------- modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(12,8,18,.72);backdrop-filter:blur(6px);
+  display:grid;place-items:center;z-index:60;padding:var(--space-5)}
+.modal{width:100%;max-width:30rem;background:var(--surface-raised);border:1px solid var(--border-default);
+  border-radius:16px;padding:var(--space-6);box-shadow:var(--shadow-overlay)}
+.modal h2{margin:0 0 var(--space-2);font-family:var(--font-head);font-weight:300;
+  font-size:1.5rem;color:var(--text-primary)}
+.modal p.k{margin:0 0 var(--space-5);font-size:var(--text-label);color:var(--text-tertiary);line-height:1.6}
+.opt{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;text-align:left;
+  padding:var(--space-3) var(--space-4);border:1px solid var(--border-default);background:none;
+  border-radius:var(--radius-md);margin-bottom:var(--space-2);transition:var(--dur-fast)}
+.opt:hover{border-color:var(--border-strong)}
+.opt[aria-pressed="true"]{border-color:var(--state-progress);background:var(--surface-overlay)}
+.opt .nm{font-size:var(--text-body);color:var(--text-primary);font-weight:600}
+.opt .ds{font-size:var(--text-micro);color:var(--text-tertiary);margin-top:2px;line-height:1.5}
+.modal .field{margin:var(--space-4) 0 var(--space-2)}
+.modal label{display:block;font-size:var(--text-micro);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary);margin-bottom:var(--space-2)}
+.modal .foot{display:flex;gap:var(--space-2);justify-content:flex-end;margin-top:var(--space-5)}
+
+.toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);
+  background:var(--surface-overlay);border:1px solid var(--border-default);
+  padding:.6rem 1rem;border-radius:9px;font-size:.85rem;z-index:70;box-shadow:var(--shadow-overlay)}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH GATE ================= -->
+<!-- The only thing an unauthenticated visitor sees. No signup affordance, ever. -->
+<div id="gate">
+  <div class="authcard">
+    <div class="mk">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/>
+      </svg>
+      <span class="wm">CUNNING CORP</span>
+    </div>
+    <h1>Signal</h1>
+    <p>Every channel, one view. Sign in with a link sent to your email.</p>
+    <input type="email" id="email" placeholder="you@cunningcorp.com" autocomplete="email">
+    <button class="btn primary wide" id="sendLink">Send sign-in link</button>
+    <div class="msg" id="authMsg" role="status"></div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app" class="hide">
+  <aside class="rail">
+    <div class="brandrow">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/>
+      </svg>
+      <span class="wm">SIGNAL</span>
+    </div>
+    <nav class="railnav" id="rail" aria-label="Scope"></nav>
+    <div class="railfoot">
+      <div class="when"><span class="dot pulse" style="background:var(--state-positive)"></span>
+        <span id="lastSync">—</span></div>
+      <p id="syncNote">Daily at 03:15 UTC.</p>
+      <button class="btn primary wide" id="syncBtn">Sync now</button>
+      <button class="btn wide" id="connectBtn" style="margin-top:var(--space-2)">Connect account</button>
+    </div>
+  </aside>
+
+  <div>
+    <div class="scopebar">
+      <span class="k">Scope</span>
+      <span class="v" id="scopeTitle">Overview</span>
+      <span class="sub" id="scopeSub"></span>
+      <button class="chip hide" id="clearScope">Clear</button>
+      <div class="spacer"></div>
+      <div class="rangebar" id="range" role="group" aria-label="Date range">
+        <button data-d="7">7d</button>
+        <button data-d="30" aria-pressed="true">30d</button>
+        <button data-d="90">90d</button>
+      </div>
+      <button class="btn" id="signOut">Sign out</button>
+    </div>
+
+    <div class="briefing">
+      <div class="dateline">
+        <span class="d" id="dateline">—</span>
+        <span class="sep"></span>
+        <span class="s" id="historyNote">—</span>
+      </div>
+      <p class="lede" id="lede">Loading…</p>
+      <p class="lede-sub" id="ledeSub"></p>
+    </div>
+
+    <main id="view"></main>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast hide" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* ============================ config ============================ */
+const SUPABASE_URL = "https://qeafetctmtnqonhwhhlw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_gs_WsU5HUAs49uF6-A5Wog_Mvo62byI";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const LABEL = { youtube:"YouTube", instagram:"Instagram", facebook:"Facebook", tiktok:"TikTok" };
+const SHORT = { youtube:"YT", instagram:"IG", facebook:"FB", tiktok:"TT" };
+/* Read the platform hues from the token layer so there is exactly one source. */
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COLOR = {};
+for (const p of Object.keys(LABEL)) COLOR[p] = cssVar(`--data-${p}`);
+
+/* Every platform we know how to connect, in rail order. Unconnected ones stay
+   visible and dimmed — the nav itself is part of the availability story. */
+const PLATFORMS = ["youtube","instagram","tiktok","facebook"];
+const CONNECT_KIND = { youtube:"youtube", instagram:"instagram", tiktok:"tiktok", facebook:"meta" };
+
+const METRIC_LABEL = {
+  views:"Views", reach:"Reach", likes:"Likes", comments:"Comments", shares:"Shares",
+  saves:"Saves", replies:"Replies", engagements:"Engagements",
+  watch_time_minutes:"Watch time (min)", avg_view_duration_secs:"Avg view duration (s)",
+  followers_gained:"Followers gained", followers_lost:"Followers lost",
+  accounts_engaged:"Accounts engaged", total_interactions:"Total interactions",
+};
+
+const CAVEAT = {
+  instagram:"Reach is the only daily series Instagram provides. Views, likes and saves arrive as one rolling 28-day total that cannot be split into days, and below 100 followers Meta returns no follower breakdown at all.",
+  youtube:"YouTube analytics lag two to three days, so the newest days of every daily chart are legitimately missing rather than broken.",
+  tiktok:"TikTok's free API returns cumulative totals only. Daily movement is derived by differencing snapshots, so it needs two days of history and a missed sync folds two days into one.",
+  facebook:"Meta has retired many Page metrics. Whatever still returns data is shown; the rest are skipped rather than shown as zero.",
+};
+
+/* THE AVAILABILITY CONTRACT.
+   A frontend constant, not a query — it describes what each collector can ever
+   fetch. It lives here so it can be read next to the UI, but it must be kept in
+   step with supabase/functions/*; if a collector gains a metric, add it here.
+   Codes: live | lag | roll | deriv | none. "off" is decided at runtime from
+   whether the platform has a connected account. */
+const AVAIL = [
+  { m:"Followers",           youtube:"live", instagram:"live", tiktok:"live",  facebook:"live" },
+  { m:"Follower change",     youtube:"live", instagram:"roll", tiktok:"deriv", facebook:"live" },
+  { m:"Posts & cadence",     youtube:"live", instagram:"live", tiktok:"live",  facebook:"live" },
+  { m:"Engagement rate",     youtube:"live", instagram:"live", tiktok:"live",  facebook:"live" },
+  { m:"Views — daily",       youtube:"lag",  instagram:"none", tiktok:"deriv", facebook:"live" },
+  { m:"Reach — daily",       youtube:"none", instagram:"live", tiktok:"none",  facebook:"live" },
+  { m:"Watch time",          youtube:"lag",  instagram:"none", tiktok:"none",  facebook:"none" },
+  { m:"Views — 28d rolling", youtube:"none", instagram:"roll", tiktok:"none",  facebook:"none" },
+];
+const GLYPH_TITLE = {
+  live:"Daily", lag:"Daily, lags 2–3 days", roll:"28-day rolling total",
+  deriv:"Derived by differencing snapshots", none:"Not provided by this API",
+  err:"Failing — see sync health", off:"Not connected",
+};
+
+/* ============================ state ============================ */
+let RANGE = 30;
+let SCOPE = { kind:"all" };            // {kind:'all'} | {kind:'platform',p} | {kind:'account',id}
+let POSTTYPE = "all";
+let LOADING = true;
+let charts = {};
+let DATA = { overview:[], series:[], daily:[], posts:[], sync:[] };
+let sortKey = "published_at", sortDir = -1;
+
+/* ============================ helpers ============================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+const fmt = (n) => {
+  if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
+  n = Number(n);
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,"") + "B";
+  if (a >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,"") + "M";
+  if (a >= 1e4) return (n/1e3).toFixed(0) + "K";
+  return n.toLocaleString();
+};
+const signed = (n) => (n === null || n === undefined) ? "—" : (n > 0 ? "+" : "") + fmt(n);
+const cls = (n) => n > 0 ? "up" : n < 0 ? "down" : "flat";
+const daysAgoISO = (d) => { const x = new Date(); x.setUTCDate(x.getUTCDate() - d); return x.toISOString().slice(0,10); };
+const shortDate = (s) => s ? new Date(s).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—";
+const ago = (s) => {
+  if (!s) return "never";
+  const m = Math.round((Date.now() - new Date(s)) / 60000);
+  if (m < 60) return `${m}m ago`;
+  if (m < 1440) return `${Math.round(m/60)}h ago`;
+  return `${Math.round(m/1440)}d ago`;
+};
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const titleise = (s) => String(s).replace(/_/g," ").replace(/^./, (c) => c.toUpperCase());
+const isRolling = (m) => m.endsWith("_28d");
+const metricLabel = (m) => METRIC_LABEL[m.replace(/_28d$/,"")] ?? titleise(m.replace(/_28d$/,""));
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+function toast(text, ms = 4200) {
+  const el = $("#toast");
+  el.textContent = text;
+  el.classList.remove("hide");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.add("hide"), ms);
+}
+function destroyCharts() {
+  for (const k of Object.keys(charts)) { charts[k]?.destroy(); delete charts[k]; }
+}
+
+/* ============================ URL state ============================
+   A filtered view has to survive refresh and be linkable (R5). Scope and range
+   live in the query string; the rail reads it on boot and writes it on change. */
+function readUrl() {
+  const q = new URLSearchParams(location.search);
+  const r = Number(q.get("range"));
+  if ([7,30,90].includes(r)) RANGE = r;
+  if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
+  else if (PLATFORMS.includes(q.get("platform"))) SCOPE = { kind:"platform", p:q.get("platform") };
+  else SCOPE = { kind:"all" };
+  if (q.get("type")) POSTTYPE = q.get("type");
+}
+function writeUrl(push = true) {
+  const q = new URLSearchParams();
+  if (SCOPE.kind === "platform") q.set("platform", SCOPE.p);
+  if (SCOPE.kind === "account") q.set("account", SCOPE.id);
+  if (RANGE !== 30) q.set("range", String(RANGE));
+  if (POSTTYPE !== "all") q.set("type", POSTTYPE);
+  const url = location.pathname + (q.toString() ? "?" + q : "");
+  if (push) history.pushState(null, "", url); else history.replaceState(null, "", url);
+}
+addEventListener("popstate", () => { readUrl(); syncRangeButtons(); render(); });
+
+function setScope(next, { reload = false } = {}) {
+  SCOPE = next;
+  writeUrl();
+  if (reload) load(); else render();
+}
+
+/* ============================ auth ============================ */
+$("#sendLink").onclick = async () => {
+  const email = $("#email").value.trim();
+  if (!email) return ($("#authMsg").textContent = "Enter an email address.");
+  $("#sendLink").disabled = true;
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: location.href.split("#")[0],
+      // Defence in depth. Open signups are off at the project level too, but this
+      // makes the portal itself incapable of minting a user.
+      shouldCreateUser: false,
+    },
+  });
+  $("#sendLink").disabled = false;
+  $("#authMsg").textContent = error
+    ? error.message
+    : "Link sent. Check your inbox, then come back to this tab.";
+};
+$("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
+$("#signOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+/* ============================ data ============================ */
+async function load() {
+  LOADING = true;
+  render();
+  const since = daysAgoISO(RANGE);
+  const [ov, ser, day, post, syn] = await Promise.all([
+    sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
+    sb.from("social_account_series").select("*").gte("day", since).order("day"),
+    sb.from("social_daily_totals").select("*").gte("day", since).order("day"),
+    sb.from("social_top_posts").select("*").order("published_at", { ascending:false, nullsFirst:false }).limit(200),
+    sb.from("social_sync_health").select("*"),
+  ]);
+  const err = [ov, ser, day, post, syn].find((r) => r.error);
+  LOADING = false;
+  if (err) { toast(`Query failed: ${err.error.message}`); renderError(err.error.message); return; }
+
+  DATA = {
+    overview: ov.data ?? [], series: ser.data ?? [], daily: day.data ?? [],
+    posts: post.data ?? [], sync: syn.data ?? [],
+  };
+  // A scope pointing at an account that no longer exists falls back to Overview.
+  if (SCOPE.kind === "account" && !DATA.overview.some((a) => a.account_id === SCOPE.id)) {
+    SCOPE = { kind:"all" }; writeUrl(false);
+  }
+  if (SCOPE.kind === "platform" && !DATA.overview.some((a) => a.platform === SCOPE.p)) {
+    SCOPE = { kind:"all" }; writeUrl(false);
+  }
+  render();
+}
+
+const connectedPlatforms = () => [...new Set(DATA.overview.map((r) => r.platform))];
+
+/* Accounts in the current scope. */
+function scoped() {
+  if (SCOPE.kind === "platform") return DATA.overview.filter((a) => a.platform === SCOPE.p);
+  if (SCOPE.kind === "account") return DATA.overview.filter((a) => a.account_id === SCOPE.id);
+  return DATA.overview;
+}
+const scopePlatform = () => {
+  if (SCOPE.kind === "platform") return SCOPE.p;
+  if (SCOPE.kind === "account") return scoped()[0]?.platform ?? null;
+  return null;
+};
+
+/* ============================ the briefing lede ============================
+   Assembled only from figures that are actually on the page. Every branch below
+   corresponds to a real data shape: nothing connected, no history yet, nothing
+   moved, something moved. Never asserts a number the views did not return. */
+function briefing() {
+  const rows = scoped();
+  const d = new Date();
+  const dateline = d.toLocaleDateString(undefined, { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+
+  if (!DATA.overview.length) {
+    return { dateline, history:"Nothing connected",
+      a:"No accounts are connected yet.",
+      b:"Nothing is pulled until you connect a platform. Once you do, follower history begins that day — no platform backfills it." };
+  }
+  if (!rows.length) {
+    return { dateline, history:"—", a:"Nothing in this scope.", b:"" };
+  }
+
+  const withData = rows.filter((r) => r.as_of);
+  const oldest = DATA.series.length ? DATA.series.map((r) => r.day).sort()[0] : null;
+  /* DATA.series is already clipped to the selected range, so this is the earliest day
+     IN THIS WINDOW, not the connection date. Say so — claiming it as the start of
+     history would be wrong the moment the range is shorter than the data. */
+  const historyLabel = oldest
+    ? `${plural(new Set(DATA.series.map((r) => r.day)).size, "day", "days")} in this window, from ${shortDate(oldest)}`
+    : "No snapshots yet";
+
+  if (!withData.length) {
+    return { dateline, history: historyLabel,
+      a:`${plural(rows.length, "account", "accounts")} connected, none reporting yet.`,
+      b:"The collectors have not written a snapshot for these accounts. Run a sync, then check Sync health for the reason if it stays empty." };
+  }
+
+  const followers = withData.reduce((s, r) => s + (Number(r.followers) || 0), 0);
+  const key = RANGE === 7 ? "followers_delta_7d" : "followers_delta_28d";
+  const windowLabel = RANGE === 7 ? "week" : "28 days";
+  const movers = withData
+    .filter((r) => r[key] !== null && r[key] !== undefined)
+    .map((r) => ({ r, d: Number(r[key]) }))
+    .sort((x, y) => y.d - x.d);
+
+  const p = scopePlatform();
+  const caveat = p ? CAVEAT[p] : null;
+  const name = (r) => r.display_name || r.handle || "this account";
+
+  if (!movers.length) {
+    return { dateline, history: historyLabel,
+      a: SCOPE.kind === "account"
+        ? `${fmt(followers)} followers. No comparison over ${windowLabel} yet.`
+        : `${fmt(followers)} followers across ${plural(withData.length, "account", "accounts")}. No comparison over ${windowLabel} yet.`,
+      b: caveat ?? "Follower history starts the day an account is connected, so deltas appear once there is a snapshot far enough back." };
+  }
+
+  const top = movers[0], bottom = movers[movers.length - 1];
+  const net = movers.reduce((s, m) => s + m.d, 0);
+  let a, b;
+
+  if (SCOPE.kind === "account") {
+    a = `${fmt(followers)} followers, ${signed(top.d)} this ${windowLabel}.`;
+  } else if (net === 0 && top.d === 0) {
+    a = `${fmt(followers)} followers across ${plural(withData.length, "account", "accounts")}. Nothing moved this ${windowLabel}.`;
+  } else if (top.d > 0) {
+    a = `${fmt(followers)} followers across ${plural(withData.length, "account", "accounts")}. ${name(top.r)} leads at ${signed(top.d)}.`;
+  } else {
+    a = `${fmt(followers)} followers across ${plural(withData.length, "account", "accounts")}. Every account is flat or down this ${windowLabel}.`;
+  }
+
+  if (SCOPE.kind === "account") {
+    b = caveat ?? "";
+  } else {
+    const falling = bottom.d < 0 ? `${name(bottom.r)} slipped ${signed(bottom.d)}. ` : "";
+    b = falling + (caveat ?? "Only followers, post cadence and engagement rate compare across platforms — views and watch time do not, which is why they live on a platform scope.");
+  }
+  return { dateline, history: historyLabel, a, b };
+}
+
+/* ============================ render ============================ */
+function render() {
+  renderRail();
+  renderScopeBar();
+  renderBriefing();
+  renderSyncFoot();
+  destroyCharts();
+  $("#view").innerHTML = LOADING ? skeletonHtml() : viewHtml();
+  if (!LOADING) { drawCharts(); wire(); }
+}
+
+function renderError(msg) {
+  $("#view").innerHTML = `<div class="panel"><div class="empty">
+    <h3>That query failed</h3><div>${esc(msg)}</div>
+    <div class="connectrow"><button class="btn" data-retry>Try again</button></div></div></div>`;
+  $("[data-retry]")?.addEventListener("click", load);
+}
+
+function renderScopeBar() {
+  const rows = scoped();
+  let title = "Overview", sub = "all platforms · all accounts";
+  if (SCOPE.kind === "platform") {
+    title = LABEL[SCOPE.p] ?? SCOPE.p;
+    sub = plural(rows.length, "account", "accounts");
+  } else if (SCOPE.kind === "account") {
+    const a = rows[0];
+    title = a ? (a.display_name || a.handle || "Account") : "Account";
+    sub = a ? `${LABEL[a.platform] ?? a.platform}${a.handle ? " · " + a.handle : ""}` : "";
+  }
+  $("#scopeTitle").textContent = title;
+  $("#scopeSub").textContent = sub ? "· " + sub : "";
+  $("#clearScope").classList.toggle("hide", SCOPE.kind === "all");
+}
+
+function renderBriefing() {
+  if (LOADING) {
+    $("#dateline").textContent = "—"; $("#historyNote").textContent = "Loading";
+    $("#lede").innerHTML = `<span class="sk line" style="display:block;width:70%;height:26px"></span>`;
+    $("#ledeSub").innerHTML = `<span class="sk line" style="display:block;width:50%"></span>`;
+    return;
+  }
+  const b = briefing();
+  $("#dateline").textContent = b.dateline;
+  $("#historyNote").textContent = b.history;
+  $("#lede").textContent = b.a;
+  $("#ledeSub").textContent = b.b;
+}
+
+function renderRail() {
+  const byPlatform = {};
+  for (const a of DATA.overview) (byPlatform[a.platform] ??= []).push(a);
+
+  const node = (opts) => {
+    const { label, meta, kind, key, cls: extra = "", colour, hollow } = opts;
+    const current =
+      (kind === "all" && SCOPE.kind === "all") ||
+      (kind === "platform" && SCOPE.kind === "platform" && SCOPE.p === key) ||
+      (kind === "account" && SCOPE.kind === "account" && SCOPE.id === key);
+    return `<button class="node ${extra}" data-kind="${kind}" data-key="${esc(key ?? "")}"
+      aria-current="${current}">
+      ${colour !== undefined
+        ? `<span class="dot${hollow ? " hollow" : ""}" ${hollow ? "" : `style="background:${colour}"`}></span>`
+        : `<span class="dot" style="background:var(--brand-gold)"></span>`}
+      <span class="lbl">${esc(label)}</span>
+      <span class="meta">${esc(meta ?? "")}</span></button>`;
+  };
+
+  let html = node({ label:"Overview", meta:"", kind:"all", key:"" });
+  for (const p of PLATFORMS) {
+    const kids = byPlatform[p] ?? [];
+    const connected = kids.length > 0;
+    html += node({
+      label: LABEL[p], meta: connected ? String(kids.length) : "Connect",
+      kind: connected ? "platform" : "connect", key: p,
+      cls: "group" + (connected ? "" : " off"),
+      colour: COLOR[p], hollow: !connected,
+    });
+    for (const a of kids) {
+      html += node({
+        label: a.display_name || a.handle || "account",
+        meta: fmt(a.followers), kind:"account", key:a.account_id, cls:"child",
+        colour:"transparent", hollow:false,
+      }).replace(/<span class="dot"[^>]*><\/span>/, "");
+    }
+  }
+  $("#rail").innerHTML = html;
+  $$("#rail .node").forEach((b) => b.onclick = () => {
+    const { kind, key } = b.dataset;
+    if (kind === "connect") return openConnect(key);
+    if (kind === "all") return setScope({ kind:"all" });
+    if (kind === "platform") return setScope({ kind:"platform", p:key });
+    if (kind === "account") return setScope({ kind:"account", id:key });
+  });
+}
+
+function renderSyncFoot() {
+  const rows = DATA.sync;
+  if (!rows.length) { $("#lastSync").textContent = "Never synced"; return; }
+  const latest = rows.map((r) => r.started_at).filter(Boolean).sort().at(-1);
+  const failing = rows.filter((r) => r.status === "error").length;
+  $("#lastSync").textContent = latest ? `Synced ${ago(latest)}` : "Never synced";
+  $("#syncNote").textContent = failing
+    ? `${plural(failing, "collector is", "collectors are")} failing — see Sync health.`
+    : "Daily at 03:15 UTC.";
+}
+
+/* ---------- skeletons ---------- */
+function skeletonHtml() {
+  const kpi = `<div class="kpi"><div class="sk line" style="width:45%"></div>
+    <div class="sk fig"></div><div class="sk line" style="width:60%"></div></div>`;
+  return `<div class="kpis">${kpi.repeat(4)}</div>
+  <div class="grid2">
+    <div class="panel"><div class="sk line" style="width:25%;height:16px"></div>
+      <div class="sk line" style="width:55%"></div><div class="sk block" style="margin-top:16px"></div></div>
+    <div class="panel"><div class="sk line" style="width:40%;height:16px"></div>
+      <div class="sk block" style="margin-top:16px"></div></div>
+  </div>`;
+}
+
+/* ---------- the view ---------- */
+function viewHtml() {
+  if (!DATA.overview.length) {
+    return `<div class="panel"><div class="empty">
+      <h3>Nothing connected yet</h3>
+      <div>Link a platform to start collecting. Nothing is pulled until you do.</div>
+      <div class="connectrow">
+        <button class="btn" data-connect="youtube">Connect YouTube</button>
+        <button class="btn" data-connect="instagram">Connect Instagram</button>
+        <button class="btn" data-connect="tiktok">Connect TikTok</button>
+        <button class="btn" data-connect="facebook">Connect a Facebook Page</button>
+      </div></div></div>`;
+  }
+  return `
+    <div class="kpis">${kpisHtml()}</div>
+    <div class="grid2">
+      ${audiencePanel()}
+      ${activityPanel()}
+    </div>
+    <div class="grid11">
+      ${accountsPanel()}
+      ${availabilityPanel()}
+    </div>
+    ${postsPanel()}
+    ${syncPanel()}`;
+}
+
+/* ---------- KPIs ---------- */
+/* Overview keeps to figures that genuinely compare across platforms. A scoped
+   view can afford more, because there is only one platform's cadence in play. */
+function kpisHtml() {
+  const rows = scoped();
+  const since = daysAgoISO(RANGE);
+  const sum = (k) => rows.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+  const key = RANGE === 7 ? "followers_delta_7d" : "followers_delta_28d";
+  /* Only sum accounts that actually reported a delta. Treating a null as zero would
+     quietly present a partial total as if it were the whole — an account with too
+     little history is not an account that did not move. */
+  const withDelta = rows.filter((r) => r[key] != null);
+  const delta = withDelta.length ? withDelta.reduce((a, r) => a + Number(r[key]), 0) : null;
+  const partial = withDelta.length > 0 && withDelta.length < rows.length;
+
+  /* Identity key for post rows. social_top_posts exposes `account` (= display_name)
+     and `handle` but no account_id, so a post can only be tied back to an account by
+     name — and the same brand name legitimately exists on several platforms. Compound
+     the platform in so scoping to one never pulls in another's posts.
+     See github.md: social_top_posts should expose a.id as account_id. */
+  const names = new Set(rows.map((r) => `${r.platform}|${r.display_name}`));
+  const inScopePosts = DATA.posts.filter((p) =>
+    SCOPE.kind === "all" ? true
+      : SCOPE.kind === "platform" ? p.platform === SCOPE.p
+      : names.has(`${p.platform}|${p.account}`));
+  const inRange = inScopePosts.filter((p) => p.published_at && p.published_at.slice(0,10) >= since);
+  const eng = inRange.reduce((a,p) => a + (Number(p.engagements)||0), 0);
+  const vws = inRange.reduce((a,p) => a + (Number(p.views)||0), 0);
+  const rate = vws ? ((eng / vws) * 100).toFixed(2) + "%" : "—";
+
+  const cards = [
+    { l:"Followers", v:fmt(sum("followers")),
+      s: delta === null
+        ? `<span class="flat">no ${RANGE === 7 ? "7d" : "28d"} history yet</span>`
+        : `<span class="${cls(delta)}">${signed(delta)}</span> in ${RANGE === 7 ? "7d" : "28d"}${
+            partial ? ` <span class="flat">· ${withDelta.length} of ${rows.length} accounts</span>` : ""}` },
+    { l:`Posts published (${RANGE}d)`, v:String(inRange.length),
+      s: inRange.length ? `${(inRange.length / (RANGE/7)).toFixed(1)} a week` : "nothing in this window" },
+    { l:`Engagement rate (${RANGE}d)`, v:rate,
+      s: vws ? `${fmt(eng)} interactions on ${fmt(vws)} views` : "no post metrics in range" },
+  ];
+
+  if (SCOPE.kind === "all") {
+    cards.push({ l:"Accounts", v:String(rows.length),
+      s: connectedPlatforms().map((p) => LABEL[p] ?? p).join(" · ") || "none" });
+  } else {
+    cards.push({ l:"Lifetime views", v:fmt(sum("total_views")), s:"as the platform reports it" });
+    const asOf = rows.map((r) => r.as_of).filter(Boolean).sort().at(-1);
+    cards.push({ l:"Last snapshot", v: asOf ? shortDate(asOf) : "—",
+      s: asOf ? "from the daily collector" : "no data yet" });
+  }
+  return cards.map((c) =>
+    `<div class="kpi"><div class="label">${c.l}</div><div class="value">${c.v}</div>
+     <div class="sub">${c.s}</div></div>`).join("");
+}
+
+/* ---------- audience ---------- */
+function audiencePanel() {
+  const rows = scoped();
+  const has = DATA.series.length > 0;
+  return `<div class="panel">
+    <div class="phead"><h2>Audience</h2><span class="cad live">Daily · from connection</span></div>
+    <p class="hint">${SCOPE.kind === "all"
+      ? "Followers per platform. The one number every platform reports the same way."
+      : "Followers per account in this scope."} No platform backfills history, so a line starts the day its account was connected.</p>
+    ${has
+      ? `<div class="chartbox"><canvas id="chAudience"></canvas></div>`
+      : `<div class="empty"><span class="g none"></span>
+          <div>No snapshots in the last ${RANGE} days.</div></div>`}
+  </div>`;
+}
+
+/* ---------- daily activity ---------- */
+/* Data-driven: renders whichever daily metrics the platforms in scope actually
+   returned, so a newly connected platform needs no code here. */
+function activityPanel() {
+  const p = scopePlatform();
+
+  /* Overview deliberately excludes views, reach and watch time: YouTube reports
+     them daily, Instagram only as a 28-day total, TikTok not at all. Overlaying
+     them on one axis would be designing a lie. So at Overview we say what each
+     platform has and where to read it, and chart nothing. */
+  if (!p) {
+    const live = connectedPlatforms();
+    if (!live.length) return "";
+    const cadFor = (pl, hasDaily, hasRoll) =>
+      pl === "youtube" ? ["lag", "Daily · lags 2–3d"]
+      : pl === "tiktok" ? ["deriv", "Derived from snapshots"]
+      : hasDaily ? ["live", "Daily"]
+      : hasRoll ? ["roll", "28-day rolling"]
+      : ["none", "Nothing yet"];
+    const items = live.map((pl) => {
+      const daily = [...new Set(DATA.daily.filter((d) => d.platform === pl && !isRolling(d.metric)).map((d) => d.metric))];
+      const roll = [...new Set(DATA.daily.filter((d) => d.platform === pl && isRolling(d.metric)).map((d) => d.metric))];
+      const [code, label] = cadFor(pl, daily.length, roll.length);
+      const names = daily.length ? daily.map(metricLabel).join(", ")
+        : roll.length ? roll.map(metricLabel).join(", ") : "no series collected yet";
+      return `<button class="acct" data-p="${esc(pl)}" data-scope-platform="${esc(pl)}">
+        <div class="top"><span class="pill ${esc(pl)}">${LABEL[pl] ?? pl}</span>
+          <span class="cad ${code}" style="margin-left:auto">${label}</span></div>
+        <div class="hd" style="margin:0">${esc(names)}</div></button>`;
+    }).join("");
+    return `<div class="panel">
+      <h2>Daily series</h2>
+      <p class="hint">Views, reach and watch time are not comparable across platforms, so this
+        tab does not chart them. Open a platform to read its own series against its own cadence.</p>
+      <div class="accounts">${items}</div>
+    </div>`;
+  }
+
+  const rows = DATA.daily.filter((d) =>
+    (p ? d.platform === p : true) && !isRolling(d.metric));
+  const rolling = DATA.daily.filter((d) =>
+    (p ? d.platform === p : true) && isRolling(d.metric));
+  const metrics = [...new Set(rows.map((r) => r.metric))];
+
+  let body;
+  if (metrics.length) {
+    body = `<div class="chartbox"><canvas id="chDaily"></canvas></div>`;
+  } else if (rolling.length) {
+    body = `<div class="empty"><span class="g roll"></span>
+      <div>This platform reports these as one rolling 28-day figure, not per day.</div></div>`;
+  } else if (p === "youtube") {
+    /* Two access modes exist per channel: public:key+analytics (full) and public:key
+       alone, which has no token and therefore no daily figures — ever. The mode STRING
+       is not persisted, but the case that matters is: sync-youtube calls finishRun with
+       "public data only; Analytics needs OAuth from this channel" when there is no
+       token, which lands in sync_runs.message and is exposed by social_sync_health —
+       so the Sync health panel below genuinely can answer this, and renders message on
+       every status (not just errors) so that it does.
+       See github.md: the open ask is to promote that out of free text into an
+       access_mode column, so the UI keys on a value instead of a sentence. */
+    body = `<div class="empty"><span class="g none"></span>
+      <div>No daily analytics for this channel in the last ${RANGE} days.<br>
+      Either it has not consented to the Analytics API — in which case it reports public
+      totals only and never will have these — or nothing has synced in this window.
+      Sync health below will say which.</div></div>`;
+  } else {
+    body = `<div class="empty"><span class="g none"></span>
+      <div>No daily series for this scope${p ? "" : " yet"}.</div></div>`;
+  }
+
+  const rollHtml = rolling.length ? `
+    <div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px solid var(--border-subtle)">
+      <div class="phead" style="margin-bottom:var(--space-3)">
+        <h2 style="font-size:var(--text-body)">Last 28 days</h2>
+        <span class="cad roll">28-day rolling</span></div>
+      <div class="accounts" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
+        ${[...new Set(rolling.map((r) => r.metric))].sort().map((m) => {
+          const last = rolling.filter((r) => r.metric === m).at(-1);
+          return `<div class="acct" style="border-left-color:var(--avail-rolling);padding:var(--space-3)">
+            <div class="big">${fmt(last?.value)}</div>
+            <div class="hd" style="margin:0">${esc(metricLabel(m))}</div></div>`;
+        }).join("")}
+      </div>
+    </div>` : "";
+
+  const cad = p === "youtube" ? `<span class="cad lag">Lags 2–3d</span>`
+    : p === "tiktok" ? `<span class="cad deriv">Derived</span>`
+    : metrics.length ? `<span class="cad live">Daily</span>` : "";
+
+  /* social_daily_totals groups by day + platform + metric only — there is no
+     per-account breakdown in the view, so under an account scope these figures are
+     the whole platform's. Say that plainly rather than let a platform number sit
+     under an account heading. See github.md: flagged as a data-layer request. */
+  const platformWide = SCOPE.kind === "account";
+  const hint = platformWide
+    ? `These are ${LABEL[p] ?? p}-wide totals, not this account's — the daily metrics view is not broken out per account. ${CAVEAT[p] ?? ""}`
+    : (p ? CAVEAT[p] ?? "" : "Daily series across every connected platform. They are not comparable to each other — narrow to a platform to read them properly.");
+
+  return `<div class="panel">
+    <div class="phead"><h2>Daily activity${platformWide ? ` <span class="cad roll">Platform-wide</span>` : ""}</h2>${cad}</div>
+    <p class="hint">${esc(hint)}</p>
+    ${body}${rollHtml}
+  </div>`;
+}
+
+/* ---------- accounts ---------- */
+function accountsPanel() {
+  const rows = scoped();
+  return `<div class="panel">
+    <h2>Accounts</h2>
+    <p class="hint">${SCOPE.kind === "account"
+      ? "One account in scope."
+      : "Each card narrows the whole page to that account."}</p>
+    ${rows.length ? `<div class="accounts">${rows.map(acctCard).join("")}</div>`
+      : `<div class="empty">Nothing in this scope.</div>`}
+  </div>`;
+}
+
+function acctCard(a) {
+  const key = RANGE === 7 ? "followers_delta_7d" : "followers_delta_28d";
+  const pctKey = RANGE === 7 ? "followers_pct_7d" : "followers_pct_28d";
+  const d = a[key];
+  return `<button class="acct" data-p="${esc(a.platform)}" data-acct="${esc(a.account_id)}">
+    <div class="top">
+      ${a.avatar_url ? `<img src="${esc(a.avatar_url)}" alt="" loading="lazy">` : ""}
+      <span class="pill ${esc(a.platform)}">${LABEL[a.platform] ?? a.platform}</span>
+    </div>
+    <div class="nm">${esc(a.display_name || a.handle || "account")}</div>
+    <div class="hd">${esc(a.handle || "")}</div>
+    <div><span class="big">${fmt(a.followers)}</span>
+      <span class="${cls(d)}" style="font-size:var(--text-label)">
+        ${d == null ? "" : signed(d)}${a[pctKey] != null ? ` (${a[pctKey]}%)` : ""}</span></div>
+    <div class="meta">${fmt(a.total_posts)} posts · ${a.as_of ? "as of " + shortDate(a.as_of) : "no data"}</div>
+  </button>`;
+}
+
+/* ---------- availability ---------- */
+function availabilityPanel() {
+  const live = connectedPlatforms();
+  const active = scopePlatform();
+  const head = PLATFORMS.map((p) =>
+    `<div class="mh ${active && active !== p ? "dim" : ""}" style="color:${COLOR[p]}">${SHORT[p]}</div>`).join("");
+  const body = AVAIL.map((row) => {
+    const cells = PLATFORMS.map((p) => {
+      const code = live.includes(p) ? row[p] : "off";
+      const dim = active && active !== p;
+      return `<div class="mc"><span class="g ${code} ${dim ? "dim" : ""}"
+        title="${esc(row.m)} — ${esc(GLYPH_TITLE[code])}"></span></div>`;
+    }).join("");
+    return `<div class="mm">${esc(row.m)}</div>${cells}`;
+  }).join("");
+
+  return `<div class="panel">
+    <h2>Availability</h2>
+    <p class="hint">What each platform can ever give us, and how often. A hollow ring
+      is the API's answer, not a fault — terracotta would be ours.</p>
+    <div class="matrix" style="grid-template-columns:1.4fr repeat(${PLATFORMS.length},1fr)">
+      <div class="mh" style="border-bottom:1px solid var(--border-default)"></div>${head}${body}
+    </div>
+    <div class="legend">
+      ${["live","lag","roll","deriv","none","off"].map((c) =>
+        `<span><span class="g ${c}"></span>${GLYPH_TITLE[c]}</span>`).join("")}
+    </div>
+  </div>`;
+}
+
+/* ---------- posts ---------- */
+const COLS = [
+  { k:"thumb", t:"", n:false },
+  { k:"platform", t:"Platform", n:false },
+  { k:"account", t:"Account", n:false },
+  { k:"title", t:"Title", n:false },
+  { k:"published_at", t:"Published", n:false },
+  { k:"views", t:"Views", n:true },
+  { k:"likes", t:"Likes", n:true },
+  { k:"comments", t:"Comments", n:true },
+  { k:"engagement_pct", t:"Eng %", n:true },
+];
+
+function postsInScope() {
+  const names = new Set(scoped().map((r) => `${r.platform}|${r.display_name}`));
+  let rows = DATA.posts.filter((p) =>
+    SCOPE.kind === "all" ? true
+      : SCOPE.kind === "platform" ? p.platform === SCOPE.p
+      : names.has(`${p.platform}|${p.account}`));
+  if (POSTTYPE !== "all") rows = rows.filter((p) => (p.post_type ?? "") === POSTTYPE);
+  return rows;
+}
+
+function postsPanel() {
+  const all = DATA.posts.filter((p) =>
+    SCOPE.kind === "all" ? true
+      : SCOPE.kind === "platform" ? p.platform === SCOPE.p
+      : new Set(scoped().map((r) => `${r.platform}|${r.display_name}`)).has(`${p.platform}|${p.account}`));
+  // Post-type filter is built from the types actually present — no hardcoded list.
+  const types = [...new Set(all.map((p) => p.post_type).filter(Boolean))].sort();
+  // A type carried in from the URL may not exist in this scope; don't filter to nothing.
+  if (POSTTYPE !== "all" && !types.includes(POSTTYPE)) POSTTYPE = "all";
+  const rows = postsInScope();
+
+  const filters = types.length > 1 ? `<div class="filters">
+    <button data-type="all" aria-pressed="${POSTTYPE === "all"}">All types</button>
+    ${types.map((t) => `<button data-type="${esc(t)}" aria-pressed="${POSTTYPE === t}">${esc(titleise(t))}</button>`).join("")}
+  </div>` : "";
+
+  return `<div class="panel">
+    <div class="phead"><h2>Posts</h2>${filters}</div>
+    <p class="hint">Engagement rate is the figure that compares across platforms; raw views are not.</p>
+    <div class="tablewrap"><table id="posts">
+      <thead><tr>${COLS.map((c) =>
+        `<th ${sortKey === c.k ? `aria-sort="${sortDir === 1 ? "ascending" : "descending"}"` : ""}>
+          ${c.k === "thumb" ? "" : `<button data-k="${c.k}">${c.t}</button>`}</th>`).join("")}</tr></thead>
+      <tbody>${postRows(rows)}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function postRows(rows) {
+  const numeric = new Set(COLS.filter((c) => c.n).map((c) => c.k));
+  const sorted = [...rows].sort((a,b) => {
+    const x = a[sortKey], y = b[sortKey];
+    if (x === y) return 0;
+    if (x === null || x === undefined) return 1;   // nulls always sink
+    if (y === null || y === undefined) return -1;
+    if (sortKey === "published_at") return (new Date(x) - new Date(y)) * sortDir;
+    if (numeric.has(sortKey)) return (Number(x) - Number(y)) * sortDir;
+    return String(x).localeCompare(String(y)) * sortDir;
+  });
+  if (!sorted.length) {
+    return `<tr><td colspan="${COLS.length}"><div class="empty" style="border:0">
+      No posts collected for this scope yet.</div></td></tr>`;
+  }
+  return sorted.map((p) => `
+    <tr>
+      <td>${p.thumbnail_url ? `<img class="thumb" src="${esc(p.thumbnail_url)}" alt="" loading="lazy">` : ""}</td>
+      <td><span class="pill ${esc(p.platform)}">${LABEL[p.platform] ?? p.platform}</span></td>
+      <td class="t">${esc(p.account || p.handle || "")}</td>
+      <td class="t">${p.permalink
+        ? `<a href="${esc(p.permalink)}" target="_blank" rel="noopener">${esc(p.title || p.caption || "(untitled)")}</a>`
+        : esc(p.title || p.caption || "(untitled)")}</td>
+      <td>${shortDate(p.published_at)}</td>
+      <td>${fmt(p.views)}</td>
+      <td>${fmt(p.likes)}</td>
+      <td>${fmt(p.comments)}</td>
+      <td>${p.engagement_pct != null ? p.engagement_pct + "%" : "—"}</td>
+    </tr>`).join("");
+}
+
+/* ---------- sync health ---------- */
+function syncPanel() {
+  const p = scopePlatform();
+  /* social_sync_health exposes account_id, so an account scope narrows to that account
+     rather than its whole platform — this panel is where the YouTube empty state sends
+     the reader to disambiguate one channel from its siblings, so listing siblings would
+     defeat it. sync_runs.account_id is nullable (startRun takes it optionally), and a
+     platform-level run with no account is deliberately kept: it explains a whole
+     platform failing to collect, which is relevant to every account under it. */
+  const ids = new Set(scoped().map((a) => a.account_id));
+  const rows = DATA.sync.filter((r) =>
+    SCOPE.kind === "account"
+      ? (r.account_id === null || r.account_id === undefined ? r.platform === p : ids.has(r.account_id))
+      : (p ? r.platform === p : true));
+  const body = rows.length
+    ? rows.slice().sort((a,b) => new Date(b.started_at) - new Date(a.started_at)).map((r) => `
+        <div class="sync" title="${esc(r.message || "")}">
+          <span class="led ${esc(r.status)}"></span>
+          <span class="pill ${esc(r.platform)}">${LABEL[r.platform] ?? r.platform}</span>
+          <span class="who">${esc(r.display_name || "—")}${
+            r.message
+              ? ` · <span style="color:${r.status === "error" ? "var(--state-negative)" : "var(--text-tertiary)"}">${esc(r.message.slice(0,90))}</span>`
+              : ""}</span>
+          <span class="when">${ago(r.started_at)}</span>
+        </div>`).join("")
+    : `<div class="empty">No collector has run for this scope yet.</div>`;
+  return `<div class="panel"><h2>Sync health</h2>
+    <p class="hint">Last collector run per account. A red light is a fault; a hollow ring
+      in Availability above is not.</p>${body}</div>`;
+}
+
+/* ============================ charts ============================ */
+const AXIS = {
+  grid:{ color:cssVar("--border-subtle"), drawTicks:false },
+  border:{ display:false },
+  ticks:{ color:cssVar("--text-tertiary"), font:{ size:11 }, maxRotation:0, autoSkipPadding:18 },
+};
+const BASE = {
+  responsive:true, maintainAspectRatio:false,
+  interaction:{ mode:"index", intersect:false },
+  plugins:{
+    legend:{ labels:{ color:cssVar("--text-secondary"), boxWidth:9, boxHeight:9,
+      usePointStyle:true, font:{ size:11 } } },
+    tooltip:{ backgroundColor:cssVar("--surface-overlay"), borderColor:cssVar("--border-default"),
+      borderWidth:1, titleColor:cssVar("--text-primary"), bodyColor:cssVar("--text-secondary"), padding:10 },
+  },
+  scales:{ x:AXIS, y:{ ...AXIS, ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } } },
+};
+
+function drawCharts() {
+  drawAudience();
+  drawDaily();
+}
+
+/* Overview groups by platform; a narrowed scope groups by account, so the three
+   Instagram accounts stop being one indistinguishable line. */
+function drawAudience() {
+  const el = $("#chAudience");
+  if (!el) return;
+  const ids = new Set(scoped().map((a) => a.account_id));
+  const rows = DATA.series.filter((r) => SCOPE.kind === "all" ? true : ids.has(r.account_id));
+  if (!rows.length) return;
+
+  const days = [...new Set(rows.map((r) => r.day))].sort();
+  let datasets;
+
+  if (SCOPE.kind === "all") {
+    const groups = [...new Set(rows.map((r) => r.platform))];
+    const agg = {};
+    for (const r of rows) {
+      const k = `${r.day}|${r.platform}`;
+      agg[k] = (agg[k] ?? 0) + (Number(r.followers) || 0);
+    }
+    datasets = groups.map((g) => ({
+      label: LABEL[g] ?? g,
+      data: days.map((d) => agg[`${d}|${g}`] ?? null),
+      borderColor: COLOR[g] ?? cssVar("--state-progress"),
+      backgroundColor: (COLOR[g] ?? cssVar("--state-progress")) + "1f",
+      borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true, fill:true,
+    }));
+  } else {
+    const accounts = [...new Set(rows.map((r) => r.account_id))];
+    const nameOf = (id) => {
+      const a = DATA.overview.find((x) => x.account_id === id);
+      return a ? (a.display_name || a.handle || "account") : "account";
+    };
+    const idx = new Map(rows.map((r) => [`${r.day}|${r.account_id}`, Number(r.followers) || 0]));
+    const base = COLOR[scopePlatform()] ?? cssVar("--state-progress");
+    datasets = accounts.map((id, i) => ({
+      label: nameOf(id),
+      data: days.map((d) => idx.has(`${d}|${id}`) ? idx.get(`${d}|${id}`) : null),
+      borderColor: base,
+      backgroundColor: base + "14",
+      borderWidth: 2, borderDash: i === 0 ? [] : i === 1 ? [5,3] : [2,3],
+      pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true,
+      fill: accounts.length === 1,
+    }));
+  }
+
+  charts.a = new Chart(el, {
+    type:"line",
+    data:{ labels: days.map(shortDate), datasets },
+    options:{ ...BASE, plugins:{ ...BASE.plugins,
+      legend:{ ...BASE.plugins.legend, display: datasets.length > 1 } } },
+  });
+}
+
+function drawDaily() {
+  const el = $("#chDaily");
+  if (!el) return;
+  const p = scopePlatform();
+  const rows = DATA.daily.filter((d) => (p ? d.platform === p : true) && !isRolling(d.metric));
+  if (!rows.length) return;
+
+  const days = [...new Set(rows.map((r) => r.day))].sort();
+  const metrics = [...new Set(rows.map((r) => r.metric))].sort();
+  const idx = new Map(rows.map((r) => [`${r.day}|${r.metric}|${r.platform}`, Number(r.value) || 0]));
+  /* A day with no row is a gap, not a zero. YouTube's 2–3 day lag would otherwise
+     draw a cliff to the floor and read as "we lost all our views". */
+  const sumFor = (d, m) => {
+    let total = 0, seen = false;
+    for (const pl of PLATFORMS) {
+      const v = idx.get(`${d}|${m}|${pl}`);
+      if (v !== undefined) { total += v; seen = true; }
+    }
+    return seen ? total : null;
+  };
+
+  // Headline metric as bars, the rest as thin lines on a right axis.
+  const head = metrics.includes("views") ? "views" : metrics.includes("reach") ? "reach" : metrics[0];
+  const rest = metrics.filter((m) => m !== head && !/^avg_/.test(m));
+  const ramp = [cssVar("--state-progress"), cssVar("--brand-gold"), cssVar("--brand-gold-soft"),
+    cssVar("--text-secondary"), cssVar("--state-negative")];
+
+  charts.d = new Chart(el, {
+    data:{ labels: days.map(shortDate), datasets:[
+      { type:"bar", label:metricLabel(head), yAxisID:"y",
+        data: days.map((d) => sumFor(d, head)),
+        backgroundColor: p ? (COLOR[p] ?? cssVar("--state-progress")) : cssVar("--state-progress"),
+        borderRadius:2, borderSkipped:false, order:3 },
+      ...rest.map((m, i) => ({
+        type:"line", label:metricLabel(m), yAxisID:"y1",
+        data: days.map((d) => sumFor(d, m)),
+        borderColor: ramp[i % ramp.length], borderWidth:1.5,
+        pointRadius:0, pointHoverRadius:3, tension:.3, order:1,
+      })),
+    ] },
+    options:{ ...BASE, scales:{
+      x:AXIS,
+      y:{ ...AXIS, beginAtZero:true, ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } },
+      y1:{ ...AXIS, position:"right", beginAtZero:true, grid:{ display:false },
+        ticks:{ ...AXIS.ticks, callback:(v) => fmt(v) } },
+    } },
+  });
+}
+
+/* ============================ wiring ============================ */
+function wire() {
+  $$("#posts th button").forEach((b) => b.onclick = () => {
+    const k = b.dataset.k;
+    if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = -1; }
+    render();
+  });
+  $$("[data-acct]").forEach((b) => b.onclick = () => setScope({ kind:"account", id:b.dataset.acct }));
+  $$("[data-scope-platform]").forEach((b) => b.onclick = () => setScope({ kind:"platform", p:b.dataset.scopePlatform }));
+  $$("[data-connect]").forEach((b) => b.onclick = () => openConnect(b.dataset.connect));
+  $$("[data-type]").forEach((b) => b.onclick = () => {
+    POSTTYPE = b.dataset.type; writeUrl(); render();
+  });
+}
+
+$("#clearScope").onclick = () => setScope({ kind:"all" });
+
+function syncRangeButtons() {
+  $$("#range button").forEach((x) => {
+    if (Number(x.dataset.d) === RANGE) x.setAttribute("aria-pressed", "true");
+    else x.removeAttribute("aria-pressed");
+  });
+}
+$$("#range button").forEach((b) => b.onclick = () => {
+  RANGE = Number(b.dataset.d);
+  syncRangeButtons();
+  writeUrl();
+  load();
+});
+
+/* ============================ connect flow ============================
+   Replaces window.prompt(). YouTube is the awkward one: the Data API cannot
+   discover which channel an account owns, so oauth-start requires a target —
+   we register the channel by handle first, then send the user to consent. */
+function openConnect(preselect) {
+  let choice = PLATFORMS.includes(preselect) ? preselect : "youtube";
+  let handle = "";
+
+  const opts = [
+    { p:"youtube",   nm:"YouTube",         ds:"Channel stats, daily views and watch time. Needs the channel handle first." },
+    { p:"instagram", nm:"Instagram",       ds:"Business or Creator account. No Facebook Page required." },
+    { p:"tiktok",    nm:"TikTok",          ds:"Cumulative totals; daily movement is derived after two syncs." },
+    { p:"facebook",  nm:"Facebook Page",   ds:"Pages you administer, plus any Page-linked Instagram accounts." },
+  ];
+
+  const root = $("#modalRoot");
+  const draw = () => {
+    root.innerHTML = `<div class="scrim" role="dialog" aria-modal="true" aria-labelledby="cTitle">
+      <div class="modal">
+        <h2 id="cTitle">Connect an account</h2>
+        <p class="k">Choosing a platform opens that provider's consent window in a new tab.
+          Signal never sees your password — it stores only the access token the provider returns.</p>
+        ${opts.map((o) => `<button class="opt" data-p="${o.p}" aria-pressed="${choice === o.p}">
+          <span class="dot" style="background:${COLOR[o.p]};margin-top:6px"></span>
+          <span><span class="nm">${o.nm}</span><span class="ds">${o.ds}</span></span></button>`).join("")}
+        ${choice === "youtube" ? `<div class="field">
+          <label for="ytHandle">Channel handle or ID</label>
+          <input type="text" id="ytHandle" placeholder="@cunningcorp" value="${esc(handle)}">
+          <p class="k" style="margin:0">The YouTube API can't discover channels from an account,
+            so the channel is registered before consent. Handles are ambiguous — the
+            <code>UC…</code> ID from the Studio URL is authoritative. Brand Accounts are
+            supported; pick the right one in Google's account chooser.</p></div>` : ""}
+        <div class="foot">
+          <button class="btn" data-cancel>Cancel</button>
+          <button class="btn primary" data-go>Continue</button>
+        </div>
+      </div></div>`;
+
+    $$(".opt", root).forEach((b) => b.onclick = () => {
+      choice = b.dataset.p;
+      handle = $("#ytHandle", root)?.value ?? handle;
+      draw();
+    });
+    $("[data-cancel]", root).onclick = close;
+    $("[data-go]", root).onclick = go;
+    $(".scrim", root).onclick = (e) => { if (e.target === e.currentTarget) close(); };
+    $("#ytHandle", root)?.focus();
+  };
+
+  const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+
+  async function go() {
+    const btn = $("[data-go]", root);
+    btn.disabled = true; btn.textContent = "Opening…";
+    try {
+      const { data:{ session } } = await sb.auth.getSession();
+      const auth = { Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY };
+
+      if (choice === "youtube") {
+        const h = ($("#ytHandle", root)?.value ?? "").trim();
+        if (!h) { toast("Enter the channel handle, e.g. @cunningcorp."); btn.disabled = false; btn.textContent = "Continue"; return; }
+        const q = h.startsWith("UC") ? `id=${encodeURIComponent(h)}` : `handle=${encodeURIComponent(h)}`;
+        const reg = await fetch(`${SUPABASE_URL}/functions/v1/add-youtube-channel?${q}`,
+          { method:"POST", headers:auth });
+        const regBody = await reg.json().catch(() => ({}));
+        if (!reg.ok) { toast(regBody.error || regBody.hint || "Could not find that channel."); close(); return; }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/oauth-start?platform=youtube&${q}`, { headers:auth });
+        const body = await res.json();
+        if (body.url) { window.open(body.url, "_blank", "noopener"); close(); toast("Approve access in the new tab, then Sync now."); }
+        else toast(body.error || "Could not start the connect flow.");
+        return;
+      }
+
+      const res = await fetch(
+        `${SUPABASE_URL}/functions/v1/oauth-start?platform=${CONNECT_KIND[choice]}`, { headers:auth });
+      const body = await res.json();
+      if (body.url) { window.open(body.url, "_blank", "noopener"); close(); toast("Approve access in the new tab, then Sync now."); }
+      else toast(body.error || "Could not start the connect flow.");
+    } catch (e) {
+      toast(`Connect failed: ${e.message}`);
+    } finally {
+      if (root.innerHTML) { btn.disabled = false; btn.textContent = "Continue"; }
+    }
+  }
+
+  draw();
+}
+$("#connectBtn").onclick = () => openConnect(scopePlatform());
+
+/* ============================ sync ============================ */
+$("#syncBtn").onclick = async () => {
+  const btn = $("#syncBtn");
+  btn.disabled = true; btn.textContent = "Syncing…";
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/sync-all`, {
+      method:"POST",
+      headers:{ Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY },
+    });
+    const body = await res.json();
+    toast(body.failed
+      ? `Sync finished with ${plural(body.failed, "failing collector", "failing collectors")} — see Sync health.`
+      : "Sync complete.");
+  } catch (e) {
+    toast(`Sync failed: ${e.message}`);
+  } finally {
+    btn.disabled = false; btn.textContent = "Sync now";
+    await load();
+  }
+};
+
+/* ============================ boot ============================ */
+let booted = false;
+function applySession(session) {
+  const signedIn = !!session;
+  $("#gate").classList.toggle("hide", signedIn);
+  $("#app").classList.toggle("hide", !signedIn);
+  if (signedIn && !booted) { booted = true; readUrl(); syncRangeButtons(); load(); }
+  if (!signedIn) booted = false;
+}
+sb.auth.onAuthStateChange((_e, session) => applySession(session));
+applySession((await sb.auth.getSession()).data.session);
+</script>
+</body>
+</html>
