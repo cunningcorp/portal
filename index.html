@@ -522,6 +522,33 @@ td.t a:hover{color:var(--brand-gold-soft)}
   .chartbox{height:210px}
   .toast{position:fixed;left:var(--space-4);right:var(--space-4);
     bottom:calc(80px + var(--safe-bottom));top:auto;transform:none;text-align:center}
+
+  /* ---- bottom sheets (scope + profile) ---- */
+  .scrim.sheetscrim{position:fixed;inset:0;z-index:60;background:rgba(12,8,18,.66);
+    backdrop-filter:blur(4px);display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch}
+  .sheet{background:var(--surface-raised);border-top-left-radius:20px;border-top-right-radius:20px;
+    border-top:1px solid var(--border-strong);box-shadow:0 -12px 40px rgba(0,0,0,.5);
+    max-height:82%;display:flex;flex-direction:column;animation:slideup var(--dur-base) var(--ease-out)}
+  @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--border-strong);margin:var(--space-3) auto var(--space-1)}
+  .sheet h2{margin:0;padding:var(--space-2) var(--space-5) var(--space-4);
+    font-family:var(--font-head);font-weight:300;font-size:1.4rem}
+  .sheet .scroll{overflow-y:auto;padding:0 var(--space-4) calc(var(--space-5) + var(--safe-bottom))}
+  .sheet .node{padding:var(--space-3)}
+  .sheet .mi{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;text-align:left;
+    background:none;border:0;border-radius:var(--radius-md);padding:var(--space-3);color:var(--text-secondary)}
+  .sheet .mi:active{background:var(--surface-overlay);color:var(--text-primary)}
+  .sheet .mi .ico{width:17px;height:17px;flex:none;opacity:.75;margin-top:2px}
+  .sheet .mi .sub{display:block;font-size:var(--text-micro);color:var(--text-tertiary);margin-top:1px}
+  .sheet .mi.danger:active{color:var(--state-negative)}
+  .sheet .who-head{padding:var(--space-2) var(--space-3) var(--space-3);
+    border-bottom:1px solid var(--border-subtle);margin-bottom:var(--space-2)}
+  .sheet .who-head .em{display:block;font-size:var(--text-label);color:var(--text-primary);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sheet .who-head .rl{display:block;font-size:var(--text-micro);color:var(--text-tertiary);margin-top:2px}
+  .sheet .menunote{padding:var(--space-2) var(--space-3);font-size:var(--text-micro);
+    color:var(--text-tertiary);line-height:1.5}
+  .sheet .rule{height:1px;background:var(--border-subtle);margin:var(--space-2) 0}
 }
 </style>
 </head>
@@ -892,6 +919,9 @@ function setProfile(email) {
     ? (parts[0][0] + parts[1][0])
     : local.slice(0, 2);
   $("#profileInitials").textContent = initials ? initials.toUpperCase() : "—";
+  // Mobile shell mirrors the same avatar and stashes the email for the profile sheet.
+  $("#mProfileInitials").textContent = initials ? initials.toUpperCase() : "—";
+  $("#mProfileBtn").dataset.email = email ?? "";
 }
 
 $("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
@@ -1078,6 +1108,7 @@ function briefing() {
 function render() {
   renderRail();
   renderScopeBar();
+  renderContextBar();
   renderBriefing();
   renderSyncFoot();
   destroyCharts();
@@ -1744,12 +1775,12 @@ function wire() {
 $("#clearScope").onclick = () => setScope({ kind:"all" });
 
 function syncRangeButtons() {
-  $$("#range button").forEach((x) => {
+  $$("#range button, #mRange button").forEach((x) => {
     if (Number(x.dataset.d) === RANGE) x.setAttribute("aria-pressed", "true");
     else x.removeAttribute("aria-pressed");
   });
 }
-$$("#range button").forEach((b) => b.onclick = () => {
+$$("#range button, #mRange button").forEach((b) => b.onclick = () => {
   RANGE = Number(b.dataset.d);
   syncRangeButtons();
   writeUrl();
@@ -2031,6 +2062,128 @@ function openIdleWarning(secs) {
 
 ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((ev) =>
   addEventListener(ev, () => { if (idleTimer && !warnOpen) armIdleLogout(); }, { passive: true }));
+
+/* ============================ mobile shell ============================
+   Wires the mobile top/context/action bars (distinct m* IDs) and the bottom-sheet
+   scope and profile. Reuses the shared handlers and trapFocus; none of it runs on
+   desktop, where the mobile bars are display:none. Connect still opens the desktop
+   modal for now — phase C makes it a sheet. */
+function renderContextBar() {
+  const rows = scoped();
+  let name = "Overview", sub = "all platforms", dot = "var(--brand-gold)";
+  if (SCOPE.kind === "platform") {
+    name = LABEL[SCOPE.p] ?? SCOPE.p; sub = plural(rows.length, "account", "accounts"); dot = COLOR[SCOPE.p];
+  } else if (SCOPE.kind === "account") {
+    const a = rows[0];
+    name = a ? (a.display_name || a.handle || "Account") : "Account";
+    sub = a ? `${LABEL[a.platform] ?? a.platform}${a.handle ? " · " + a.handle : ""}` : "";
+    dot = a ? COLOR[a.platform] : "var(--brand-gold)";
+  }
+  $("#mScopeName").textContent = name;
+  $("#mScopeSub").textContent = sub;
+  $("#mScopeDot").style.background = dot;
+}
+const scrollTop = () => $("#view")?.scrollTo?.({ top: 0 });
+
+/* Bottom-sheet primitives — one sheet at a time in #sheetRoot, mirroring the
+   modal's Escape / scrim-close and reusing trapFocus so focus behaves the same. */
+let releaseSheetTrap = null;
+const onSheetKey = (e) => { if (e.key === "Escape") closeSheet(); };
+function openSheet(inner, { labelledby } = {}) {
+  const root = $("#sheetRoot");
+  root.innerHTML = `<div class="scrim sheetscrim"><div class="sheet" role="dialog" aria-modal="true"${labelledby ? ` aria-labelledby="${labelledby}"` : ""}>
+    <div class="grab"></div>${inner}</div></div>`;
+  const scrim = root.querySelector(".scrim");
+  scrim.addEventListener("click", (e) => { if (e.target === scrim) closeSheet(); });
+  document.addEventListener("keydown", onSheetKey);
+  releaseSheetTrap = trapFocus(root);
+  return root;
+}
+function closeSheet() {
+  const root = $("#sheetRoot");
+  if (!root.innerHTML) return;
+  root.innerHTML = "";
+  document.removeEventListener("keydown", onSheetKey);
+  if (releaseSheetTrap) { releaseSheetTrap(); releaseSheetTrap = null; }
+}
+
+/* Scope sheet — the rail's scope tree as a bottom sheet. Everything goes through
+   setScope(), the only correct way to change scope (handoff §3). */
+function openScope() {
+  const byPlatform = {};
+  for (const a of DATA.overview) (byPlatform[a.platform] ??= []).push(a);
+  const node = ({ label, meta, kind, key, extra = "", colour, hollow, showdot = true }) => {
+    const current = (kind === "all" && SCOPE.kind === "all")
+      || (kind === "platform" && SCOPE.kind === "platform" && SCOPE.p === key)
+      || (kind === "account" && SCOPE.kind === "account" && SCOPE.id === key);
+    const dot = !showdot ? ""
+      : colour !== undefined
+        ? `<span class="dot${hollow ? " hollow" : ""}"${hollow ? "" : ` style="background:${colour}"`}></span>`
+        : `<span class="dot" style="background:var(--brand-gold)"></span>`;
+    return `<button class="node ${extra}" data-kind="${kind}" data-key="${esc(key ?? "")}" aria-current="${current}">
+      ${dot}<span class="lbl">${esc(label)}</span><span class="meta">${esc(meta ?? "")}</span></button>`;
+  };
+  let html = node({ label: "Overview", kind: "all", key: "" });
+  for (const p of PLATFORMS) {
+    const kids = byPlatform[p] ?? [];
+    const connected = kids.length > 0;
+    html += node({ label: LABEL[p], meta: connected ? String(kids.length) : "Connect",
+      kind: connected ? "platform" : "connect", key: p,
+      extra: "group" + (connected ? "" : " off"), colour: COLOR[p], hollow: !connected });
+    for (const a of kids) html += node({ label: a.display_name || a.handle || "account",
+      meta: fmt(a.followers), kind: "account", key: a.account_id, extra: "child", showdot: false });
+  }
+  openSheet(`<h2 id="mScopeTitle">Scope</h2><div class="scroll">${html}</div>`, { labelledby: "mScopeTitle" });
+  $$("#sheetRoot .node").forEach((b) => b.onclick = () => {
+    const { kind, key } = b.dataset;
+    if (kind === "connect") { closeSheet(); return openConnect(key); }
+    if (kind === "all") setScope({ kind: "all" });
+    else if (kind === "platform") setScope({ kind: "platform", p: key });
+    else if (kind === "account") setScope({ kind: "account", id: key });
+    closeSheet(); scrollTop();
+  });
+}
+
+/* Profile sheet — email, add passkey, the idle rule, sign out. Sheet buttons use
+   data-attributes, not IDs, so they never collide with the desktop menu's
+   #addPasskey / #signOut, which still exist (hidden) in the DOM. */
+function openProfileSheet() {
+  const email = $("#mProfileBtn").dataset.email || "—";
+  const passkeyItem = window.PublicKeyCredential ? `<button class="mi" data-sheet-passkey>
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.4"></circle><path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path><path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path></svg>
+    <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span></button>` : "";
+  openSheet(`<h2 id="mProfTitle" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Account</h2><div class="scroll">
+    <div class="who-head"><span class="em">${esc(email)}</span><span class="rl">Signed in · invited access</span></div>
+    ${passkeyItem}
+    <div class="menunote">Signs out after ${IDLE_MINUTES} minutes without activity.</div>
+    <div class="rule"></div>
+    <button class="mi danger" data-sheet-signout>
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M14 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H14"></path><path d="M17 8.5 20.5 12 17 15.5M20.5 12H10"></path></svg>
+      <span>Sign out</span></button></div>`, { labelledby: "mProfTitle" });
+  const ap = $("#sheetRoot [data-sheet-passkey]");
+  if (ap) ap.onclick = async () => {
+    ap.disabled = true;
+    const { error } = await sb.auth.registerPasskey();
+    ap.disabled = false; closeSheet();
+    toast(error ? `Couldn't add a passkey: ${error.message}` : "Passkey added — sign in with Face ID next time.");
+  };
+  $("#sheetRoot [data-sheet-signout]").onclick = async () => {
+    lastEmail = null;
+    history.replaceState(null, "", location.pathname);
+    await sb.auth.signOut();
+    location.reload();
+  };
+}
+
+/* Wire the mobile bars. The write-actions reuse the desktop handlers so there is a
+   single code path; the visible "Syncing…" state lands on the (hidden) desktop
+   button — a known phase-B rough edge, not a correctness gap. */
+$("#mScopeBtn").onclick = openScope;
+$("#mProfileBtn").onclick = openProfileSheet;
+$("#mConnectBtn").onclick = () => openConnect(scopePlatform());
+$("#mSyncBtn").onclick = () => $("#syncBtn").click();
 
 /* ============================ boot ============================ */
 let booted = false;
