@@ -1544,11 +1544,29 @@ $("#syncBtn").onclick = async () => {
 };
 
 /* ============================ boot ============================ */
+/* Idle logout: sign out after 66 minutes without interaction. The timer runs
+   only while signed in and resets on any activity. Client-side by design — a
+   belt-and-braces cap on top of the token's own lifetime, fine for an internal
+   tool where the browser is the only client. */
+const IDLE_MS = 66 * 60 * 1000;
+let idleTimer = null;
+function armIdleLogout() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(async () => {
+    await sb.auth.signOut();               // -> onAuthStateChange(null) -> gate
+    $("#authMsg").textContent = "Signed out after 66 minutes of inactivity.";
+  }, IDLE_MS);
+}
+function disarmIdleLogout() { clearTimeout(idleTimer); idleTimer = null; }
+["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((ev) =>
+  addEventListener(ev, () => { if (idleTimer) armIdleLogout(); }, { passive: true }));
+
 let booted = false;
 function applySession(session) {
   const signedIn = !!session;
   $("#gate").classList.toggle("hide", signedIn);
   $("#app").classList.toggle("hide", !signedIn);
+  if (signedIn) armIdleLogout(); else disarmIdleLogout();
   if (signedIn && !booted) { booted = true; readUrl(); syncRangeButtons(); load(); }
   if (!signedIn) booted = false;
 }
