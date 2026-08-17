@@ -82,8 +82,10 @@ Discoverability: the profile menu states the rule while signed in, so the sign-o
 before it happens rather than only explained afterwards.
 
 Testing: `signalIdleWarn()` in the console opens it immediately; `signalIdleWarn(10)` with
-10 seconds on the clock. Nobody can wait 66 minutes to review a dialog. Remove the hook if
-you'd rather not ship it — it only shortens the clock.
+10 seconds on the clock. Nobody can wait 66 minutes to review a dialog. **The hook is kept
+in this prototype and was deliberately dropped from the shipped `index.html`** — a review
+artifact needs it, production doesn't. That is the one intentional difference between the
+two files.
 
 ---
 
@@ -150,9 +152,8 @@ Overview deliberately charts no daily series at all. Views, reach and watch time
 comparable, so it lists each platform's cadence and defers to a platform scope — preserving
 the editorial decision brief §1.3 says must survive.
 
-*Open item: the audience chart keeps the framework's `spanGaps: true`, so a missed sync
-interpolates rather than showing a hole. That now sits oddly beside the daily charts. A
-decision either way, not a defect.*
+*Open item: the audience chart now uses `spanGaps: false` — a missed sync shows a hole
+rather than interpolating, matching the daily series. Decided with the code pass 17 Aug.*
 
 ---
 
@@ -170,4 +171,8 @@ may not need more, but it's a decision, not an oversight.
 and `role="alertdialog"` on the idle warning, both closing on Escape and scrim click ·
 `prefers-reduced-motion` disables shimmer, pulse and the running LED.
 
-*Open item: neither modal traps focus. Escape and scrim-click work; Tab can leave.*
+Both modals trap Tab (`trapFocus`, added by the code pass 17 Aug) and close on Escape and
+scrim click.
+
+*Open item: the profile menu is a `role="menu"` without arrow-key roving focus — Tab
+works, arrows don't.*
