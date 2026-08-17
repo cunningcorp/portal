@@ -106,6 +106,10 @@
   --shadow-overlay:0 18px 50px rgba(0,0,0,.55);
   --dur-fast:120ms; --dur-base:200ms; --ease-out:cubic-bezier(.2,.7,.2,1);
   --rail-w:248px;
+  /* mobile shell (used only under the max-width:720px breakpoint) */
+  --topbar-h:54px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 
 *{box-sizing:border-box}
@@ -445,6 +449,80 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);
   background:var(--surface-overlay);border:1px solid var(--border-default);
   padding:.6rem 1rem;border-radius:9px;font-size:.85rem;z-index:70;box-shadow:var(--shadow-overlay)}
+
+/* ============================================================================
+   MOBILE — folded from the signal-mobile comp (design v3). Everything below the
+   720px breakpoint: the desktop rail can't ride a phone, so scope moves to a
+   bottom sheet reached from a thumb-zone bar, the two write-actions live in that
+   bar, and content stacks. Shared token/component vocabulary; hex stays in :root.
+   The mobile shell containers are display:none by default so the desktop grid
+   never sees them. PHASE A = shell swap + content foundation only; the bottom
+   sheets, post cards and transposed availability matrix arrive with their DOM
+   and JS in later phases.
+   ============================================================================ */
+.mtop,.mctx,.mact{display:none}
+
+@media(max-width:720px){
+  /* ---- shell swap ---- */
+  #app{grid-template-columns:1fr}
+  .rail,.scopebar,.appmain>.briefing{display:none !important}
+  .appmain{display:flex;flex-direction:column;height:100dvh;min-height:0}
+  .mtop,.mctx,.mact{display:flex}
+  #view{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:var(--space-4);padding-bottom:var(--space-6);
+    display:flex;flex-direction:column;gap:var(--space-4)}
+
+  /* ---- top bar ---- */
+  .mtop{align-items:center;gap:var(--space-3);flex:none;z-index:30;
+    height:calc(var(--topbar-h) + var(--safe-top));padding:var(--safe-top) var(--space-3) 0 var(--space-4);
+    background:color-mix(in srgb,var(--surface-raised) 88%,transparent);
+    backdrop-filter:blur(14px);border-bottom:1px solid var(--border-subtle)}
+  .mtop .mark{width:20px;height:20px;flex:none}
+  .mtop .wm{font-family:var(--font-display);font-size:15px;letter-spacing:var(--track-display)}
+  .mtop .cc{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+    color:var(--text-tertiary);padding-left:var(--space-3);border-left:1px solid var(--border-default)}
+  .mspacer{flex:1}
+  .mavatar{width:34px;height:34px;border-radius:50%;flex:none;background:var(--surface-overlay);
+    border:1px solid var(--border-default);color:var(--text-secondary);font-weight:600;
+    font-size:var(--text-micro);letter-spacing:.04em;text-transform:uppercase;display:grid;place-items:center}
+  .mavatar:active{border-color:var(--state-progress)}
+
+  /* ---- context bar (scope + range) ---- */
+  .mctx{align-items:center;gap:var(--space-3);flex:none;z-index:20;padding:var(--space-3) var(--space-4);
+    background:color-mix(in srgb,var(--surface-base) 90%,transparent);
+    backdrop-filter:blur(14px);border-bottom:1px solid var(--border-subtle)}
+  .mscopebtn{flex:1;min-width:0;display:flex;align-items:center;gap:var(--space-2);
+    background:var(--surface-raised);border:1px solid var(--border-default);
+    border-radius:var(--radius-md);padding:.5rem .7rem;text-align:left}
+  .msdot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--brand-gold)}
+  .mstext{flex:1;min-width:0}
+  .msname{display:block;font-size:var(--text-body);color:var(--text-primary);font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}
+  .mssub{display:block;font-size:var(--text-micro);color:var(--text-tertiary);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mschev{flex:none;color:var(--text-tertiary)}
+  .mrange{display:flex;gap:.2rem;flex:none;background:var(--surface-sunken);
+    border:1px solid var(--border-subtle);border-radius:9px;padding:.2rem}
+  .mrange button{background:none;border:0;color:var(--text-tertiary);padding:.4rem .6rem;
+    border-radius:var(--radius-sm);font-size:.8rem}
+  .mrange button[aria-pressed="true"]{background:var(--surface-overlay);color:var(--text-primary)}
+
+  /* ---- thumb-zone action bar ---- */
+  .mact{gap:var(--space-3);flex:none;z-index:30;padding:var(--space-3) var(--space-4);
+    padding-bottom:calc(var(--space-3) + var(--safe-bottom));
+    background:color-mix(in srgb,var(--surface-raised) 92%,transparent);
+    backdrop-filter:blur(16px);border-top:1px solid var(--border-default)}
+  .mact .btn{flex:1;padding:.85rem 1rem;font-size:.9rem;
+    display:inline-flex;align-items:center;justify-content:center;gap:.45rem}
+  .mact .btn.primary{flex:1.4}
+  .mact .btn .ico{width:15px;height:15px;flex:none}
+
+  /* ---- content foundation ---- */
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+  .chartbox{height:210px}
+  .toast{position:fixed;left:var(--space-4);right:var(--space-4);
+    bottom:calc(80px + var(--safe-bottom));top:auto;transform:none;text-align:center}
+}
 </style>
 </head>
 <body>
@@ -512,7 +590,36 @@ td.t a:hover{color:var(--brand-gold-soft)}
     </div>
   </aside>
 
-  <div>
+  <div class="appmain">
+    <!-- Mobile shell: shown only under @media(max-width:720px). Distinct IDs (m*)
+         so it never collides with the desktop rail/scopebar controls that share
+         the same purpose (#syncBtn/#connectBtn/#profileBtn/#range). Wired in a
+         later phase; inert until then. -->
+    <header class="mtop">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      <span class="wm">SIGNAL</span>
+      <span class="cc">Cunning Corp</span>
+      <span class="mspacer"></span>
+      <button class="mavatar" id="mProfileBtn" aria-haspopup="dialog" aria-label="Account and preferences"><span id="mProfileInitials">—</span></button>
+    </header>
+    <div class="mctx">
+      <button class="mscopebtn" id="mScopeBtn" aria-haspopup="dialog">
+        <span class="msdot" id="mScopeDot"></span>
+        <span class="mstext">
+          <span class="msname" id="mScopeName">Overview</span>
+          <span class="mssub" id="mScopeSub">all platforms</span>
+        </span>
+        <svg class="mschev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="mrange" id="mRange" role="group" aria-label="Date range">
+        <button data-d="7">7d</button>
+        <button data-d="30" aria-pressed="true">30d</button>
+        <button data-d="90">90d</button>
+      </div>
+    </div>
+
     <div class="scopebar">
       <span class="k">Scope</span>
       <span class="v" id="scopeTitle">Overview</span>
@@ -566,11 +673,21 @@ td.t a:hover{color:var(--brand-gold-soft)}
     </div>
 
     <main id="view"></main>
+
+    <div class="mact">
+      <button class="btn" id="mConnectBtn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Connect</button>
+      <button class="btn primary" id="mSyncBtn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-.9 4.6M20 4v6h-6"/></svg>
+        Sync now</button>
+    </div>
   </div>
 </div>
 
 <div id="modalRoot"></div>
 <div id="idleRoot"></div>
+<div id="sheetRoot"></div>
 <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
