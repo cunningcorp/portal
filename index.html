@@ -549,6 +549,58 @@ td.t a:hover{color:var(--brand-gold-soft)}
   .sheet .menunote{padding:var(--space-2) var(--space-3);font-size:var(--text-micro);
     color:var(--text-tertiary);line-height:1.5}
   .sheet .rule{height:1px;background:var(--border-subtle);margin:var(--space-2) 0}
+
+  /* ---- briefing (inline in the scroll area on mobile) ---- */
+  .briefing{padding:var(--space-2) 0 var(--space-1)}
+  .dateline{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);flex-wrap:wrap}
+  .dateline .d{font-weight:600;font-size:var(--text-micro);letter-spacing:.16em;text-transform:uppercase;color:var(--brand-gold)}
+  .dateline .s{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary)}
+  .sep{width:3px;height:3px;border-radius:50%;background:var(--border-strong)}
+  .lede{font-family:var(--font-head);font-weight:300;font-size:24px;line-height:1.28;letter-spacing:-.01em;color:var(--text-primary);margin:0 0 var(--space-3);text-wrap:pretty}
+  .lede-sub{font-size:var(--text-body);line-height:1.6;color:var(--text-secondary);margin:0;text-wrap:pretty}
+
+  /* ---- posts as cards ---- */
+  .filters{display:flex;gap:var(--space-2);overflow-x:auto;margin:0 0 var(--space-3);padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .filters button{flex:none;font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary);border:1px solid var(--border-default);background:none;border-radius:var(--radius-pill);padding:.3rem .7rem}
+  .filters button[aria-pressed="true"]{color:var(--text-primary);border-color:var(--border-strong)}
+  .sortrow{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
+  .sortrow select{flex:1;background:var(--surface-sunken);border:1px solid var(--border-default);color:var(--text-secondary);border-radius:var(--radius-md);padding:.5rem .6rem;font:inherit;font-size:var(--text-label)}
+  .sortrow .dir{flex:none;width:40px;background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-secondary);padding:.5rem 0}
+  .pcard{display:flex;gap:var(--space-3);padding:var(--space-3) 0;border-top:1px solid var(--border-subtle)}
+  .pcard:first-of-type{border-top:0}
+  .pcard .th{width:56px;height:56px;flex:none;border-radius:var(--radius-md);object-fit:cover;background:linear-gradient(120deg,var(--surface-overlay),var(--border-default))}
+  .pcard .body{flex:1;min-width:0}
+  .pcard .ptop{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)}
+  .pcard .ptop .when{margin-left:auto;font-size:var(--text-micro);color:var(--text-tertiary);white-space:nowrap}
+  .pcard .title{color:var(--text-primary);font-size:var(--text-body);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pcard .title a{color:var(--text-primary)}
+  .pcard .who{font-size:var(--text-micro);color:var(--text-tertiary);margin:2px 0 var(--space-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pcard .mrow{display:flex;gap:var(--space-4)}
+  .pcard .mrow .m{display:flex;flex-direction:column}
+  .pcard .mrow .mv{font-size:var(--text-body);color:var(--text-secondary);font-variant-numeric:tabular-nums}
+  .pcard .mrow .mv.hi{color:var(--text-primary)}
+  .pcard .mrow .ml{font-size:9px;letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary)}
+
+  /* ---- availability as per-platform cards ---- */
+  .availcard{border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin-top:var(--space-3);background:var(--surface-overlay)}
+  .availcard .top{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)}
+  .arow{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;border-top:1px solid var(--border-subtle);font-size:var(--text-label)}
+  .arow .m{flex:1;color:var(--text-secondary)}
+  .arow .cw{font-size:var(--text-micro);color:var(--text-tertiary);white-space:nowrap}
+  .availoff{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+  .availoff .chipoff{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-micro);color:var(--text-tertiary);border:1px dashed var(--border-default);border-radius:var(--radius-pill);padding:2px var(--space-3)}
+
+  /* ---- connect sheet options ---- */
+  .opt{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;text-align:left;padding:var(--space-3) var(--space-4);border:1px solid var(--border-default);background:none;border-radius:var(--radius-md);margin-bottom:var(--space-2)}
+  .opt[aria-pressed="true"]{border-color:var(--state-progress);background:var(--surface-overlay)}
+  .opt .nm{font-size:var(--text-body);color:var(--text-primary);font-weight:600}
+  .opt .ds{font-size:var(--text-micro);color:var(--text-tertiary);margin-top:2px;line-height:1.5}
+  .field{margin:var(--space-3) 0 var(--space-2)}
+  .field label{display:block;font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary);margin-bottom:var(--space-2)}
+
+  /* ---- empty states ---- */
+  .empty h3{margin:0 0 var(--space-2);font-family:var(--font-head);font-weight:300;color:var(--text-secondary);font-size:1.05rem}
+  .connectrow{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-4)}
 }
 </style>
 </head>
@@ -1238,6 +1290,7 @@ function viewHtml() {
       </div></div></div>`;
   }
   return `
+    ${isMobile() ? briefingHtml() : ""}
     <div class="kpis">${kpisHtml()}</div>
     <div class="grid2">
       ${audiencePanel()}
@@ -1476,6 +1529,7 @@ function acctCard(a) {
    "lags 2–3 days" to "not provided" — the matrix goes from per-platform to per-account
    accuracy, which is what the R4 distinction was missing. */
 function availabilityPanel() {
+  if (isMobile()) return mobileAvailabilityPanel();
   const live = connectedPlatforms();
   const active = scopePlatform();
   const rows = scoped();
@@ -1542,6 +1596,7 @@ function postsInScope() {
 }
 
 function postsPanel() {
+  if (isMobile()) return mobilePostsPanel();
   const scopeIds = new Set(scoped().map((r) => r.account_id));
   const all = DATA.posts.filter((p) =>
     SCOPE.kind === "all" ? true
@@ -1770,6 +1825,9 @@ function wire() {
   $$("[data-type]").forEach((b) => b.onclick = () => {
     POSTTYPE = b.dataset.type; writeUrl(); render();
   });
+  // mobile posts use a select + direction button instead of sortable headers
+  const sel = $("#sortSel"); if (sel) sel.onchange = () => { sortKey = sel.value; render(); };
+  const dir = $("#sortDir"); if (dir) dir.onclick = () => { sortDir *= -1; render(); };
 }
 
 $("#clearScope").onclick = () => setScope({ kind:"all" });
@@ -1812,6 +1870,7 @@ function trapFocus(container) {
 }
 
 function openConnect(preselect) {
+  if (isMobile()) return openConnectSheet(preselect);
   let choice = PLATFORMS.includes(preselect) ? preselect : "youtube";
   let handle = "";
 
@@ -2184,6 +2243,156 @@ $("#mScopeBtn").onclick = openScope;
 $("#mProfileBtn").onclick = openProfileSheet;
 $("#mConnectBtn").onclick = () => openConnect(scopePlatform());
 $("#mSyncBtn").onclick = () => $("#syncBtn").click();
+
+/* ---------- viewport-branched render (phase C) ----------
+   isMobile() reads the same 720px breakpoint the CSS uses. Only the panels that
+   genuinely differ branch — posts become cards, the availability matrix transposes
+   to per-platform cards, the briefing moves inline into the scroll area, and
+   Connect becomes a sheet. Everything else is shared. Re-render on breakpoint
+   cross so a rotate/resize swaps layouts. */
+const isMobile = () => matchMedia("(max-width:720px)").matches;
+matchMedia("(max-width:720px)").addEventListener("change", () => { if (booted) render(); });
+
+function briefingHtml() {
+  const b = briefing();
+  return `<div class="briefing">
+    <div class="dateline"><span class="d">${esc(b.dateline)}</span>
+      ${b.history ? `<span class="sep"></span><span class="s">${esc(b.history)}</span>` : ""}</div>
+    <p class="lede">${esc(b.a)}</p>
+    ${b.b ? `<p class="lede-sub">${esc(b.b)}</p>` : ""}</div>`;
+}
+
+const SORTS = [
+  { k: "published_at", t: "Published" }, { k: "views", t: "Views" },
+  { k: "likes", t: "Likes" }, { k: "comments", t: "Comments" }, { k: "engagement_pct", t: "Engagement %" },
+];
+const NUMERIC = new Set(["views", "likes", "comments", "engagement_pct"]);
+function mobilePostsPanel() {
+  const scopeIds = new Set(scoped().map((r) => r.account_id));
+  const all = DATA.posts.filter((p) =>
+    SCOPE.kind === "all" ? true : SCOPE.kind === "platform" ? p.platform === SCOPE.p : scopeIds.has(p.account_id));
+  const types = [...new Set(all.map((p) => p.post_type).filter(Boolean))].sort();
+  if (POSTTYPE !== "all" && !types.includes(POSTTYPE)) POSTTYPE = "all";
+  const rows = postsInScope();
+  const filters = types.length > 1 ? `<div class="filters">
+    <button data-type="all" aria-pressed="${POSTTYPE === "all"}">All types</button>
+    ${types.map((t) => `<button data-type="${esc(t)}" aria-pressed="${POSTTYPE === t}">${esc(titleise(t))}</button>`).join("")}</div>` : "";
+  const sortcontrol = `<div class="sortrow">
+    <select id="sortSel" aria-label="Sort posts by">${SORTS.map((s) => `<option value="${s.k}"${sortKey === s.k ? " selected" : ""}>${s.t}</option>`).join("")}</select>
+    <button class="dir" id="sortDir" aria-label="Sort direction">${sortDir === 1 ? "↑" : "↓"}</button></div>`;
+  return `<div class="panel"><h2>Posts</h2>
+    <p class="hint">Engagement rate compares across platforms; raw views do not.</p>
+    ${filters}
+    ${rows.length ? sortcontrol + postCards(rows) : `<div class="empty">No posts collected for this scope yet.</div>`}</div>`;
+}
+function postCards(rows) {
+  const sorted = [...rows].sort((a, b) => {
+    const x = a[sortKey], y = b[sortKey];
+    if (x === y) return 0;
+    if (x == null) return 1;
+    if (y == null) return -1;
+    if (sortKey === "published_at") return (new Date(x) - new Date(y)) * sortDir;
+    if (NUMERIC.has(sortKey)) return (Number(x) - Number(y)) * sortDir;
+    return String(x).localeCompare(String(y)) * sortDir;
+  });
+  return sorted.map((p) => {
+    const title = p.title || p.caption || "(untitled)";
+    const titleHtml = p.permalink ? `<a href="${esc(p.permalink)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title);
+    return `<div class="pcard">
+      ${p.thumbnail_url ? `<img class="th" src="${esc(p.thumbnail_url)}" alt="" loading="lazy">` : `<span class="th"></span>`}
+      <div class="body">
+        <div class="ptop"><span class="pill ${esc(p.platform)}">${LABEL[p.platform] ?? p.platform}</span>
+          <span class="when">${shortDate(p.published_at)}</span></div>
+        <div class="title">${titleHtml}</div>
+        <div class="who">${esc(p.account || p.handle || "")}</div>
+        <div class="mrow">
+          <div class="m"><span class="mv">${fmt(p.views)}</span><span class="ml">Views</span></div>
+          <div class="m"><span class="mv">${fmt(p.likes)}</span><span class="ml">Likes</span></div>
+          <div class="m"><span class="mv hi">${p.engagement_pct != null ? p.engagement_pct + "%" : "—"}</span><span class="ml">Eng.</span></div>
+        </div></div></div>`;
+  }).join("");
+}
+
+function mobileAvailabilityPanel() {
+  const live = connectedPlatforms();
+  const active = scopePlatform();
+  const rows = scoped();
+  const known = rows.filter(modeKnown);
+  const qualify = known.length === rows.length && known.length > 0 && !known.some(hasAnalytics);
+  const ANALYTICS_ROWS = new Set(["Views — daily", "Watch time"]);
+  const shownPlatforms = active ? [active] : PLATFORMS.filter((p) => live.includes(p));
+  const cards = shownPlatforms.map((p) => {
+    const rowsHtml = AVAIL.map((row) => {
+      let code = live.includes(p) ? row[p] : "off";
+      if (qualify && p === active && ANALYTICS_ROWS.has(row.m)) code = "none";
+      return `<div class="arow"><span class="g ${code}"></span><span class="m">${esc(row.m)}</span>
+        <span class="cw">${esc(GLYPH_TITLE[code])}</span></div>`;
+    }).join("");
+    return `<div class="availcard"><div class="top"><span class="pill ${esc(p)}">${LABEL[p] ?? p}</span></div>${rowsHtml}</div>`;
+  }).join("");
+  const offPlatforms = active ? [] : PLATFORMS.filter((p) => !live.includes(p));
+  const offHtml = offPlatforms.length ? `<div class="availoff">${offPlatforms.map((p) =>
+    `<span class="chipoff"><span class="g off"></span>${LABEL[p] ?? p} · not connected</span>`).join("")}</div>` : "";
+  const modeNote = qualify ? `<p class="hint" style="margin:var(--space-3) 0 0">Narrowed to what this scope has: no Analytics consent, so the daily rows are off the table rather than merely late.</p>` : "";
+  return `<div class="panel"><h2>Availability</h2>
+    <p class="hint">What each platform can ever give us, and how often. A hollow ring is the API's answer, not a fault — terracotta would be ours.</p>
+    ${cards || `<div class="empty">Connect a platform to see what it can report.</div>`}
+    ${offHtml}
+    <div class="legend">${["live", "lag", "roll", "deriv", "none", "off"].map((c) => `<span><span class="g ${c}"></span>${GLYPH_TITLE[c]}</span>`).join("")}</div>
+    ${modeNote}</div>`;
+}
+
+/* Connect as a bottom sheet on mobile (desktop keeps the modal). Distinct IDs
+   (#mYtHandle, data-con-go) so it never collides with the desktop connect modal. */
+function openConnectSheet(preselect) {
+  let choice = PLATFORMS.includes(preselect) ? preselect : "youtube";
+  const opts = [
+    { p: "youtube",   nm: "YouTube",       ds: "Channel stats, daily views and watch time. Needs the channel handle first." },
+    { p: "instagram", nm: "Instagram",     ds: "Business or Creator account. No Facebook Page required." },
+    { p: "tiktok",    nm: "TikTok",        ds: "Cumulative totals; daily movement is derived after two syncs." },
+    { p: "facebook",  nm: "Facebook Page", ds: "Pages you administer, plus any Page-linked Instagram accounts." },
+  ];
+  const draw = () => {
+    const inner = `<h2 id="mConTitle">Connect an account</h2><div class="scroll">
+      <p class="hint" style="margin-bottom:var(--space-4)">Choosing a platform opens that provider's consent window in a new tab. Signal never sees your password — only the token the provider returns.</p>
+      ${opts.map((o) => `<button class="opt" data-p="${o.p}" aria-pressed="${choice === o.p}">
+        <span class="dot" style="background:${COLOR[o.p]};margin-top:6px"></span>
+        <span><span class="nm">${o.nm}</span><span class="ds">${o.ds}</span></span></button>`).join("")}
+      ${choice === "youtube" ? `<div class="field"><label for="mYtHandle">Channel handle or ID</label>
+        <input type="text" id="mYtHandle" placeholder="@cunningcorp">
+        <p class="hint" style="margin:var(--space-2) 0 0">The API can't discover channels, so the channel is registered before consent. The <code>UC…</code> ID from the Studio URL is authoritative; Brand Accounts are supported.</p></div>` : ""}
+      <button class="btn primary wide" data-con-go style="margin-top:var(--space-4)">Continue</button></div>`;
+    openSheet(inner, { labelledby: "mConTitle" });
+    $$("#sheetRoot .opt").forEach((b) => b.onclick = () => { choice = b.dataset.p; draw(); });
+    $("#sheetRoot [data-con-go]").onclick = go;
+  };
+  async function go() {
+    const btn = $("#sheetRoot [data-con-go]"); btn.disabled = true; btn.textContent = "Opening…";
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const auth = { Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_KEY };
+      if (choice === "youtube") {
+        const h = ($("#mYtHandle")?.value ?? "").trim();
+        if (!h) { toast("Enter the channel handle, e.g. @cunningcorp."); btn.disabled = false; btn.textContent = "Continue"; return; }
+        const q = h.startsWith("UC") ? `id=${encodeURIComponent(h)}` : `handle=${encodeURIComponent(h)}`;
+        const reg = await fetch(`${SUPABASE_URL}/functions/v1/add-youtube-channel?${q}`, { method: "POST", headers: auth });
+        const regBody = await reg.json().catch(() => ({}));
+        if (!reg.ok) { toast(regBody.error || regBody.hint || "Could not find that channel."); closeSheet(); return; }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/oauth-start?platform=youtube&${q}`, { headers: auth });
+        const body = await res.json();
+        if (body.url) { window.open(body.url, "_blank", "noopener"); closeSheet(); toast("Approve access in the new tab, then Sync now."); }
+        else toast(body.error || "Could not start the connect flow.");
+        return;
+      }
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/oauth-start?platform=${CONNECT_KIND[choice]}`, { headers: auth });
+      const body = await res.json();
+      if (body.url) { window.open(body.url, "_blank", "noopener"); closeSheet(); toast("Approve access in the new tab, then Sync now."); }
+      else toast(body.error || "Could not start the connect flow.");
+    } catch (e) { toast(`Connect failed: ${e.message}`); }
+    finally { const b = $("#sheetRoot [data-con-go]"); if (b) { b.disabled = false; b.textContent = "Continue"; } }
+  }
+  draw();
+}
 
 /* ============================ boot ============================ */
 let booted = false;
