@@ -1554,13 +1554,15 @@ let idleTimer = null;
 function armIdleLogout() {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(async () => {
+    console.debug("[idle] firing signOut");
     await sb.auth.signOut();               // -> onAuthStateChange(null) -> gate
     $("#authMsg").textContent = `Signed out after ${IDLE_MINUTES} minute${IDLE_MINUTES === 1 ? "" : "s"} of inactivity.`;
   }, IDLE_MS);
+  console.debug("[idle] armed at", new Date().toLocaleTimeString());
 }
 function disarmIdleLogout() { clearTimeout(idleTimer); idleTimer = null; }
 ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((ev) =>
-  addEventListener(ev, () => { if (idleTimer) armIdleLogout(); }, { passive: true }));
+  addEventListener(ev, () => { if (idleTimer) { console.debug("[idle] activity:", ev); armIdleLogout(); } }, { passive: true }));
 
 let booted = false;
 function applySession(session) {
