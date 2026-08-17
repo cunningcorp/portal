@@ -1915,14 +1915,6 @@ function openIdleWarning(secs) {
 ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((ev) =>
   addEventListener(ev, () => { if (idleTimer && !warnOpen) armIdleLogout(); }, { passive: true }));
 
-/* Nobody can wait 66 minutes to check a dialog. Run signalIdleWarn() in the console
-   to open it immediately; signalIdleWarn(10) opens it with 10 seconds on the clock. */
-window.signalIdleWarn = (secs) => {
-  clearTimeout(idleTimer); clearTimeout(warnTimer);
-  warnOpen = false;
-  openIdleWarning(secs);
-};
-
 /* ============================ boot ============================ */
 let booted = false;
 function applySession(session) {
