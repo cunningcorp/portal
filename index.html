@@ -383,6 +383,7 @@ td.t a:hover{color:var(--brand-gold-soft)}
     <p>Every channel, one view. Sign in with a link sent to your email.</p>
     <input type="email" id="email" placeholder="you@cunningcorp.com" autocomplete="email">
     <button class="btn primary wide" id="sendLink">Send sign-in link</button>
+    <button class="btn wide hide" id="passkeySignin">Sign in with a passkey</button>
     <div class="msg" id="authMsg" role="status"></div>
   </div>
 </div>
@@ -419,6 +420,7 @@ td.t a:hover{color:var(--brand-gold-soft)}
         <button data-d="30" aria-pressed="true">30d</button>
         <button data-d="90">90d</button>
       </div>
+      <button class="btn hide" id="addPasskey">Add a passkey</button>
       <button class="btn" id="signOut">Sign out</button>
     </div>
 
@@ -445,7 +447,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 /* ============================ config ============================ */
 const SUPABASE_URL = "https://qeafetctmtnqonhwhhlw.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gs_WsU5HUAs49uF6-A5Wog_Mvo62byI";
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  // Opt in to the passkey (WebAuthn) beta. Magic link stays the primary and
+  // fallback method; passkeys are an optional faster path on supported devices.
+  // Requires @supabase/supabase-js >= 2.105.0 (the @2 import resolves to it).
+  auth: { experimental: { passkey: true } },
+});
 
 const LABEL = { youtube:"YouTube", instagram:"Instagram", facebook:"Facebook", tiktok:"TikTok" };
 const SHORT = { youtube:"YT", instagram:"IG", facebook:"FB", tiktok:"TT" };
@@ -597,6 +604,32 @@ $("#sendLink").onclick = async () => {
 };
 $("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
 $("#signOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+/* Passkeys (WebAuthn beta). Magic link above stays the primary path and the
+   recovery route for a new device; these buttons only appear where the browser
+   supports platform passkeys, and every failure degrades to a clear message so
+   a passkey problem can never lock anyone out of the email route. */
+if (window.PublicKeyCredential) {
+  $("#passkeySignin").classList.remove("hide");
+  $("#addPasskey").classList.remove("hide");
+}
+$("#passkeySignin").onclick = async () => {
+  const btn = $("#passkeySignin");
+  btn.disabled = true; $("#authMsg").textContent = "";
+  const { error } = await sb.auth.signInWithPasskey();
+  btn.disabled = false;
+  // On success, onAuthStateChange swaps to the app; only handle failure here.
+  if (error) $("#authMsg").textContent =
+    "No passkey found on this device. Use the email link, then add a passkey once you're in.";
+};
+$("#addPasskey").onclick = async () => {
+  const btn = $("#addPasskey");
+  btn.disabled = true;
+  const { error } = await sb.auth.registerPasskey();
+  btn.disabled = false;
+  toast(error ? `Couldn't add a passkey: ${error.message}`
+              : "Passkey added — you can sign in with Face ID next time.");
+};
 
 /* ============================ data ============================ */
 async function load() {
