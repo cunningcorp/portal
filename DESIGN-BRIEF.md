@@ -5,6 +5,27 @@ against real APIs, and out of scope: your job is the interface. Produce prototyp
 with Demetri, and hand the chosen direction to the code pass in a form it can implement
 against the site framework without reverse-engineering pixels.
 
+## Git workflow — read first
+
+Do all work on a branch, never on `main`:
+
+```bash
+cd ~/Documents/GitHub/portal
+git checkout -b design/prototypes    # or switch to it if it already exists
+```
+
+`main` auto-deploys to the live, internet-facing portal on push, so it is not a place for
+work in progress. Commit early and often on the branch — one commit per prototype
+direction at minimum, with messages that say what changed and why.
+
+You cannot push. Sessions have no GitHub credentials, deliberately: Demetri reviews and
+pushes via GitHub Desktop, which makes him the deploy gate for anything public. End every
+working session by telling him the branch has commits waiting, so nothing sits only on
+this machine. Prototypes stay on the branch until a direction is chosen; the merge into
+`main` is the code pass's concern, not yours.
+
+---
+
 Two hard rules before anything else:
 
 1. **No hardcoded values.** Every colour, typeface, spacing step, radius and duration is a

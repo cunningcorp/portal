@@ -223,6 +223,9 @@ accordingly. A newly connected platform populates its own tab with no code chang
 
 ## Ground rules
 
+- **Work on a branch; `main` auto-deploys the live portal on push.** You cannot push —
+  sessions have no GitHub credentials, deliberately. Demetri reviews and pushes via
+  GitHub Desktop, so end each session by telling him which branch has commits waiting.
 - **Deploy from `supabase/`, not from memory.** `supabase functions deploy <slug>` and
   `supabase db push`. `config.toml` records each function's `verify_jwt` — respect it.
 - **Don't add a build step to the frontend.** It is deliberately one file served from the
