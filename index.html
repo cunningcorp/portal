@@ -1548,13 +1548,14 @@ $("#syncBtn").onclick = async () => {
    only while signed in and resets on any activity. Client-side by design — a
    belt-and-braces cap on top of the token's own lifetime, fine for an internal
    tool where the browser is the only client. */
-const IDLE_MS = 66 * 60 * 1000;
+const IDLE_MINUTES = 1; // TEMPORARY test value — restore to 66
+const IDLE_MS = IDLE_MINUTES * 60 * 1000;
 let idleTimer = null;
 function armIdleLogout() {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(async () => {
     await sb.auth.signOut();               // -> onAuthStateChange(null) -> gate
-    $("#authMsg").textContent = "Signed out after 66 minutes of inactivity.";
+    $("#authMsg").textContent = `Signed out after ${IDLE_MINUTES} minute${IDLE_MINUTES === 1 ? "" : "s"} of inactivity.`;
   }, IDLE_MS);
 }
 function disarmIdleLogout() { clearTimeout(idleTimer); idleTimer = null; }
