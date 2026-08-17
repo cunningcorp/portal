@@ -1,0 +1,1331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#191220">
+<title>Signal — Cunning Corp (mobile)</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='9' fill='none' stroke='%238E8BD8' stroke-width='2'/><circle cx='16' cy='7' r='2.6' fill='%23C8A24C'/></svg>">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+/* ==========================================================================
+   Signal — mobile-first prototype.
+
+   Same portal, same five social_* views, same tokens as the shipped index.html —
+   this is the deliberate small-screen architecture the desktop file only ever
+   COLLAPSED into. The desktop rail (248px, scope as a persistent tree) can't ride
+   along on a phone, so scope moves to a bottom sheet reached from a thumb-zone bar,
+   and the two write-actions (Sync, Connect) sit in that bar where the thumb is.
+   The posts table becomes cards; the availability matrix transposes to per-platform
+   cards. Everything data-truthful is ported verbatim from index.html.
+
+   Tokens: two layers, hex only in the first. Identical to the shipped file so the
+   two can eventually be one responsive stylesheet.
+   ========================================================================== */
+
+@font-face{font-family:'Glamour Absolute Extended';font-weight:400;font-display:swap;
+  src:url(fonts/GlamourAbsoluteExtended-400.woff2) format('woff2')}
+@font-face{font-family:'Glamour Absolute';font-weight:400;font-display:swap;
+  src:url(fonts/GlamourAbsolute-400.woff2) format('woff2')}
+@font-face{font-family:'Graphik';font-weight:400;font-display:swap;
+  src:url(fonts/Graphik-400.woff2) format('woff2')}
+@font-face{font-family:'Graphik';font-weight:600;font-display:swap;
+  src:url(fonts/Graphik-600.woff2) format('woff2')}
+@font-face{font-family:'Recoleta';font-weight:300;font-display:swap;
+  src:url(fonts/Recoleta-300.woff2) format('woff2')}
+
+:root{
+  color-scheme: dark;
+  --brand-plum-deep:#191220; --brand-plum:#241B30; --brand-plum-lift:#2C2239;
+  --brand-plum-sunk:#140E1B;
+  --brand-gold:#C8A24C; --brand-gold-soft:#E3C57E; --brand-peri:#8E8BD8;
+  --brand-paper:#FAF6EE; --brand-terracotta:#C0593B;
+  --brand-line:#372C47; --brand-line-soft:#2A2036; --brand-line-strong:#4A3C5E;
+  --brand-mute:#B7AEC2; --brand-dim:#7D7290;
+  --plat-youtube:#FF4E45; --plat-instagram:#E1477E; --plat-facebook:#4A8CFF; --plat-tiktok:#25E5D0;
+
+  --surface-base:var(--brand-plum-deep);
+  --surface-raised:var(--brand-plum);
+  --surface-overlay:var(--brand-plum-lift);
+  --surface-sunken:var(--brand-plum-sunk);
+  --border-subtle:var(--brand-line-soft);
+  --border-default:var(--brand-line);
+  --border-strong:var(--brand-line-strong);
+  --text-primary:var(--brand-paper);
+  --text-secondary:var(--brand-mute);
+  --text-tertiary:var(--brand-dim);
+  --text-on-accent:var(--brand-plum-deep);
+  --state-positive:var(--brand-gold);
+  --state-negative:var(--brand-terracotta);
+  --state-progress:var(--brand-peri);
+  --state-neutral:var(--brand-dim);
+  --data-youtube:var(--plat-youtube);
+  --data-instagram:var(--plat-instagram);
+  --data-facebook:var(--plat-facebook);
+  --data-tiktok:var(--plat-tiktok);
+  --avail-live:var(--brand-gold);
+  --avail-lagged:var(--brand-gold-soft);
+  --avail-rolling:var(--brand-peri);
+  --avail-absent:var(--brand-line-strong);
+  --avail-error:var(--brand-terracotta);
+
+  --font-display:'Glamour Absolute Extended','Glamour Absolute','Recoleta',Georgia,serif;
+  --font-head:'Recoleta',Georgia,serif;
+  --font-body:'Graphik',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --text-micro:11px; --text-label:12px; --text-body:14px; --text-lead:16px;
+  --figure-sm:20px; --figure-md:28px; --figure-lg:38px;
+  --track-label:.12em; --track-display:.03em;
+
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:24px; --space-6:32px; --space-7:48px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+  --shadow-panel:0 1px 2px rgba(0,0,0,.3);
+  --shadow-overlay:0 -12px 40px rgba(0,0,0,.5);
+  --dur-fast:120ms; --dur-base:200ms; --ease-out:cubic-bezier(.2,.7,.2,1);
+
+  --topbar-h:54px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{color:var(--text-primary);font:var(--text-body)/1.55 var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  background:#0E0A14;
+  display:grid;place-items:start center}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;color:inherit}
+.hide{display:none !important}
+:focus-visible{outline:2px solid var(--state-progress);outline-offset:2px;border-radius:var(--radius-sm)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.num{font-variant-numeric:tabular-nums}
+
+/* The phone column. Centered with a frame on wide viewports so the prototype reads
+   as an app even in a desktop preview; edge-to-edge on an actual phone. */
+.phone{position:relative;width:100%;max-width:440px;height:100dvh;
+  background:var(--surface-base);overflow:hidden;isolation:isolate}
+#app{height:100%;display:flex;flex-direction:column;min-height:0}
+@media(min-width:520px){
+  .phone{margin:24px 0;height:calc(100vh - 48px);
+    border-radius:28px;border:1px solid var(--border-default);
+    box-shadow:0 30px 80px rgba(0,0,0,.6)}
+}
+
+/* ---------- auth gate ---------- */
+#gate{position:absolute;inset:0;z-index:80;display:flex;flex-direction:column;
+  justify-content:center;padding:var(--space-6) var(--space-5);
+  padding-top:calc(var(--space-6) + var(--safe-top));
+  background:radial-gradient(120% 60% at 70% 0%, rgba(142,139,216,.16), transparent 60%),
+             radial-gradient(90% 50% at 0% 8%, rgba(200,162,76,.07), transparent 60%),
+             var(--surface-base);overflow-y:auto}
+.gate-mk{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6)}
+.gate-wm{font-family:var(--font-display);font-size:.95rem;letter-spacing:.05em}
+#gate h1{margin:0 0 var(--space-3);font-family:var(--font-head);font-weight:300;
+  font-size:2.4rem;letter-spacing:-.02em}
+#gateIntro{margin:0 0 var(--space-5);color:var(--text-secondary);font-size:.95rem;max-width:32ch}
+.mark{width:20px;height:20px;flex:none}
+input[type=email],input[type=text]{width:100%;padding:.85rem .9rem;background:var(--surface-sunken);
+  border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);
+  font:inherit;margin-bottom:var(--space-2)}
+input::placeholder{color:var(--text-tertiary)}
+input:focus{outline:0;border-color:var(--state-progress)}
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--text-primary);
+  -webkit-box-shadow:0 0 0 100px var(--surface-sunken) inset;
+  transition:background-color 8000s ease-in-out 0s;caret-color:var(--text-primary)}
+.methods{display:flex;flex-direction:column;gap:var(--space-2)}
+.orrule{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-4) 0;
+  font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--text-tertiary)}
+.orrule::before,.orrule::after{content:"";flex:1;height:1px;background:var(--border-subtle)}
+.why{margin:var(--space-2) 0 0;font-size:var(--text-micro);color:var(--text-tertiary);
+  line-height:1.5;text-align:center}
+.msg{font-size:.85rem;margin-top:var(--space-4);color:var(--text-secondary);min-height:2.4em}
+.msg.err{color:var(--state-negative)}
+.notice{display:flex;gap:var(--space-3);padding:var(--space-4);margin:0 0 var(--space-5);
+  background:var(--surface-overlay);border:1px solid var(--border-default);
+  border-left:2px solid var(--brand-gold);border-radius:var(--radius-md)}
+.notice svg{width:16px;height:16px;flex:none;margin-top:1px;color:var(--brand-gold)}
+.notice .t{display:block;font-size:var(--text-label);font-weight:600;color:var(--text-primary);
+  margin-bottom:var(--space-1)}
+.notice .d{display:block;font-size:var(--text-micro);color:var(--text-secondary);line-height:1.55}
+.notice .r{display:block;font-size:var(--text-micro);color:var(--text-tertiary);
+  margin-top:var(--space-2);padding-top:var(--space-2);border-top:1px solid var(--border-subtle)}
+.notice .r b{color:var(--brand-gold-soft);font-weight:600}
+.fastest{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--brand-gold);margin-left:var(--space-2)}
+
+/* ---------- buttons ---------- */
+.btn{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);
+  padding:.85rem 1rem;border-radius:var(--radius-md);transition:var(--dur-fast);
+  font-size:.9rem;display:inline-flex;align-items:center;justify-content:center;gap:.45rem}
+.btn:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--state-progress);border-color:var(--state-progress);
+  color:var(--text-on-accent);font-weight:600}
+.btn:disabled{opacity:.45}
+.btn.wide{width:100%}
+.btn .ico{width:15px;height:15px;flex:none}
+
+/* ---------- top bar ---------- */
+.topbar{flex:none;z-index:30;height:calc(var(--topbar-h) + var(--safe-top));
+  padding-top:var(--safe-top);display:flex;align-items:center;gap:var(--space-3);
+  padding-left:var(--space-4);padding-right:var(--space-3);
+  background:color-mix(in srgb, var(--surface-raised) 88%, transparent);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--border-subtle)}
+.topbar .wm{font-family:var(--font-display);font-size:15px;letter-spacing:var(--track-display)}
+.topbar .cc{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--text-tertiary);padding-left:var(--space-3);border-left:1px solid var(--border-default)}
+.spacer{flex:1}
+.avatar{width:34px;height:34px;border-radius:50%;flex:none;
+  background:var(--surface-overlay);border:1px solid var(--border-default);
+  color:var(--text-secondary);font-weight:600;font-size:var(--text-micro);
+  letter-spacing:.04em;text-transform:uppercase;display:grid;place-items:center}
+.avatar:active{border-color:var(--state-progress)}
+
+/* ---------- scope + range bar ---------- */
+.ctxbar{flex:none;z-index:20;
+  display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);
+  background:color-mix(in srgb, var(--surface-base) 90%, transparent);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--border-subtle)}
+.scopebtn{flex:1;min-width:0;display:flex;align-items:center;gap:var(--space-2);
+  background:var(--surface-raised);border:1px solid var(--border-default);
+  border-radius:var(--radius-md);padding:.5rem .7rem;text-align:left}
+.scopebtn .sdot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--brand-gold)}
+.scopebtn .stext{flex:1;min-width:0}
+.scopebtn .sname{display:block;font-size:var(--text-body);color:var(--text-primary);font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}
+.scopebtn .ssub{display:block;font-size:var(--text-micro);color:var(--text-tertiary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scopebtn .chev{flex:none;color:var(--text-tertiary)}
+.rangebar{display:flex;gap:.2rem;background:var(--surface-sunken);
+  border:1px solid var(--border-subtle);border-radius:9px;padding:.2rem;flex:none}
+.rangebar button{background:none;border:0;color:var(--text-tertiary);
+  padding:.4rem .6rem;border-radius:var(--radius-sm);font-size:.8rem}
+.rangebar button[aria-pressed="true"]{background:var(--surface-overlay);color:var(--text-primary)}
+
+/* ---------- scroll area ---------- */
+main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:var(--space-4);padding-bottom:var(--space-6);
+  display:flex;flex-direction:column;gap:var(--space-4)}
+
+/* ---------- briefing ---------- */
+.briefing{padding:var(--space-2) 0 var(--space-1)}
+.dateline{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);flex-wrap:wrap}
+.dateline .d{font-weight:600;font-size:var(--text-micro);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--brand-gold)}
+.dateline .s{font-size:var(--text-micro);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary)}
+.sep{width:3px;height:3px;border-radius:50%;background:var(--border-strong)}
+.lede{font-family:var(--font-head);font-weight:300;font-size:24px;line-height:1.28;
+  letter-spacing:-.01em;color:var(--text-primary);margin:0 0 var(--space-3);text-wrap:pretty}
+.lede-sub{font-size:var(--text-body);line-height:1.6;color:var(--text-secondary);margin:0;text-wrap:pretty}
+
+/* ---------- panel ---------- */
+.panel{background:var(--surface-raised);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-panel)}
+.panel h2{margin:0 0 .15rem;font-family:var(--font-head);font-size:var(--figure-sm);
+  font-weight:300;letter-spacing:-.01em}
+.panel .hint{margin:0 0 var(--space-4);font-size:var(--text-label);color:var(--text-tertiary)}
+.phead{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap}
+.chartbox{position:relative;height:210px}
+.cad{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  border:1px solid var(--border-default);border-radius:var(--radius-pill);
+  padding:2px var(--space-2);white-space:nowrap}
+.cad.live{color:var(--avail-live)} .cad.lag{color:var(--avail-lagged)}
+.cad.roll{color:var(--avail-rolling)} .cad.deriv{color:var(--avail-rolling)}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+.kpi{background:var(--surface-raised);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-panel)}
+.kpi .label{font-size:var(--text-micro);text-transform:uppercase;
+  letter-spacing:var(--track-label);color:var(--text-tertiary);line-height:1.3}
+.kpi .value{font-family:var(--font-head);font-size:var(--figure-lg);font-weight:300;
+  letter-spacing:-.02em;margin:var(--space-2) 0 var(--space-1);line-height:1;
+  font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:var(--text-micro);color:var(--text-secondary);font-variant-numeric:tabular-nums;line-height:1.4}
+.up{color:var(--state-positive)} .down{color:var(--state-negative)} .flat{color:var(--text-tertiary)}
+
+/* ---------- account cards ---------- */
+.acct{display:block;width:100%;text-align:left;background:var(--surface-overlay);
+  border:1px solid var(--border-subtle);border-left:3px solid var(--border-default);
+  border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-2)}
+.acct:last-child{margin-bottom:0}
+.acct:active{border-color:var(--border-strong)}
+.acct[data-p="youtube"]{border-left-color:var(--data-youtube)}
+.acct[data-p="instagram"]{border-left-color:var(--data-instagram)}
+.acct[data-p="facebook"]{border-left-color:var(--data-facebook)}
+.acct[data-p="tiktok"]{border-left-color:var(--data-tiktok)}
+.acct .top{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)}
+.acct img{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--border-default);flex:none}
+.acct .nm{font-weight:600;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct .hd{font-size:var(--text-micro);color:var(--text-tertiary);margin-bottom:var(--space-3)}
+.acct .big{font-family:var(--font-head);font-weight:300;font-size:var(--figure-sm);
+  color:var(--text-primary);font-variant-numeric:tabular-nums}
+.acct .meta{font-size:var(--text-micro);color:var(--text-tertiary);margin-top:var(--space-1)}
+
+.pill{display:inline-block;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;
+  padding:.14rem .45rem;border-radius:var(--radius-sm);background:var(--border-default);color:var(--text-secondary)}
+.pill.youtube{background:rgba(255,78,69,.15);color:#FF8079}
+.pill.instagram{background:rgba(225,71,126,.15);color:#EF7FA5}
+.pill.facebook{background:rgba(74,140,255,.15);color:#87B1FF}
+.pill.tiktok{background:rgba(37,229,208,.14);color:#65EDDD}
+
+/* ---------- availability (transposed to per-platform cards) ---------- */
+.availcard{border:1px solid var(--border-subtle);border-radius:var(--radius-md);
+  padding:var(--space-3) var(--space-4);margin-top:var(--space-3);background:var(--surface-overlay)}
+.availcard .top{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)}
+.arow{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) 0;
+  border-top:1px solid var(--border-subtle);font-size:var(--text-label)}
+.arow .m{flex:1;color:var(--text-secondary)}
+.arow .cw{font-size:var(--text-micro);color:var(--text-tertiary);white-space:nowrap}
+.g{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.g.live{background:var(--avail-live)}
+.g.lag{border:1.5px solid var(--avail-lagged);
+  background:linear-gradient(90deg,var(--avail-lagged) 0 50%,transparent 50% 100%)}
+.g.roll{background:var(--avail-rolling)}
+.g.deriv{border:1.5px dashed var(--avail-rolling);background:transparent}
+.g.none{border:1px dashed var(--avail-absent);background:transparent}
+.g.err{background:var(--avail-error)}
+.g.off{width:10px;height:1px;border-radius:0;background:var(--border-strong)}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-3);margin-top:var(--space-4);
+  padding-top:var(--space-3);border-top:1px solid var(--border-subtle)}
+.legend span{display:inline-flex;align-items:center;gap:var(--space-2);
+  font-size:var(--text-micro);color:var(--text-tertiary)}
+.availoff{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+.availoff .chipoff{display:inline-flex;align-items:center;gap:var(--space-2);
+  font-size:var(--text-micro);color:var(--text-tertiary);border:1px dashed var(--border-default);
+  border-radius:var(--radius-pill);padding:2px var(--space-3)}
+
+/* ---------- post cards ---------- */
+.filters{display:flex;gap:var(--space-2);overflow-x:auto;margin:0 0 var(--space-3);
+  padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.filters button{flex:none;font-size:var(--text-micro);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary);border:1px solid var(--border-default);
+  background:none;border-radius:var(--radius-pill);padding:.3rem .7rem}
+.filters button[aria-pressed="true"]{color:var(--text-primary);border-color:var(--border-strong)}
+.sortrow{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
+.sortrow select{flex:1;background:var(--surface-sunken);border:1px solid var(--border-default);
+  color:var(--text-secondary);border-radius:var(--radius-md);padding:.5rem .6rem;font:inherit;font-size:var(--text-label)}
+.sortrow .dir{flex:none;width:40px;background:var(--surface-sunken);border:1px solid var(--border-default);
+  border-radius:var(--radius-md);color:var(--text-secondary);padding:.5rem 0}
+.pcard{display:flex;gap:var(--space-3);padding:var(--space-3) 0;border-top:1px solid var(--border-subtle)}
+.pcard:first-of-type{border-top:0}
+.pcard .th{width:56px;height:56px;flex:none;border-radius:var(--radius-md);object-fit:cover;
+  background:linear-gradient(120deg,var(--surface-overlay),var(--border-default))}
+.pcard .body{flex:1;min-width:0}
+.pcard .ptop{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)}
+.pcard .ptop .when{margin-left:auto;font-size:var(--text-micro);color:var(--text-tertiary);white-space:nowrap}
+.pcard .title{color:var(--text-primary);font-size:var(--text-body);line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcard .who{font-size:var(--text-micro);color:var(--text-tertiary);margin:2px 0 var(--space-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard .mrow{display:flex;gap:var(--space-4)}
+.pcard .mrow .m{display:flex;flex-direction:column}
+.pcard .mrow .mv{font-size:var(--text-body);color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.pcard .mrow .mv.hi{color:var(--text-primary)}
+.pcard .mrow .ml{font-size:9px;letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary)}
+
+/* ---------- sync health ---------- */
+.sync{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) 0;
+  font-size:var(--text-label);border-bottom:1px solid var(--border-subtle)}
+.sync:last-child{border-bottom:0}
+.led{width:8px;height:8px;border-radius:50%;flex:none}
+.led.ok{background:var(--state-positive);box-shadow:0 0 0 3px rgba(200,162,76,.14)}
+.led.error{background:var(--state-negative);box-shadow:0 0 0 3px rgba(192,89,59,.14)}
+.led.running{background:var(--state-progress);animation:pulse 1.4s ease-in-out infinite}
+.led.skipped{background:var(--state-neutral)}
+.sync .who{flex:1;min-width:0;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync .when{color:var(--text-tertiary);font-size:var(--text-micro);white-space:nowrap}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---------- empty / skeleton ---------- */
+.empty{text-align:center;padding:var(--space-5) var(--space-4);color:var(--text-tertiary);
+  font-size:var(--text-label);border:1px dashed var(--border-default);border-radius:var(--radius-md)}
+.empty h3{margin:0 0 var(--space-2);font-family:var(--font-head);font-weight:300;
+  color:var(--text-secondary);font-size:1.05rem}
+.empty .g{margin:0 auto var(--space-3)}
+.connectrow{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-4)}
+.sk{background:linear-gradient(90deg,var(--surface-overlay) 0%,var(--border-default) 50%,var(--surface-overlay) 100%);
+  background-size:280px 100%;animation:sh 1.2s linear infinite;border-radius:var(--radius-sm)}
+@keyframes sh{0%{background-position:-140px 0}100%{background-position:140px 0}}
+.sk.line{height:12px;margin-bottom:var(--space-2)}
+.sk.fig{height:34px;width:55%;margin:var(--space-2) 0}
+.sk.block{height:180px}
+@media(prefers-reduced-motion:reduce){.sk,.pulse,.led.running{animation:none}}
+
+/* ---------- bottom action bar ---------- */
+.actionbar{flex:none;z-index:30;
+  display:flex;gap:var(--space-3);padding:var(--space-3) var(--space-4);
+  padding-bottom:calc(var(--space-3) + var(--safe-bottom));
+  background:color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  backdrop-filter:blur(16px);border-top:1px solid var(--border-default)}
+.actionbar .btn{flex:1}
+.actionbar .btn.primary{flex:1.4}
+
+/* ---------- sheets & modals ---------- */
+.scrim{position:absolute;inset:0;z-index:60;background:rgba(12,8,18,.66);
+  backdrop-filter:blur(4px);display:flex;flex-direction:column;justify-content:flex-end}
+.sheet{background:var(--surface-raised);border-top-left-radius:20px;border-top-right-radius:20px;
+  border-top:1px solid var(--border-strong);box-shadow:var(--shadow-overlay);
+  max-height:82%;display:flex;flex-direction:column;
+  animation:slideup var(--dur-base) var(--ease-out)}
+@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.grab{width:38px;height:4px;border-radius:2px;background:var(--border-strong);
+  margin:var(--space-3) auto var(--space-1)}
+.sheet h2{margin:0;padding:var(--space-2) var(--space-5) var(--space-4);
+  font-family:var(--font-head);font-weight:300;font-size:1.4rem}
+.sheet .scroll{overflow-y:auto;padding:0 var(--space-4) var(--space-5)}
+
+/* scope sheet nodes */
+.node{display:flex;align-items:center;gap:var(--space-3);width:100%;text-align:left;
+  padding:var(--space-3);border:0;background:none;border-radius:var(--radius-md);
+  color:var(--text-secondary);margin-bottom:2px}
+.node:active{background:var(--surface-overlay)}
+.node[aria-current="true"]{background:var(--surface-overlay);color:var(--text-primary);font-weight:600}
+.node .lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.node .meta{font-size:var(--text-micro);color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+.node.child{padding-left:var(--space-6);font-size:var(--text-label);color:var(--text-tertiary)}
+.node.group{margin-top:var(--space-3)}
+.node.off .meta{color:var(--state-progress)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.dot.hollow{background:transparent;border:1px dashed var(--avail-absent)}
+
+/* profile / menu items */
+.mi{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;text-align:left;
+  background:none;border:0;border-radius:var(--radius-md);padding:var(--space-3);
+  color:var(--text-secondary)}
+.mi:active{background:var(--surface-overlay);color:var(--text-primary)}
+.mi .ico{width:17px;height:17px;flex:none;opacity:.75;margin-top:2px}
+.mi .sub{display:block;font-size:var(--text-micro);color:var(--text-tertiary);margin-top:1px}
+.mi.danger:active{color:var(--state-negative)}
+.who-head{padding:var(--space-2) var(--space-3) var(--space-3);border-bottom:1px solid var(--border-subtle);
+  margin-bottom:var(--space-2)}
+.who-head .em{display:block;font-size:var(--text-label);color:var(--text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who-head .rl{display:block;font-size:var(--text-micro);color:var(--text-tertiary);margin-top:2px}
+.rule{height:1px;background:var(--border-subtle);margin:var(--space-2) 0}
+.menunote{padding:var(--space-2) var(--space-3);font-size:var(--text-micro);
+  color:var(--text-tertiary);line-height:1.5}
+
+/* connect options */
+.opt{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;text-align:left;
+  padding:var(--space-3) var(--space-4);border:1px solid var(--border-default);background:none;
+  border-radius:var(--radius-md);margin-bottom:var(--space-2)}
+.opt[aria-pressed="true"]{border-color:var(--state-progress);background:var(--surface-overlay)}
+.opt .nm{font-size:var(--text-body);color:var(--text-primary);font-weight:600}
+.opt .ds{font-size:var(--text-micro);color:var(--text-tertiary);margin-top:2px;line-height:1.5}
+.field{margin:var(--space-3) 0 var(--space-2)}
+.field label{display:block;font-size:var(--text-micro);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary);margin-bottom:var(--space-2)}
+
+/* idle warning — centered card, not a sheet */
+.idlewrap{position:absolute;inset:0;z-index:70;background:rgba(12,8,18,.72);
+  backdrop-filter:blur(6px);display:grid;place-items:center;padding:var(--space-5)}
+.idlecard{width:100%;background:var(--surface-raised);border:1px solid var(--border-default);
+  border-radius:18px;padding:var(--space-5);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.idlecard h2{margin:0 0 var(--space-2);font-family:var(--font-head);font-weight:300;font-size:1.5rem}
+.idlecard p{margin:0;font-size:var(--text-label);color:var(--text-secondary);line-height:1.6}
+.countdown{display:flex;align-items:baseline;gap:var(--space-2);margin:var(--space-5) 0 var(--space-3)}
+.countdown .n{font-family:var(--font-head);font-weight:300;font-size:var(--figure-lg);
+  line-height:1;font-variant-numeric:tabular-nums}
+.countdown .u{font-size:var(--text-label);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary)}
+.bar{height:3px;background:var(--surface-overlay);border-radius:var(--radius-pill);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--state-positive)}
+.idlecard .foot{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-5)}
+
+.toast{position:absolute;left:var(--space-4);right:var(--space-4);
+  bottom:calc(80px + var(--safe-bottom));z-index:75;
+  background:var(--surface-overlay);border:1px solid var(--border-default);
+  padding:.7rem 1rem;border-radius:10px;font-size:.85rem;box-shadow:0 10px 30px rgba(0,0,0,.5);
+  text-align:center}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- ===== AUTH GATE ===== -->
+  <div id="gate">
+    <div class="gate-mk">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      <span class="gate-wm">CUNNING CORP</span>
+    </div>
+    <h1>Signal</h1>
+    <div class="notice hide" id="gateNotice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.6V12l3 1.8"></path></svg>
+      <span>
+        <span class="t" id="gateNoticeTitle">Signed out after 66 minutes</span>
+        <span class="d">No activity, so Signal closed the session. Nothing was lost — there is nothing here to save.</span>
+        <span class="r hide" id="gateResume"></span>
+      </span>
+    </div>
+    <p id="gateIntro">Every channel, one view. Access is by invitation — there is no sign-up.</p>
+    <div class="methods">
+      <input type="email" id="email" placeholder="you@cunningcorp.com" autocomplete="email webauthn" enterkeyhint="send">
+      <button class="btn primary wide" id="sendLink">Send sign-in link</button>
+    </div>
+    <div class="orrule hide" id="orRule">or</div>
+    <button class="btn wide hide" id="passkeySignin">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="9" cy="8" r="3.4"></circle><path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path>
+        <path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path></svg>
+      Sign in with a passkey<span class="fastest hide" id="passkeyFastest">Fastest</span></button>
+    <p class="why hide" id="passkeyWhy">Face ID, Touch ID or a security key on this device.</p>
+    <div class="msg" id="authMsg" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="app" class="hide">
+    <div class="topbar">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      <span class="wm">SIGNAL</span>
+      <span class="cc">Cunning Corp</span>
+      <span class="spacer"></span>
+      <button class="avatar" id="profileBtn" aria-haspopup="dialog" aria-label="Account and preferences"><span id="profileInitials">—</span></button>
+    </div>
+
+    <div class="ctxbar">
+      <button class="scopebtn" id="scopeBtn" aria-haspopup="dialog">
+        <span class="sdot" id="scopeDot"></span>
+        <span class="stext">
+          <span class="sname" id="scopeName">Overview</span>
+          <span class="ssub" id="scopeSub">all platforms</span>
+        </span>
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="rangebar" id="range" role="group" aria-label="Date range">
+        <button data-d="7">7d</button>
+        <button data-d="30" aria-pressed="true">30d</button>
+        <button data-d="90">90d</button>
+      </div>
+    </div>
+
+    <main id="view"></main>
+
+    <div class="actionbar">
+      <button class="btn" id="connectBtn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Connect</button>
+      <button class="btn primary" id="syncBtn">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-.9 4.6M20 4v6h-6"/></svg>
+        Sync now</button>
+    </div>
+  </div>
+
+  <div id="sheetRoot"></div>
+  <div id="idleRoot"></div>
+  <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+/* ============================ config (identical to index.html) ============================ */
+const SUPABASE_URL = "https://qeafetctmtnqonhwhhlw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_gs_WsU5HUAs49uF6-A5Wog_Mvo62byI";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { experimental: { passkey: true } } });
+
+const LABEL = { youtube:"YouTube", instagram:"Instagram", facebook:"Facebook", tiktok:"TikTok" };
+const SHORT = { youtube:"YT", instagram:"IG", facebook:"FB", tiktok:"TT" };
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COLOR = {}; for (const p of Object.keys(LABEL)) COLOR[p] = cssVar(`--data-${p}`);
+const PLATFORMS = ["youtube","instagram","tiktok","facebook"];
+const CONNECT_KIND = { youtube:"youtube", instagram:"instagram", tiktok:"tiktok", facebook:"meta" };
+
+const METRIC_LABEL = {
+  views:"Views", reach:"Reach", likes:"Likes", comments:"Comments", shares:"Shares",
+  saves:"Saves", replies:"Replies", engagements:"Engagements",
+  watch_time_minutes:"Watch time (min)", avg_view_duration_secs:"Avg view duration (s)",
+  followers_gained:"Followers gained", followers_lost:"Followers lost",
+  accounts_engaged:"Accounts engaged", total_interactions:"Total interactions",
+};
+const CAVEAT = {
+  instagram:"Reach is the only daily series Instagram provides. Views, likes and saves arrive as one rolling 28-day total that cannot be split into days, and below 100 followers Meta returns no follower breakdown at all.",
+  youtube:"YouTube analytics lag two to three days, so the newest days of every daily chart are legitimately missing rather than broken.",
+  tiktok:"TikTok's free API returns cumulative totals only. Daily movement is derived by differencing snapshots, so it needs two days of history and a missed sync folds two days into one.",
+  facebook:"Meta has retired many Page metrics. Whatever still returns data is shown; the rest are skipped rather than shown as zero.",
+};
+const AVAIL = [
+  { m:"Followers",           youtube:"live", instagram:"live", tiktok:"live",  facebook:"live" },
+  { m:"Follower change",     youtube:"live", instagram:"roll", tiktok:"deriv", facebook:"live" },
+  { m:"Posts & cadence",     youtube:"live", instagram:"live", tiktok:"live",  facebook:"live" },
+  { m:"Engagement rate",     youtube:"live", instagram:"live", tiktok:"live",  facebook:"live" },
+  { m:"Views — daily",       youtube:"lag",  instagram:"none", tiktok:"deriv", facebook:"live" },
+  { m:"Reach — daily",       youtube:"none", instagram:"live", tiktok:"none",  facebook:"live" },
+  { m:"Watch time",          youtube:"lag",  instagram:"none", tiktok:"none",  facebook:"none" },
+  { m:"Views — 28d rolling", youtube:"none", instagram:"roll", tiktok:"none",  facebook:"none" },
+];
+const GLYPH_TITLE = {
+  live:"Daily", lag:"Lags 2–3 days", roll:"28-day rolling", deriv:"Derived from snapshots",
+  none:"Not provided", err:"Failing", off:"Not connected",
+};
+
+/* ============================ state ============================ */
+let RANGE = 30, SCOPE = { kind:"all" }, POSTTYPE = "all", LOADING = true;
+let charts = {}, DATA = { overview:[], series:[], daily:[], posts:[], sync:[] };
+let sortKey = "published_at", sortDir = -1;
+let lastEmail = null;
+
+/* ============================ helpers (ported) ============================ */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const fmt = (n) => {
+  if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
+  n = Number(n); const a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,"") + "B";
+  if (a >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,"") + "M";
+  if (a >= 1e4) return (n/1e3).toFixed(0) + "K";
+  return n.toLocaleString();
+};
+const signed = (n) => (n === null || n === undefined) ? "—" : (n > 0 ? "+" : "") + fmt(n);
+const cls = (n) => n > 0 ? "up" : n < 0 ? "down" : "flat";
+const daysAgoISO = (d) => { const x = new Date(); x.setUTCDate(x.getUTCDate() - d); return x.toISOString().slice(0,10); };
+const shortDate = (s) => s ? new Date(s).toLocaleDateString(undefined,{month:"short",day:"numeric"}) : "—";
+const ago = (s) => { if (!s) return "never"; const m = Math.round((Date.now()-new Date(s))/60000);
+  if (m<60) return `${m}m ago`; if (m<1440) return `${Math.round(m/60)}h ago`; return `${Math.round(m/1440)}d ago`; };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g,(c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const titleise = (s) => String(s).replace(/_/g," ").replace(/^./,(c)=>c.toUpperCase());
+const isRolling = (m) => m.endsWith("_28d");
+const metricLabel = (m) => METRIC_LABEL[m.replace(/_28d$/,"")] ?? titleise(m.replace(/_28d$/,""));
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+function toast(text, ms=4200){ const el=$("#toast"); el.textContent=text; el.classList.remove("hide");
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.add("hide"), ms); }
+function destroyCharts(){ for (const k of Object.keys(charts)){ charts[k]?.destroy(); delete charts[k]; } }
+
+/* ============================ URL state ============================ */
+function readUrl(){
+  const q = new URLSearchParams(location.search);
+  const r = Number(q.get("range")); if ([7,30,90].includes(r)) RANGE = r;
+  if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
+  else if (PLATFORMS.includes(q.get("platform"))) SCOPE = { kind:"platform", p:q.get("platform") };
+  else SCOPE = { kind:"all" };
+  if (q.get("type")) POSTTYPE = q.get("type");
+}
+function writeUrl(push=true){
+  const q = new URLSearchParams();
+  if (SCOPE.kind==="platform") q.set("platform", SCOPE.p);
+  if (SCOPE.kind==="account") q.set("account", SCOPE.id);
+  if (RANGE!==30) q.set("range", String(RANGE));
+  if (POSTTYPE!=="all") q.set("type", POSTTYPE);
+  const url = location.pathname + (q.toString() ? "?"+q : "");
+  if (push) history.pushState(null,"",url); else history.replaceState(null,"",url);
+}
+addEventListener("popstate", () => { readUrl(); syncRangeButtons(); render(); });
+function setScope(next){ SCOPE = next; writeUrl(); render(); }
+
+/* ============================ scoping (ported) ============================ */
+const connectedPlatforms = () => [...new Set(DATA.overview.map((r)=>r.platform))];
+function scoped(){
+  if (SCOPE.kind==="platform") return DATA.overview.filter((a)=>a.platform===SCOPE.p);
+  if (SCOPE.kind==="account") return DATA.overview.filter((a)=>a.account_id===SCOPE.id);
+  return DATA.overview;
+}
+const scopePlatform = () => {
+  if (SCOPE.kind==="platform") return SCOPE.p;
+  if (SCOPE.kind==="account") return scoped()[0]?.platform ?? null;
+  return null;
+};
+function dailyInScope(opts={}){
+  const { rolling=false } = opts;
+  const ids = new Set(scoped().map((a)=>a.account_id));
+  return DATA.daily.filter((d)=>
+    (SCOPE.kind==="all" ? true : ids.has(d.account_id)) &&
+    (rolling ? isRolling(d.metric) : !isRolling(d.metric)));
+}
+const modeParts = (a) => String(a?.access_mode ?? "").split("+").filter(Boolean);
+const hasAnalytics = (a) => modeParts(a).includes("analytics");
+const analyticsFailed = (a) => modeParts(a).includes("analytics:failed");
+const modeKnown = (a) => modeParts(a).length > 0;
+
+/* ============================ auth (ported) ============================ */
+function authMsg(text, isError=false){ const el=$("#authMsg"); el.className="msg"+(isError?" err":""); el.textContent=text; }
+$("#sendLink").onclick = async () => {
+  const email = $("#email").value.trim();
+  if (!email) return authMsg("Enter an email address.", true);
+  $("#sendLink").disabled = true;
+  const { error } = await sb.auth.signInWithOtp({ email,
+    options:{ emailRedirectTo: location.href.split("#")[0], shouldCreateUser:false } });
+  $("#sendLink").disabled = false;
+  if (error) authMsg(error.message, true); else authMsg("Link sent. Check your inbox, then come back to this tab.");
+};
+$("#email").addEventListener("keydown",(e)=>{ if (e.key==="Enter") $("#sendLink").click(); });
+if (window.PublicKeyCredential){
+  $("#passkeySignin").classList.remove("hide"); $("#passkeyWhy").classList.remove("hide"); $("#orRule").classList.remove("hide");
+}
+$("#passkeySignin").onclick = async () => {
+  const btn=$("#passkeySignin"); btn.disabled=true; authMsg("");
+  const { error } = await sb.auth.signInWithPasskey(); btn.disabled=false;
+  if (error) authMsg("No passkey found on this device. Use the email link, then add a passkey once you're in.", true);
+};
+
+/* ============================ data (ported) ============================ */
+async function load(){
+  LOADING = true; render();
+  const since = daysAgoISO(RANGE);
+  const [ov,ser,day,post,syn] = await Promise.all([
+    sb.from("social_accounts_overview").select("*").order("followers",{ ascending:false, nullsFirst:false }),
+    sb.from("social_account_series").select("*").gte("day",since).order("day"),
+    sb.from("social_daily_totals").select("*").gte("day",since).order("day"),
+    sb.from("social_top_posts").select("*").order("published_at",{ ascending:false, nullsFirst:false }).limit(200),
+    sb.from("social_sync_health").select("*"),
+  ]);
+  const err = [ov,ser,day,post,syn].find((r)=>r.error);
+  LOADING = false;
+  if (err){ toast(`Query failed: ${err.error.message}`); renderError(err.error.message); return; }
+  DATA = { overview:ov.data ?? [], series:ser.data ?? [], daily:day.data ?? [], posts:post.data ?? [], sync:syn.data ?? [] };
+  if (SCOPE.kind==="account" && !DATA.overview.some((a)=>a.account_id===SCOPE.id)){ SCOPE={kind:"all"}; writeUrl(false); }
+  if (SCOPE.kind==="platform" && !DATA.overview.some((a)=>a.platform===SCOPE.p)){ SCOPE={kind:"all"}; writeUrl(false); }
+  render();
+}
+
+/* ============================ briefing (ported verbatim) ============================ */
+function briefing(){
+  const rows = scoped();
+  const d = new Date();
+  const dateline = d.toLocaleDateString(undefined,{ weekday:"long", day:"numeric", month:"long", year:"numeric" });
+  if (!DATA.overview.length) return { dateline, history:"Nothing connected",
+    a:"No accounts are connected yet.",
+    b:"Nothing is pulled until you connect a platform. Once you do, follower history begins that day — no platform backfills it." };
+  if (!rows.length) return { dateline, history:"—", a:"Nothing in this scope.", b:"" };
+  const withData = rows.filter((r)=>r.as_of);
+  const oldest = DATA.series.length ? DATA.series.map((r)=>r.day).sort()[0] : null;
+  const historyLabel = oldest
+    ? `${plural(new Set(DATA.series.map((r)=>r.day)).size,"day","days")} in this window, from ${shortDate(oldest)}`
+    : "No snapshots yet";
+  if (!withData.length) return { dateline, history:historyLabel,
+    a:`${plural(rows.length,"account","accounts")} connected, none reporting yet.`,
+    b:"The collectors have not written a snapshot for these accounts. Run a sync, then check Sync health for the reason if it stays empty." };
+  const followers = withData.reduce((s,r)=>s+(Number(r.followers)||0),0);
+  const key = RANGE===7 ? "followers_delta_7d" : "followers_delta_28d";
+  const windowLabel = RANGE===7 ? "week" : "28 days";
+  const movers = withData.filter((r)=>r[key]!=null).map((r)=>({ r, d:Number(r[key]) })).sort((x,y)=>y.d-x.d);
+  const p = scopePlatform();
+  const caveat = p ? CAVEAT[p] : null;
+  const name = (r)=> r.display_name || r.handle || "this account";
+  if (!movers.length) return { dateline, history:historyLabel,
+    a: SCOPE.kind==="account"
+      ? `${fmt(followers)} followers. No comparison over ${windowLabel} yet.`
+      : `${fmt(followers)} followers across ${plural(withData.length,"account","accounts")}. No comparison over ${windowLabel} yet.`,
+    b: caveat ?? "Follower history starts the day an account is connected, so deltas appear once there is a snapshot far enough back." };
+  const top = movers[0], bottom = movers[movers.length-1];
+  const net = movers.reduce((s,m)=>s+m.d,0);
+  let a,b;
+  if (SCOPE.kind==="account") a = `${fmt(followers)} followers, ${signed(top.d)} this ${windowLabel}.`;
+  else if (net===0 && top.d===0) a = `${fmt(followers)} followers across ${plural(withData.length,"account","accounts")}. Nothing moved this ${windowLabel}.`;
+  else if (top.d>0) a = `${fmt(followers)} followers across ${plural(withData.length,"account","accounts")}. ${name(top.r)} leads at ${signed(top.d)}.`;
+  else a = `${fmt(followers)} followers across ${plural(withData.length,"account","accounts")}. Every account is flat or down this ${windowLabel}.`;
+  if (SCOPE.kind==="account") b = caveat ?? "";
+  else { const falling = bottom.d<0 ? `${name(bottom.r)} slipped ${signed(bottom.d)}. ` : "";
+    b = falling + (caveat ?? "Only followers, post cadence and engagement rate compare across platforms — views and watch time do not, which is why they live on a platform scope."); }
+  return { dateline, history:historyLabel, a, b };
+}
+
+/* ============================ render ============================ */
+function render(){
+  renderContextBar();
+  renderBriefingBar();
+  destroyCharts();
+  $("#view").innerHTML = LOADING ? skeletonHtml() : viewHtml();
+  if (!LOADING){ drawCharts(); wire(); }
+}
+function renderError(msg){
+  $("#view").innerHTML = `<div class="panel"><div class="empty">
+    <h3>That query failed</h3><div>${esc(msg)}</div>
+    <div class="connectrow"><button class="btn" data-retry>Try again</button></div></div></div>`;
+  $("[data-retry]")?.addEventListener("click", load);
+}
+
+function renderContextBar(){
+  const rows = scoped();
+  let name="Overview", sub="all platforms", dot="var(--brand-gold)";
+  if (SCOPE.kind==="platform"){ name=LABEL[SCOPE.p] ?? SCOPE.p; sub=plural(rows.length,"account","accounts"); dot=COLOR[SCOPE.p]; }
+  else if (SCOPE.kind==="account"){ const a=rows[0];
+    name = a ? (a.display_name||a.handle||"Account") : "Account";
+    sub = a ? `${LABEL[a.platform] ?? a.platform}${a.handle ? " · "+a.handle : ""}` : "";
+    dot = a ? COLOR[a.platform] : "var(--brand-gold)"; }
+  $("#scopeName").textContent = name;
+  $("#scopeSub").textContent = sub;
+  $("#scopeDot").style.background = dot;
+}
+
+function renderBriefingBar(){
+  // Rendered as the first block inside #view (see viewHtml); nothing sticky here.
+}
+
+/* ---------- skeleton ---------- */
+function skeletonHtml(){
+  const kpi = `<div class="kpi"><div class="sk line" style="width:50%"></div><div class="sk fig"></div><div class="sk line" style="width:70%"></div></div>`;
+  return `<div class="briefing">
+      <div class="sk line" style="width:40%;height:12px"></div>
+      <div class="sk line" style="width:88%;height:22px;margin-top:12px"></div>
+      <div class="sk line" style="width:60%;height:22px"></div></div>
+    <div class="kpis">${kpi.repeat(4)}</div>
+    <div class="panel"><div class="sk line" style="width:30%;height:16px"></div><div class="sk block" style="margin-top:14px"></div></div>`;
+}
+
+/* ---------- view ---------- */
+function viewHtml(){
+  if (!DATA.overview.length){
+    return `${briefingHtml()}<div class="panel"><div class="empty">
+      <h3>Nothing connected yet</h3>
+      <div>Link a platform to start collecting. Nothing is pulled until you do.</div>
+      <div class="connectrow">
+        <button class="btn" data-connect="youtube">Connect YouTube</button>
+        <button class="btn" data-connect="instagram">Connect Instagram</button>
+        <button class="btn" data-connect="tiktok">Connect TikTok</button>
+        <button class="btn" data-connect="facebook">Connect a Facebook Page</button>
+      </div></div></div>`;
+  }
+  return `${briefingHtml()}
+    <div class="kpis">${kpisHtml()}</div>
+    ${audiencePanel()}
+    ${activityPanel()}
+    ${accountsPanel()}
+    ${availabilityPanel()}
+    ${postsPanel()}
+    ${syncPanel()}`;
+}
+
+function briefingHtml(){
+  const b = briefing();
+  return `<div class="briefing">
+    <div class="dateline"><span class="d">${esc(b.dateline)}</span>
+      ${b.history ? `<span class="sep"></span><span class="s">${esc(b.history)}</span>` : ""}</div>
+    <p class="lede">${esc(b.a)}</p>
+    ${b.b ? `<p class="lede-sub">${esc(b.b)}</p>` : ""}</div>`;
+}
+
+/* ---------- KPIs (ported logic) ---------- */
+function kpisHtml(){
+  const rows = scoped();
+  const since = daysAgoISO(RANGE);
+  const sum = (k) => rows.reduce((a,r)=>a+(Number(r[k])||0),0);
+  const key = RANGE===7 ? "followers_delta_7d" : "followers_delta_28d";
+  const withDelta = rows.filter((r)=>r[key]!=null);
+  const delta = withDelta.length ? withDelta.reduce((a,r)=>a+Number(r[key]),0) : null;
+  const partial = withDelta.length>0 && withDelta.length<rows.length;
+  const ids = new Set(rows.map((r)=>r.account_id));
+  const inScopePosts = DATA.posts.filter((p)=>
+    SCOPE.kind==="all" ? true : SCOPE.kind==="platform" ? p.platform===SCOPE.p : ids.has(p.account_id));
+  const inRange = inScopePosts.filter((p)=>p.published_at && p.published_at.slice(0,10)>=since);
+  const eng = inRange.reduce((a,p)=>a+(Number(p.engagements)||0),0);
+  const vws = inRange.reduce((a,p)=>a+(Number(p.views)||0),0);
+  const rate = vws ? ((eng/vws)*100).toFixed(2)+"%" : "—";
+  const cards = [
+    { l:"Followers", v:fmt(sum("followers")),
+      s: delta===null ? `<span class="flat">no ${RANGE===7?"7d":"28d"} history yet</span>`
+        : `<span class="${cls(delta)}">${signed(delta)}</span> in ${RANGE===7?"7d":"28d"}${partial?` <span class="flat">· ${withDelta.length}/${rows.length}</span>`:""}` },
+    { l:`Posts (${RANGE}d)`, v:String(inRange.length),
+      s: inRange.length ? `${(inRange.length/(RANGE/7)).toFixed(1)} a week` : "nothing in window" },
+    { l:`Eng. rate (${RANGE}d)`, v:rate, s: vws ? `${fmt(eng)} on ${fmt(vws)} views` : "no post metrics" },
+  ];
+  if (SCOPE.kind==="all") cards.push({ l:"Accounts", v:String(rows.length), s: connectedPlatforms().map((p)=>LABEL[p]??p).join(" · ")||"none" });
+  else { cards.push({ l:"Lifetime views", v:fmt(sum("total_views")), s:"as reported" });
+    const asOf = rows.map((r)=>r.as_of).filter(Boolean).sort().at(-1);
+    cards.push({ l:"Last snapshot", v: asOf ? shortDate(asOf) : "—", s: asOf ? "daily collector" : "no data yet" }); }
+  return cards.map((c)=>`<div class="kpi"><div class="label">${c.l}</div><div class="value">${c.v}</div><div class="sub">${c.s}</div></div>`).join("");
+}
+
+/* ---------- audience ---------- */
+function audiencePanel(){
+  const has = DATA.series.length>0;
+  return `<div class="panel">
+    <div class="phead"><h2>Audience</h2><span class="cad live">Daily</span></div>
+    <p class="hint">${SCOPE.kind==="all" ? "Followers per platform — the one number every platform reports the same way."
+      : "Followers per account in this scope."} A line starts the day its account was connected.</p>
+    ${has ? `<div class="chartbox"><canvas id="chAudience"></canvas></div>`
+      : `<div class="empty"><span class="g none"></span><div>No snapshots in the last ${RANGE} days.</div></div>`}</div>`;
+}
+
+/* ---------- daily activity (ported logic) ---------- */
+function activityPanel(){
+  const p = scopePlatform();
+  if (!p){
+    const live = connectedPlatforms();
+    if (!live.length) return "";
+    const cadFor = (pl,hasDaily,hasRoll) =>
+      pl==="youtube" ? ["lag","Daily · lags 2–3d"] : pl==="tiktok" ? ["deriv","Derived from snapshots"]
+      : hasDaily ? ["live","Daily"] : hasRoll ? ["roll","28-day rolling"] : ["none","Nothing yet"];
+    const items = live.map((pl)=>{
+      const daily = [...new Set(dailyInScope().filter((d)=>d.platform===pl).map((d)=>d.metric))];
+      const roll = [...new Set(dailyInScope({rolling:true}).filter((d)=>d.platform===pl).map((d)=>d.metric))];
+      const [code,label] = cadFor(pl,daily.length,roll.length);
+      const names = daily.length ? daily.map(metricLabel).join(", ") : roll.length ? roll.map(metricLabel).join(", ") : "no series yet";
+      return `<button class="acct" data-p="${esc(pl)}" data-scope-platform="${esc(pl)}">
+        <div class="top"><span class="pill ${esc(pl)}">${LABEL[pl]??pl}</span><span class="cad ${code}" style="margin-left:auto">${label}</span></div>
+        <div class="hd" style="margin:0">${esc(names)}</div></button>`;
+    }).join("");
+    return `<div class="panel"><h2>Daily series</h2>
+      <p class="hint">Views, reach and watch time aren't comparable across platforms, so Overview doesn't chart them. Tap a platform to read its own series.</p>
+      ${items}</div>`;
+  }
+  const rows = dailyInScope().filter((d)=>d.platform===p);
+  const rolling = dailyInScope({rolling:true}).filter((d)=>d.platform===p);
+  const metrics = [...new Set(rows.map((r)=>r.metric))];
+  const noAnalytics = scoped().filter((a)=>modeKnown(a) && !hasAnalytics(a));
+  const failedAnalytics = scoped().filter((a)=>analyticsFailed(a));
+  const nameOfAcct = (a)=>a.display_name||a.handle||"this account";
+  let body;
+  if (metrics.length) body = `<div class="chartbox"><canvas id="chDaily"></canvas></div>`;
+  else if (rolling.length) body = `<div class="empty"><span class="g roll"></span><div>Reported as one rolling 28-day figure, not per day.</div></div>`;
+  else if (noAnalytics.length && noAnalytics.length===scoped().length)
+    body = `<div class="empty"><span class="g none"></span><div>${SCOPE.kind==="account"
+      ? `${esc(nameOfAcct(noAnalytics[0]))} reports public totals only.` : `${plural(noAnalytics.length,"account","accounts")} here report public totals only.`}
+      Daily figures need OAuth from the channel — absent by design, not missing.</div></div>`;
+  else if (failedAnalytics.length) body = `<div class="empty"><span class="g err"></span><div>The analytics call failed on the last run — a fault, not a gap. See Sync health.</div></div>`;
+  else body = `<div class="empty"><span class="g none"></span><div>No daily series for this scope.</div></div>`;
+  const rollHtml = rolling.length ? `
+    <div style="margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px solid var(--border-subtle)">
+      <div class="phead" style="margin-bottom:var(--space-3)"><h2 style="font-size:var(--text-body)">Last 28 days</h2><span class="cad roll">Rolling</span></div>
+      <div class="kpis">${[...new Set(rolling.map((r)=>r.metric))].sort().map((m)=>{
+        const forMetric = rolling.filter((r)=>r.metric===m); const latestPer = new Map();
+        for (const r of forMetric){ const prev=latestPer.get(r.account_id); if (!prev||r.day>prev.day) latestPer.set(r.account_id,r); }
+        const total = [...latestPer.values()].reduce((a,r)=>a+(Number(r.value)||0),0);
+        return `<div class="kpi"><div class="value" style="font-size:var(--figure-md)">${fmt(total)}</div><div class="label">${esc(metricLabel(m))}</div></div>`;
+      }).join("")}</div></div>` : "";
+  const cad = p==="youtube" ? `<span class="cad lag">Lags 2–3d</span>` : p==="tiktok" ? `<span class="cad deriv">Derived</span>` : metrics.length ? `<span class="cad live">Daily</span>` : "";
+  return `<div class="panel"><div class="phead"><h2>Daily activity</h2>${cad}</div>
+    <p class="hint">${esc(CAVEAT[p] ?? "")}</p>${body}${rollHtml}</div>`;
+}
+
+/* ---------- accounts ---------- */
+function accountsPanel(){
+  const rows = scoped();
+  return `<div class="panel"><h2>Accounts</h2>
+    <p class="hint">${SCOPE.kind==="account" ? "One account in scope." : "Tap a card to narrow the whole page to that account."}</p>
+    ${rows.length ? rows.map(acctCard).join("") : `<div class="empty">Nothing in this scope.</div>`}</div>`;
+}
+function acctCard(a){
+  const key = RANGE===7 ? "followers_delta_7d" : "followers_delta_28d";
+  const pctKey = RANGE===7 ? "followers_pct_7d" : "followers_pct_28d";
+  const d = a[key];
+  const modeChip = analyticsFailed(a) ? `<span class="cad" style="margin-left:auto;color:var(--state-negative)">Analytics failing</span>`
+    : (modeKnown(a) && !hasAnalytics(a) ? `<span class="cad none" style="margin-left:auto;color:var(--text-tertiary)">Public only</span>` : "");
+  return `<button class="acct" data-p="${esc(a.platform)}" data-acct="${esc(a.account_id)}">
+    <div class="top">${a.avatar_url ? `<img src="${esc(a.avatar_url)}" alt="" loading="lazy">` : ""}
+      <span class="pill ${esc(a.platform)}">${LABEL[a.platform]??a.platform}</span>${modeChip}</div>
+    <div class="nm">${esc(a.display_name||a.handle||"account")}</div>
+    <div class="hd">${esc(a.handle||"")}</div>
+    <div><span class="big">${fmt(a.followers)}</span>
+      <span class="${cls(d)}" style="font-size:var(--text-label)">${d==null?"":signed(d)}${a[pctKey]!=null?` (${a[pctKey]}%)`:""}</span></div>
+    <div class="meta">${fmt(a.total_posts)} posts · ${a.as_of?"as of "+shortDate(a.as_of):"no data"}</div></button>`;
+}
+
+/* ---------- availability (transposed to per-platform cards for mobile) ---------- */
+function availabilityPanel(){
+  const live = connectedPlatforms();
+  const active = scopePlatform();
+  const rows = scoped();
+  const known = rows.filter(modeKnown);
+  const qualify = known.length===rows.length && known.length>0 && !known.some(hasAnalytics);
+  const ANALYTICS_ROWS = new Set(["Views — daily","Watch time"]);
+  const shownPlatforms = active ? [active] : PLATFORMS.filter((p)=>live.includes(p));
+
+  const cards = shownPlatforms.map((p)=>{
+    const rowsHtml = AVAIL.map((row)=>{
+      let code = live.includes(p) ? row[p] : "off";
+      if (qualify && p===active && ANALYTICS_ROWS.has(row.m)) code = "none";
+      return `<div class="arow"><span class="g ${code}"></span><span class="m">${esc(row.m)}</span>
+        <span class="cw">${esc(GLYPH_TITLE[code])}</span></div>`;
+    }).join("");
+    return `<div class="availcard"><div class="top"><span class="pill ${esc(p)}">${LABEL[p]??p}</span></div>${rowsHtml}</div>`;
+  }).join("");
+
+  const offPlatforms = active ? [] : PLATFORMS.filter((p)=>!live.includes(p));
+  const offHtml = offPlatforms.length ? `<div class="availoff">${offPlatforms.map((p)=>
+    `<span class="chipoff"><span class="g off"></span>${LABEL[p]??p} · not connected</span>`).join("")}</div>` : "";
+
+  const modeNote = qualify ? `<p class="hint" style="margin:var(--space-3) 0 0">Narrowed to what this scope has: no Analytics consent, so the daily rows are off the table rather than merely late.</p>` : "";
+
+  return `<div class="panel"><h2>Availability</h2>
+    <p class="hint">What each platform can ever give us, and how often. A hollow ring is the API's answer, not a fault — terracotta would be ours.</p>
+    ${cards || `<div class="empty">Connect a platform to see what it can report.</div>`}
+    ${offHtml}
+    <div class="legend">${["live","lag","roll","deriv","none","off"].map((c)=>`<span><span class="g ${c}"></span>${GLYPH_TITLE[c]}</span>`).join("")}</div>
+    ${modeNote}</div>`;
+}
+
+/* ---------- posts (cards, not a table) ---------- */
+const SORTS = [
+  { k:"published_at", t:"Published" }, { k:"views", t:"Views" },
+  { k:"likes", t:"Likes" }, { k:"comments", t:"Comments" }, { k:"engagement_pct", t:"Engagement %" },
+];
+const NUMERIC = new Set(["views","likes","comments","engagement_pct"]);
+function postsInScope(){
+  const ids = new Set(scoped().map((r)=>r.account_id));
+  let rows = DATA.posts.filter((p)=>
+    SCOPE.kind==="all" ? true : SCOPE.kind==="platform" ? p.platform===SCOPE.p : ids.has(p.account_id));
+  if (POSTTYPE!=="all") rows = rows.filter((p)=>(p.post_type??"")===POSTTYPE);
+  return rows;
+}
+function postsPanel(){
+  const scopeIds = new Set(scoped().map((r)=>r.account_id));
+  const all = DATA.posts.filter((p)=>
+    SCOPE.kind==="all" ? true : SCOPE.kind==="platform" ? p.platform===SCOPE.p : scopeIds.has(p.account_id));
+  const types = [...new Set(all.map((p)=>p.post_type).filter(Boolean))].sort();
+  if (POSTTYPE!=="all" && !types.includes(POSTTYPE)) POSTTYPE = "all";
+  const rows = postsInScope();
+  const filters = types.length>1 ? `<div class="filters">
+    <button data-type="all" aria-pressed="${POSTTYPE==="all"}">All types</button>
+    ${types.map((t)=>`<button data-type="${esc(t)}" aria-pressed="${POSTTYPE===t}">${esc(titleise(t))}</button>`).join("")}</div>` : "";
+  const sortcontrol = `<div class="sortrow">
+    <select id="sortSel" aria-label="Sort posts by">${SORTS.map((s)=>`<option value="${s.k}" ${sortKey===s.k?"selected":""}>${s.t}</option>`).join("")}</select>
+    <button class="dir" id="sortDir" aria-label="Sort direction">${sortDir===1?"↑":"↓"}</button></div>`;
+  return `<div class="panel"><h2>Posts</h2>
+    <p class="hint">Engagement rate compares across platforms; raw views do not.</p>
+    ${filters}
+    ${rows.length ? sortcontrol + postCards(rows) : `<div class="empty">No posts collected for this scope yet.</div>`}</div>`;
+}
+function postCards(rows){
+  const sorted = [...rows].sort((a,b)=>{
+    const x=a[sortKey], y=b[sortKey];
+    if (x===y) return 0;
+    if (x===null||x===undefined) return 1;
+    if (y===null||y===undefined) return -1;
+    if (sortKey==="published_at") return (new Date(x)-new Date(y))*sortDir;
+    if (NUMERIC.has(sortKey)) return (Number(x)-Number(y))*sortDir;
+    return String(x).localeCompare(String(y))*sortDir;
+  });
+  return sorted.map((p)=>{
+    const title = p.title || p.caption || "(untitled)";
+    const titleHtml = p.permalink ? `<a href="${esc(p.permalink)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title);
+    return `<div class="pcard">
+      ${p.thumbnail_url ? `<img class="th" src="${esc(p.thumbnail_url)}" alt="" loading="lazy">` : `<span class="th"></span>`}
+      <div class="body">
+        <div class="ptop"><span class="pill ${esc(p.platform)}">${LABEL[p.platform]??p.platform}</span>
+          <span class="when">${shortDate(p.published_at)}</span></div>
+        <div class="title">${titleHtml}</div>
+        <div class="who">${esc(p.account||p.handle||"")}</div>
+        <div class="mrow">
+          <div class="m"><span class="mv">${fmt(p.views)}</span><span class="ml">Views</span></div>
+          <div class="m"><span class="mv">${fmt(p.likes)}</span><span class="ml">Likes</span></div>
+          <div class="m"><span class="mv hi">${p.engagement_pct!=null?p.engagement_pct+"%":"—"}</span><span class="ml">Eng.</span></div>
+        </div></div></div>`;
+  }).join("");
+}
+
+/* ---------- sync health (ported) ---------- */
+function syncPanel(){
+  const p = scopePlatform();
+  const ids = new Set(scoped().map((a)=>a.account_id));
+  const rows = DATA.sync.filter((r)=>
+    SCOPE.kind==="account" ? (r.account_id==null ? r.platform===p : ids.has(r.account_id)) : (p ? r.platform===p : true));
+  const body = rows.length ? rows.slice().sort((a,b)=>new Date(b.started_at)-new Date(a.started_at)).map((r)=>`
+    <div class="sync"><span class="led ${esc(r.status)}"></span>
+      <span class="pill ${esc(r.platform)}">${LABEL[r.platform]??r.platform}</span>
+      <span class="who">${esc(r.display_name||"—")}${r.message?` · <span style="color:${r.status==="error"?"var(--state-negative)":"var(--text-tertiary)"}">${esc(r.message.slice(0,60))}</span>`:""}</span>
+      <span class="when">${ago(r.started_at)}</span></div>`).join("") : `<div class="empty">No collector has run for this scope yet.</div>`;
+  return `<div class="panel"><h2>Sync health</h2><p class="hint">Last collector run per account. A red light is a fault; a hollow ring in Availability is not.</p>${body}</div>`;
+}
+
+/* ============================ charts (ported) ============================ */
+const AXIS = { grid:{ color:cssVar("--border-subtle"), drawTicks:false }, border:{ display:false },
+  ticks:{ color:cssVar("--text-tertiary"), font:{ size:10 }, maxRotation:0, autoSkipPadding:16 } };
+const BASE = { responsive:true, maintainAspectRatio:false, interaction:{ mode:"index", intersect:false },
+  plugins:{ legend:{ labels:{ color:cssVar("--text-secondary"), boxWidth:8, boxHeight:8, usePointStyle:true, font:{ size:10 } } },
+    tooltip:{ backgroundColor:cssVar("--surface-overlay"), borderColor:cssVar("--border-default"), borderWidth:1,
+      titleColor:cssVar("--text-primary"), bodyColor:cssVar("--text-secondary"), padding:9 } },
+  scales:{ x:AXIS, y:{ ...AXIS, ticks:{ ...AXIS.ticks, callback:(v)=>fmt(v) } } } };
+function drawCharts(){ drawAudience(); drawDaily(); }
+function drawAudience(){
+  const el = $("#chAudience"); if (!el) return;
+  const ids = new Set(scoped().map((a)=>a.account_id));
+  const rows = DATA.series.filter((r)=>SCOPE.kind==="all" ? true : ids.has(r.account_id));
+  if (!rows.length) return;
+  const days = [...new Set(rows.map((r)=>r.day))].sort();
+  let datasets;
+  if (SCOPE.kind==="all"){
+    const groups = [...new Set(rows.map((r)=>r.platform))]; const agg = {};
+    for (const r of rows){ const k=`${r.day}|${r.platform}`; agg[k]=(agg[k]??0)+(Number(r.followers)||0); }
+    datasets = groups.map((g)=>({ label:LABEL[g]??g, data:days.map((d)=>agg[`${d}|${g}`]??null),
+      borderColor:COLOR[g]??cssVar("--state-progress"), backgroundColor:(COLOR[g]??cssVar("--state-progress"))+"1f",
+      borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:false, fill:true }));
+  } else {
+    const accounts = [...new Set(rows.map((r)=>r.account_id))];
+    const nameOf = (id)=>{ const a=DATA.overview.find((x)=>x.account_id===id); return a?(a.display_name||a.handle||"account"):"account"; };
+    const idx = new Map(rows.map((r)=>[`${r.day}|${r.account_id}`, Number(r.followers)||0]));
+    const base = COLOR[scopePlatform()]??cssVar("--state-progress");
+    datasets = accounts.map((id,i)=>({ label:nameOf(id), data:days.map((d)=>idx.has(`${d}|${id}`)?idx.get(`${d}|${id}`):null),
+      borderColor:base, backgroundColor:base+"14", borderWidth:2, borderDash:i===0?[]:i===1?[5,3]:[2,3],
+      pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:false, fill:accounts.length===1 }));
+  }
+  charts.a = new Chart(el, { type:"line", data:{ labels:days.map(shortDate), datasets },
+    options:{ ...BASE, plugins:{ ...BASE.plugins, legend:{ ...BASE.plugins.legend, display:datasets.length>1 } } } });
+}
+function drawDaily(){
+  const el = $("#chDaily"); if (!el) return;
+  const p = scopePlatform();
+  const rows = dailyInScope().filter((d)=>d.platform===p); if (!rows.length) return;
+  const days = [...new Set(rows.map((r)=>r.day))].sort();
+  const metrics = [...new Set(rows.map((r)=>r.metric))].sort();
+  const bucket = new Map();
+  for (const r of rows){ const k=`${r.day}|${r.metric}`; bucket.set(k,(bucket.get(k)??0)+(Number(r.value)||0)); }
+  const valueFor = (d,m)=>bucket.has(`${d}|${m}`)?bucket.get(`${d}|${m}`):null;
+  const head = metrics.includes("views")?"views":metrics.includes("reach")?"reach":metrics[0];
+  const rest = metrics.filter((m)=>m!==head && !/^avg_/.test(m));
+  const ramp = [cssVar("--state-progress"), cssVar("--brand-gold"), cssVar("--brand-gold-soft"), cssVar("--text-secondary"), cssVar("--state-negative")];
+  charts.d = new Chart(el, { data:{ labels:days.map(shortDate), datasets:[
+    { type:"bar", label:metricLabel(head), yAxisID:"y", data:days.map((d)=>valueFor(d,head)),
+      backgroundColor:p?(COLOR[p]??cssVar("--state-progress")):cssVar("--state-progress"), borderRadius:2, borderSkipped:false, order:3 },
+    ...rest.map((m,i)=>({ type:"line", label:metricLabel(m), yAxisID:"y1", data:days.map((d)=>valueFor(d,m)),
+      borderColor:ramp[i%ramp.length], borderWidth:1.5, pointRadius:0, pointHoverRadius:3, tension:.3, order:1 })) ] },
+    options:{ ...BASE, scales:{ x:AXIS, y:{ ...AXIS, beginAtZero:true, ticks:{ ...AXIS.ticks, callback:(v)=>fmt(v) } },
+      y1:{ ...AXIS, position:"right", beginAtZero:true, grid:{ display:false }, ticks:{ ...AXIS.ticks, callback:(v)=>fmt(v) } } } } });
+}
+
+/* ============================ wiring ============================ */
+function wire(){
+  $$("[data-acct]").forEach((b)=>b.onclick=()=>{ setScope({ kind:"account", id:b.dataset.acct }); scrollTop(); });
+  $$("[data-scope-platform]").forEach((b)=>b.onclick=()=>{ setScope({ kind:"platform", p:b.dataset.scopePlatform }); scrollTop(); });
+  $$("[data-connect]").forEach((b)=>b.onclick=()=>openConnect(b.dataset.connect));
+  $$("[data-type]").forEach((b)=>b.onclick=()=>{ POSTTYPE=b.dataset.type; writeUrl(); render(); });
+  const sel = $("#sortSel"); if (sel) sel.onchange=()=>{ sortKey=sel.value; render(); };
+  const dir = $("#sortDir"); if (dir) dir.onclick=()=>{ sortDir*=-1; render(); };
+}
+function scrollTop(){ $("#view")?.scrollTo?.({ top:0 }); }
+
+function syncRangeButtons(){ $$("#range button").forEach((x)=>{
+  if (Number(x.dataset.d)===RANGE) x.setAttribute("aria-pressed","true"); else x.removeAttribute("aria-pressed"); }); }
+$$("#range button").forEach((b)=>b.onclick=()=>{ RANGE=Number(b.dataset.d); syncRangeButtons(); writeUrl(); load(); });
+
+/* ============================ sheets ============================ */
+let releaseTrap = null;
+function trapFocus(container){
+  const SEL = 'a[href],button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  const onKey = (e)=>{ if (e.key!=="Tab") return;
+    const items = [...container.querySelectorAll(SEL)].filter((el)=>el.offsetParent!==null);
+    if (!items.length) return;
+    const first=items[0], last=items[items.length-1], active=document.activeElement;
+    if (!container.contains(active)){ e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && active===first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && active===last){ e.preventDefault(); first.focus(); }
+  };
+  document.addEventListener("keydown", onKey, true);
+  return ()=>document.removeEventListener("keydown", onKey, true);
+}
+function openSheet(inner, { labelledby } = {}){
+  const root = $("#sheetRoot");
+  root.innerHTML = `<div class="scrim"><div class="sheet" role="dialog" aria-modal="true" ${labelledby?`aria-labelledby="${labelledby}"`:""}>
+    <div class="grab"></div>${inner}</div></div>`;
+  const scrim = root.querySelector(".scrim");
+  scrim.addEventListener("click",(e)=>{ if (e.target===scrim) closeSheet(); });
+  document.addEventListener("keydown", onSheetKey);
+  releaseTrap = trapFocus(root);
+  return root;
+}
+function closeSheet(){ const root=$("#sheetRoot"); root.innerHTML=""; document.removeEventListener("keydown", onSheetKey); if (releaseTrap){ releaseTrap(); releaseTrap=null; } }
+const onSheetKey = (e)=>{ if (e.key==="Escape") closeSheet(); };
+
+/* scope sheet — the desktop rail, as a bottom sheet */
+function openScope(){
+  const byPlatform = {}; for (const a of DATA.overview)(byPlatform[a.platform]??=[]).push(a);
+  const node = ({label,meta,kind,key,extra="",colour,hollow,showdot=true})=>{
+    const current = (kind==="all"&&SCOPE.kind==="all")||(kind==="platform"&&SCOPE.kind==="platform"&&SCOPE.p===key)||(kind==="account"&&SCOPE.kind==="account"&&SCOPE.id===key);
+    const dot = !showdot ? "" : colour!==undefined
+      ? `<span class="dot${hollow?" hollow":""}" ${hollow?"":`style="background:${colour}"`}></span>`
+      : `<span class="dot" style="background:var(--brand-gold)"></span>`;
+    return `<button class="node ${extra}" data-kind="${kind}" data-key="${esc(key??"")}" aria-current="${current}">
+      ${dot}<span class="lbl">${esc(label)}</span><span class="meta">${esc(meta??"")}</span></button>`;
+  };
+  let html = node({ label:"Overview", kind:"all", key:"" });
+  for (const p of PLATFORMS){
+    const kids = byPlatform[p]??[]; const connected = kids.length>0;
+    html += node({ label:LABEL[p], meta:connected?String(kids.length):"Connect", kind:connected?"platform":"connect",
+      key:p, extra:"group"+(connected?"":" off"), colour:COLOR[p], hollow:!connected });
+    for (const a of kids) html += node({ label:a.display_name||a.handle||"account", meta:fmt(a.followers),
+      kind:"account", key:a.account_id, extra:"child", showdot:false });
+  }
+  openSheet(`<h2 id="scopeTitle">Scope</h2><div class="scroll">${html}</div>`, { labelledby:"scopeTitle" });
+  $$("#sheetRoot .node").forEach((b)=>b.onclick=()=>{
+    const { kind, key } = b.dataset;
+    if (kind==="connect"){ closeSheet(); return openConnect(key); }
+    if (kind==="all") setScope({ kind:"all" });
+    else if (kind==="platform") setScope({ kind:"platform", p:key });
+    else if (kind==="account") setScope({ kind:"account", id:key });
+    closeSheet(); scrollTop();
+  });
+}
+$("#scopeBtn").onclick = openScope;
+
+/* profile sheet */
+function setProfile(email){
+  const local = (email??"").split("@")[0];
+  const parts = local.split(/[._-]+/).filter(Boolean);
+  const initials = parts.length>1 ? (parts[0][0]+parts[1][0]) : local.slice(0,2);
+  $("#profileInitials").textContent = initials ? initials.toUpperCase() : "—";
+  $("#profileBtn").dataset.email = email ?? "";
+}
+$("#profileBtn").onclick = () => {
+  const email = $("#profileBtn").dataset.email || "—";
+  const passkeyItem = window.PublicKeyCredential ? `<button class="mi" id="addPasskey">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.4"></circle><path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path><path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path></svg>
+    <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span></button>` : "";
+  openSheet(`<h2 id="profTitle" class="sr">Account</h2><div class="scroll">
+    <div class="who-head"><span class="em">${esc(email)}</span><span class="rl">Signed in · invited access</span></div>
+    ${passkeyItem}
+    <div class="menunote" id="idleNote">Signs out after 66 minutes without activity.</div>
+    <div class="rule"></div>
+    <button class="mi danger" id="signOut">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M14 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H14"></path><path d="M17 8.5 20.5 12 17 15.5M20.5 12H10"></path></svg>
+      <span>Sign out</span></button></div>`, { labelledby:"profTitle" });
+  $("#idleNote").textContent = `Signs out after ${IDLE_MINUTES} minutes without activity.`;
+  const ap = $("#addPasskey"); if (ap) ap.onclick = async () => {
+    ap.disabled=true; const { error } = await sb.auth.registerPasskey(); ap.disabled=false; closeSheet();
+    toast(error ? `Couldn't add a passkey: ${error.message}` : "Passkey added — sign in with Face ID next time.");
+  };
+  $("#signOut").onclick = async () => { lastEmail=null; history.replaceState(null,"",location.pathname); await sb.auth.signOut(); location.reload(); };
+};
+
+/* ============================ connect flow (ported, as a sheet) ============================ */
+function openConnect(preselect){
+  let choice = PLATFORMS.includes(preselect) ? preselect : "youtube";
+  const opts = [
+    { p:"youtube",   nm:"YouTube",       ds:"Channel stats, daily views and watch time. Needs the channel handle first." },
+    { p:"instagram", nm:"Instagram",     ds:"Business or Creator account. No Facebook Page required." },
+    { p:"tiktok",    nm:"TikTok",        ds:"Cumulative totals; daily movement is derived after two syncs." },
+    { p:"facebook",  nm:"Facebook Page", ds:"Pages you administer, plus any Page-linked Instagram accounts." },
+  ];
+  const draw = () => {
+    const inner = `<h2 id="conTitle">Connect an account</h2><div class="scroll">
+      <p class="hint" style="margin-bottom:var(--space-4)">Choosing a platform opens that provider's consent window in a new tab. Signal never sees your password — only the token the provider returns.</p>
+      ${opts.map((o)=>`<button class="opt" data-p="${o.p}" aria-pressed="${choice===o.p}">
+        <span class="dot" style="background:${COLOR[o.p]};margin-top:6px"></span>
+        <span><span class="nm">${o.nm}</span><span class="ds">${o.ds}</span></span></button>`).join("")}
+      ${choice==="youtube" ? `<div class="field"><label for="ytHandle">Channel handle or ID</label>
+        <input type="text" id="ytHandle" placeholder="@cunningcorp">
+        <p class="hint" style="margin:var(--space-2) 0 0">The API can't discover channels, so the channel is registered before consent. The <code>UC…</code> ID from the Studio URL is authoritative; Brand Accounts are supported.</p></div>` : ""}
+      <button class="btn primary wide" id="conGo" style="margin-top:var(--space-4)">Continue</button></div>`;
+    openSheet(inner, { labelledby:"conTitle" });
+    $$("#sheetRoot .opt").forEach((b)=>b.onclick=()=>{ choice=b.dataset.p; draw(); });
+    $("#conGo").onclick = go;
+  };
+  async function go(){
+    const btn = $("#conGo"); btn.disabled=true; btn.textContent="Opening…";
+    try{
+      const { data:{ session } } = await sb.auth.getSession();
+      const auth = { Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY };
+      if (choice==="youtube"){
+        const h = ($("#ytHandle")?.value ?? "").trim();
+        if (!h){ toast("Enter the channel handle, e.g. @cunningcorp."); btn.disabled=false; btn.textContent="Continue"; return; }
+        const q = h.startsWith("UC") ? `id=${encodeURIComponent(h)}` : `handle=${encodeURIComponent(h)}`;
+        const reg = await fetch(`${SUPABASE_URL}/functions/v1/add-youtube-channel?${q}`, { method:"POST", headers:auth });
+        const regBody = await reg.json().catch(()=>({}));
+        if (!reg.ok){ toast(regBody.error||regBody.hint||"Could not find that channel."); closeSheet(); return; }
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/oauth-start?platform=youtube&${q}`, { headers:auth });
+        const body = await res.json();
+        if (body.url){ window.open(body.url,"_blank","noopener"); closeSheet(); toast("Approve access in the new tab, then Sync now."); }
+        else toast(body.error||"Could not start the connect flow.");
+        return;
+      }
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/oauth-start?platform=${CONNECT_KIND[choice]}`, { headers:auth });
+      const body = await res.json();
+      if (body.url){ window.open(body.url,"_blank","noopener"); closeSheet(); toast("Approve access in the new tab, then Sync now."); }
+      else toast(body.error||"Could not start the connect flow.");
+    } catch(e){ toast(`Connect failed: ${e.message}`); }
+    finally { const b=$("#conGo"); if (b){ b.disabled=false; b.textContent="Continue"; } }
+  }
+  draw();
+}
+$("#connectBtn").onclick = () => openConnect(scopePlatform());
+
+/* ============================ sync ============================ */
+$("#syncBtn").onclick = async () => {
+  const btn = $("#syncBtn"); btn.disabled=true; const label=btn.innerHTML; btn.textContent="Syncing…";
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/sync-all`, { method:"POST",
+      headers:{ Authorization:`Bearer ${session.access_token}`, apikey:SUPABASE_KEY } });
+    const body = await res.json();
+    toast(body.failed ? `Sync finished with ${plural(body.failed,"failing collector","failing collectors")} — see Sync health.` : "Sync complete.");
+  } catch(e){ toast(`Sync failed: ${e.message}`); }
+  finally { btn.disabled=false; btn.innerHTML=label; await load(); }
+};
+
+/* ============================ idle logout (ported) ============================ */
+const IDLE_MINUTES = 66, WARN_SECONDS = 90, IDLE_MS = IDLE_MINUTES*60*1000;
+let idleTimer=null, warnTimer=null, tickTimer=null, warnOpen=false, releaseIdleTrap=null;
+function armIdleLogout(){ if (warnOpen) return; clearTimeout(idleTimer); clearTimeout(warnTimer);
+  warnTimer=setTimeout(()=>openIdleWarning(), Math.max(0, IDLE_MS-WARN_SECONDS*1000));
+  idleTimer=setTimeout(()=>idleSignOut(), IDLE_MS); }
+function disarmIdleLogout(){ clearTimeout(idleTimer); clearTimeout(warnTimer); clearTimeout(tickTimer);
+  idleTimer=warnTimer=tickTimer=null; closeIdleWarning(); }
+async function idleSignOut(){ closeIdleWarning(); await sb.auth.signOut(); showIdleGate(); }
+function gateScopeLabel(){
+  const q = new URLSearchParams(location.search); const parts=[];
+  if (q.get("account")) parts.push("an account view");
+  else if (PLATFORMS.includes(q.get("platform"))) parts.push(LABEL[q.get("platform")]);
+  else parts.push("Overview");
+  parts.push(`${Number(q.get("range"))||30} days`);
+  if (q.get("type")) parts.push(titleise(q.get("type")));
+  return parts.join(" · ");
+}
+function showIdleGate(){
+  $("#gateNoticeTitle").textContent = `Signed out after ${IDLE_MINUTES} minutes`;
+  $("#gateResume").innerHTML = `Waiting for you: <b>${esc(gateScopeLabel())}</b>`;
+  $("#gateResume").classList.remove("hide"); $("#gateNotice").classList.remove("hide");
+  $("#gateIntro").classList.add("hide"); authMsg("");
+  if (lastEmail) $("#email").value = lastEmail;
+  if (window.PublicKeyCredential) $("#passkeyFastest").classList.remove("hide");
+  $("#sendLink").textContent = "Email me a link to resume";
+}
+function resetGate(){ $("#gateNotice").classList.add("hide"); $("#gateIntro").classList.remove("hide");
+  $("#passkeyFastest").classList.add("hide"); $("#sendLink").textContent="Send sign-in link"; }
+function closeIdleWarning(){ warnOpen=false; clearTimeout(tickTimer); tickTimer=null;
+  const root=$("#idleRoot"); if (root.innerHTML) root.innerHTML=""; document.removeEventListener("keydown", onIdleKey);
+  if (releaseIdleTrap){ releaseIdleTrap(); releaseIdleTrap=null; } }
+const onIdleKey = (e)=>{ if (e.key==="Escape"){ e.preventDefault(); staySignedIn(); } };
+function staySignedIn(){ closeIdleWarning(); armIdleLogout(); toast(`Still signed in. The ${IDLE_MINUTES}-minute idle timer has restarted.`); }
+function openIdleWarning(secs){
+  if (warnOpen || $("#app").classList.contains("hide")) return;
+  warnOpen=true; const total=secs??WARN_SECONDS; const until=Date.now()+total*1000;
+  $("#idleRoot").innerHTML = `<div class="idlewrap"><div class="idlecard" role="alertdialog" aria-modal="true" aria-labelledby="idleTitle" aria-describedby="idleBody">
+    <h2 id="idleTitle">Still there?</h2>
+    <p id="idleBody">Signal signs you out after ${IDLE_MINUTES} minutes without activity, so an unattended phone can't leave the numbers on screen. Nothing is lost — there is nothing here to save.</p>
+    <div class="countdown"><span class="n" id="idleN" aria-hidden="true">${total}</span><span class="u">seconds left</span></div>
+    <div class="bar"><i id="idleBar" style="width:100%"></i></div>
+    <div class="foot"><button class="btn primary" data-idle-stay>Keep me signed in</button><button class="btn" data-idle-out>Sign out now</button></div></div></div>`;
+  $("[data-idle-stay]").onclick = staySignedIn;
+  $("[data-idle-out]").onclick = () => { lastEmail=null; idleSignOut(); };
+  document.addEventListener("keydown", onIdleKey);
+  if (releaseIdleTrap) releaseIdleTrap();
+  releaseIdleTrap = trapFocus($("#idleRoot"));
+  $("[data-idle-stay]").focus();
+  toast(`Signing out in ${total} seconds without activity.`, total*1000);
+  const tick = () => { if (!warnOpen) return; const left=Math.max(0,until-Date.now());
+    const n=$("#idleN"), bar=$("#idleBar"); if (!n||!bar) return;
+    n.textContent=Math.ceil(left/1000); bar.style.width=(left/(total*1000)*100).toFixed(1)+"%";
+    if (left>0) tickTimer=setTimeout(tick,250); };
+  tick();
+}
+["mousemove","keydown","click","scroll","touchstart"].forEach((ev)=>
+  addEventListener(ev, ()=>{ if (idleTimer && !warnOpen) armIdleLogout(); }, { passive:true }));
+window.signalIdleWarn = (secs)=>{ clearTimeout(idleTimer); clearTimeout(warnTimer); warnOpen=false; openIdleWarning(secs); };
+
+/* ============================ boot ============================ */
+let booted = false;
+function applySession(session){
+  const signedIn = !!session;
+  $("#gate").classList.toggle("hide", signedIn);
+  $("#app").classList.toggle("hide", !signedIn);
+  if (signedIn){ lastEmail = session.user?.email ?? lastEmail; setProfile(session.user?.email); armIdleLogout(); resetGate(); }
+  else { disarmIdleLogout(); }
+  if (signedIn && !booted){ booted=true; readUrl(); syncRangeButtons(); load(); }
+  if (!signedIn) booted=false;
+}
+sb.auth.onAuthStateChange((_e, session)=>applySession(session));
+applySession((await sb.auth.getSession()).data.session);
+</script>
+</body>
+</html>

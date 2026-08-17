@@ -2,24 +2,33 @@
 
 Everything the design pass produced, mapping to `DESIGN-BRIEF.md` §4 deliverables.
 
-**This belongs on `design/prototypes`, never `main`.** `main` auto-deploys to the live,
-internet-facing portal. Promoting a prototype to `index.html` is a deploy decision for
-Demetri, not a file move.
+**Shipped.** As of 17 Aug 2026 direction 2a is `index.html` on `main` and deployed to the
+live portal. This folder is the record of how it got there, plus the prototype kept in
+review form.
+
+One consequence worth knowing: `main` auto-deploys, so `/design/prototypes/signal-2a.html`
+is a real URL on the live host. Harmless — `robots.txt` is `Disallow: /`, the prototype
+sits behind the same auth gate, and the exploration file holds illustrative figures only.
 
 | # | Deliverable | File |
 |---|---|---|
-| 1 | Prototype directions | `prototypes/directions-1a-1b-1c.html`, `prototypes/signal-2a.html` |
+| 1 | Prototype directions | `prototypes/directions-1a-1b-1c.html`, `prototypes/signal-2a.html`, `prototypes/signal-mobile.html` |
 | 2 | Token sheet | `tokens.md` |
 | 3 | Interaction notes | `interactions.md` |
 | 4 | Handoff note for the code pass | `handoff.md` |
 
 ## The prototypes
 
-**`prototypes/signal-2a.html` — the chosen direction.** A working page, not a mockup:
-magic-link and passkey sign-in, live reads from the five `social_*` views, real connect
-flow, idle logout. Single file, no build step, drop-in shape for `index.html`. Signed out
-it shows the auth gate — correct, since nothing is visible pre-auth. It needs `fonts/`
-alongside it, which the repo now has.
+**`prototypes/signal-2a.html` — the chosen direction, now shipped.** A working page, not a
+mockup: magic-link and passkey sign-in, live reads from the five `social_*` views, real
+connect flow, idle logout. Single file, no build step. Signed out it shows the auth gate —
+correct, since nothing is visible pre-auth. It needs `fonts/` alongside it, which the repo
+has.
+
+This file and the shipped `index.html` are the same page, with **one intentional
+difference**: the prototype keeps the `signalIdleWarn()` console hook so the 66-minute idle
+dialog can be reviewed without waiting. Production drops it. Read that as deliberate, not
+drift.
 
 **`prototypes/directions-1a-1b-1c.html` — the exploration.** The three earlier directions
 side by side (1a Console, 1b Briefing, 1c Board) plus the token sheet rendered visually.
@@ -30,11 +39,22 @@ shape — this file is the argument for 2a, not a live view. For anything real, 
 2a is **1c's scope rail plus 1b's briefing header**: the rail is navigation, the lede is
 content, and merging them forces one rule — the summary follows the scope.
 
+**`prototypes/signal-mobile.html` — the mobile-first build (new, for review).** Not the
+desktop page collapsed: the scope rail becomes a bottom sheet, the write-actions (Connect,
+Sync) move to a thumb-zone bar, the posts table becomes cards, and the availability matrix
+transposes to one card per platform. Same tokens, same five `social_*` views, same
+data-truth logic ported verbatim (briefing lede, `access_mode`, per-account availability,
+gap-not-zero charts). Signed out it shows the auth gate. **Intended end state:** its
+breakpoints fold into one responsive `index.html` — this separate file is for review, not a
+second page to ship. That merge is the code pass's call.
+
 ## Reading order
 
-`handoff.md` first — §6 records the three data-layer requests, all now shipped, and the
-one grain change that would silently corrupt figures if code reads it stale. Then
-`tokens.md` for what to bind to CSS custom properties, then `interactions.md` for states
-and URL scheme.
+`handoff.md` first — §4 records the three data-layer requests, all now shipped, and the one
+grain change that would silently corrupt figures if code reads it stale. Then `tokens.md`
+for what to bind to CSS custom properties, then `interactions.md` for states and URL
+scheme. §5 of the handoff lists what is still open: the 200-row post cap, mobile beyond
+grid collapse, chart re-instantiation per render, `innerHTML` concatenation, and arrow-key
+roving focus in the profile menu.
 
-Built against `cunningcorp/portal@a31cfe3742cd`, 17 Aug 2026.
+Built against `cunningcorp/portal@08d22f7eeb7b`, 17 Aug 2026.

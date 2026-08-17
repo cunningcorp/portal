@@ -118,25 +118,37 @@ than string-matching a `sync_runs.message` sentence:
 
 ## 5 · Open items for the code pass
 
-Known, deliberate, and not defects:
+Known, deliberate, and not defects. **Two were closed by the code pass on 17 Aug and are
+recorded here as settled, not outstanding** — items 1 and 5.
 
-1. **No focus trap** in the connect modal. Escape and scrim-click work; Tab can leave.
+1. ~~**No focus trap** in the connect modal.~~ **Closed.** `trapFocus(container)` traps Tab
+   in capture on both modals and returns a teardown, re-querying focusables each press so
+   it survives the Connect modal's redraws. Escape stays with each modal's own handler.
 2. **200-row post cap, no pagination** (`CLAUDE.md` rough edge 12, still open).
-3. **Mobile is a collapse, not a design.** Below 900px the rail stacks above the content;
-   a five-account internal tool may not need more, but it is a decision, not an oversight.
+3. ~~**Mobile is a collapse, not a design.**~~ **Addressed — see `prototypes/signal-mobile.html`.**
+   A dedicated mobile-first build: scope moves to a bottom sheet, the two write-actions to a
+   thumb-zone bar, the posts table becomes cards, the availability matrix transposes to
+   per-platform cards. Same tokens, same five views, same data-truth logic. It is a
+   separate file for review; the intended end state is folding its breakpoints into one
+   responsive `index.html` rather than shipping two files — that merge is the code pass's.
 4. **Every render rebuilds and re-instantiates both charts.** Fine at five accounts; the
    first thing that will feel slow. Sorting the posts table re-renders the page.
-5. **`spanGaps: true` on the audience chart**, inherited from the framework — a missed
-   sync interpolates rather than showing a hole. Now that gaps are meaningful elsewhere
-   (daily series render `null`, not `0`, precisely so YouTube's lag reads as absence),
-   this deserves a decision either way.
+5. ~~**`spanGaps: true` on the audience chart**~~ — **decided: now `false`.** A missed sync
+   shows a hole rather than interpolating, which matches the daily series (`null`, not
+   `0`, so YouTube's lag reads as absence). Gaps now mean the same thing on every chart in
+   the product.
 6. **`innerHTML` string concatenation throughout** (`CLAUDE.md` rough edge 14). Kept
    deliberately to match the existing file; every interpolation goes through `esc()`.
    Note the two places that build strings for `textContent` instead — the briefing lede —
    which must *not* be escaped.
 
 Closed by this work: rough edge 11 (`window.prompt()` connect) and 13 (tab state not in
-the URL).
+the URL). Closed by the code pass while promoting 2a to `index.html`: the modal focus trap
+and the `spanGaps` decision above.
+
+Still genuinely open: the 200-row post cap (2), mobile (3), chart re-instantiation (4),
+`innerHTML` concatenation (6), and arrow-key roving focus in the profile menu — Tab works,
+arrows don't.
 
 ---
 
