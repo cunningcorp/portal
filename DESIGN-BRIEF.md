@@ -49,10 +49,15 @@ via CDN. Everything below is what a signed-in user can currently see or do.
 
 ### 1.1 Auth gate
 
-Full-viewport card: wordmark, product name, one email field, one button, magic-link flow.
-Status line for feedback. `shouldCreateUser: false` — unknown emails are refused; there is
-no signup and there must never appear to be one. This screen is the only thing an
-unauthenticated visitor ever sees, and the page is on the public internet.
+Full-viewport card: wordmark, product name, one email field, one button, magic-link flow,
+plus **passkey (WebAuthn) sign-in** with magic link as the fallback. Status line for
+feedback. `shouldCreateUser: false` — unknown emails are refused; there is no signup and
+there must never appear to be one. This screen is the only thing an unauthenticated
+visitor ever sees, and the page is on the public internet.
+
+Sessions also **sign out after 66 minutes idle** (client-side timer, resets on activity,
+message shown on the gate). The redesign should keep both behaviours and give the
+signed-out-for-inactivity state a designed treatment rather than a bare status line.
 
 ### 1.2 Header (sticky)
 
