@@ -232,8 +232,8 @@ survive refresh and be shareable).
 Palette and type per the Cunning Corp Brand Handbook (table in `README.md`): Plum
 `#241B30`, Plum Deep `#191220`, Gold `#C8A24C`, Gold Soft `#E3C57E`, Periwinkle `#8E8BD8`,
 Paper `#FAF6EE`; division accents Terracotta/Slate/Teal. Type: Glamour Absolute Extended
-(display), Recoleta (headings, figures), Graphik (body/UI) — Recoleta is the only file
-currently in the repo; the others are declared with graceful fallbacks.
+(display), Recoleta (headings, figures), Graphik (body/UI) — all five font files are committed
+under `fonts/`.
 
 Two standing exceptions, documented in `README.md`, to preserve unless explicitly
 overturned with a better answer: platform colours (YouTube red etc.) are data encoding,
