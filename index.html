@@ -130,13 +130,53 @@ button{font:inherit;cursor:pointer}
 .authcard h1{margin:0 0 var(--space-2);font-family:var(--font-head);font-size:1.65rem;
   font-weight:300;letter-spacing:-.02em;color:var(--text-primary)}
 .authcard p{margin:0 0 var(--space-5);color:var(--text-secondary);font-size:.87rem}
+.authcard .methods{display:flex;flex-direction:column;gap:var(--space-2)}
+/* Two sign-in methods need a visible seam, or the stacked buttons read as one
+   control and the passkey looks like a subtitle of the link button. */
+.orrule{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-4) 0;
+  font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--text-tertiary)}
+.orrule::before,.orrule::after{content:"";flex:1;height:1px;background:var(--border-subtle)}
+.authcard .why{margin:var(--space-2) 0 0;font-size:var(--text-micro);color:var(--text-tertiary);
+  line-height:1.5;text-align:center}
+.btn.wide.tall{padding:.62rem .85rem}
+.btn .ico{width:14px;height:14px;vertical-align:-2px;margin-right:.4rem}
 .mark{width:17px;height:17px;flex:none}
 input[type=email],input[type=text]{width:100%;padding:.68rem .85rem;background:var(--surface-sunken);
   border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);
   font:inherit;margin-bottom:var(--space-2)}
 input::placeholder{color:var(--text-tertiary)}
 input:focus{outline:0;border-color:var(--state-progress)}
-.msg{font-size:.83rem;margin-top:var(--space-3);color:var(--text-secondary);min-height:1.2em}
+/* Autofill paints its own yellow field and ignores background-color. The inset shadow
+   is the only way to repaint it, and the long transition stops the flash on load. */
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--text-primary);
+  -webkit-box-shadow:0 0 0 100px var(--surface-sunken) inset;
+  box-shadow:0 0 0 100px var(--surface-sunken) inset;
+  border:1px solid var(--border-default);
+  transition:background-color 8000s ease-in-out 0s;
+  caret-color:var(--text-primary)}
+input:-webkit-autofill:focus{border-color:var(--state-progress)}
+.msg{font-size:.83rem;margin-top:var(--space-3);color:var(--text-secondary);min-height:2.4em}
+.msg.err{color:var(--state-negative)}
+
+/* ---------- signed-out-for-inactivity ----------
+   Brief §1.1 asks for a designed treatment, not a status line. It sits above the
+   methods, states the rule, and — the part that makes it useful — names the view being
+   held, so signing back in reads as resuming rather than starting over. Gold, because a
+   scheduled sign-out is routine; terracotta is for faults. */
+.notice{display:flex;gap:var(--space-3);padding:var(--space-4);margin:0 0 var(--space-5);
+  background:var(--surface-overlay);border:1px solid var(--border-default);
+  border-left:2px solid var(--brand-gold);border-radius:var(--radius-md)}
+.notice svg{width:16px;height:16px;flex:none;margin-top:1px;color:var(--brand-gold)}
+.notice .t{display:block;font-size:var(--text-label);font-weight:600;color:var(--text-primary);
+  margin-bottom:var(--space-1)}
+.notice .d{display:block;font-size:var(--text-micro);color:var(--text-secondary);line-height:1.55}
+.notice .r{display:block;font-size:var(--text-micro);color:var(--text-tertiary);
+  margin-top:var(--space-2);padding-top:var(--space-2);border-top:1px solid var(--border-subtle)}
+.notice .r b{color:var(--brand-gold-soft);font-weight:600}
+.fastest{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--brand-gold);margin-left:var(--space-2)}
 
 /* ---------- buttons ---------- */
 .btn{background:transparent;border:1px solid var(--border-default);color:var(--text-secondary);
@@ -197,6 +237,34 @@ input:focus{outline:0;border-color:var(--state-progress)}
 .chip{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
   color:var(--state-progress);border:1px solid var(--border-default);
   border-radius:var(--radius-pill);padding:2px var(--space-3);background:none}
+
+/* ---------- profile menu ---------- */
+.acctmenu{position:relative}
+.avatar{width:30px;height:30px;border-radius:50%;flex:none;
+  background:var(--surface-overlay);border:1px solid var(--border-default);
+  color:var(--text-secondary);font-family:var(--font-body);font-weight:600;
+  font-size:var(--text-micro);letter-spacing:.04em;text-transform:uppercase;
+  display:grid;place-items:center;transition:var(--dur-fast)}
+.avatar:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.avatar[aria-expanded="true"]{border-color:var(--state-progress);color:var(--text-primary)}
+.menu{position:absolute;right:0;top:calc(100% + var(--space-2));min-width:17rem;
+  background:var(--surface-raised);border:1px solid var(--border-default);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-overlay);padding:var(--space-2);z-index:40}
+.menu .who{padding:var(--space-3) var(--space-3) var(--space-2);
+  border-bottom:1px solid var(--border-subtle);margin-bottom:var(--space-2)}
+.menu .who .em{display:block;font-size:var(--text-label);color:var(--text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu .who .rl{display:block;font-size:var(--text-micro);color:var(--text-tertiary);margin-top:2px}
+.mi{display:flex;align-items:flex-start;gap:var(--space-3);width:100%;text-align:left;
+  background:none;border:0;border-radius:var(--radius-md);padding:var(--space-2) var(--space-3);
+  color:var(--text-secondary);font-size:var(--text-body);transition:var(--dur-fast)}
+.mi:hover{background:var(--surface-overlay);color:var(--text-primary)}
+.mi .ico{width:15px;height:15px;flex:none;opacity:.75;margin-top:3px}
+.mi .sub{display:block;font-size:var(--text-micro);color:var(--text-tertiary);margin-top:1px}
+.mi.danger:hover{color:var(--state-negative)}
+.menu .rule{height:1px;background:var(--border-subtle);margin:var(--space-2) 0}
+.menu .note{padding:var(--space-2) var(--space-3) var(--space-1);font-size:var(--text-micro);
+  color:var(--text-tertiary);line-height:1.5}
 
 /* ---------- briefing header ---------- */
 .briefing{padding:var(--space-6) var(--space-6) var(--space-5);border-bottom:1px solid var(--border-subtle)}
@@ -361,6 +429,19 @@ td.t a:hover{color:var(--brand-gold-soft)}
   text-transform:uppercase;color:var(--text-tertiary);margin-bottom:var(--space-2)}
 .modal .foot{display:flex;gap:var(--space-2);justify-content:flex-end;margin-top:var(--space-5)}
 
+/* ---------- idle warning ---------- */
+/* Same modal shell as Connect. A pending sign-out is a normal security event, not a
+   fault, so it stays in gold and periwinkle — terracotta is reserved for things that
+   actually broke. */
+.countdown{display:flex;align-items:baseline;gap:var(--space-3);margin:var(--space-5) 0 var(--space-3)}
+.countdown .n{font-family:var(--font-head);font-weight:300;font-size:var(--figure-lg);
+  line-height:1;letter-spacing:-.02em;color:var(--text-primary);font-variant-numeric:tabular-nums}
+.countdown .u{font-size:var(--text-label);letter-spacing:var(--track-label);
+  text-transform:uppercase;color:var(--text-tertiary)}
+.bar{height:3px;background:var(--surface-overlay);border-radius:var(--radius-pill);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--state-positive);border-radius:var(--radius-pill)}
+.msg.note{color:var(--brand-gold-soft)}
+
 .toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);
   background:var(--surface-overlay);border:1px solid var(--border-default);
   padding:.6rem 1rem;border-radius:9px;font-size:.85rem;z-index:70;box-shadow:var(--shadow-overlay)}
@@ -380,11 +461,34 @@ td.t a:hover{color:var(--brand-gold-soft)}
       <span class="wm">CUNNING CORP</span>
     </div>
     <h1>Signal</h1>
-    <p>Every channel, one view. Sign in with a link sent to your email.</p>
-    <input type="email" id="email" placeholder="you@cunningcorp.com" autocomplete="email">
-    <button class="btn primary wide" id="sendLink">Send sign-in link</button>
-    <button class="btn wide hide" id="passkeySignin">Sign in with a passkey</button>
-    <div class="msg" id="authMsg" role="status"></div>
+    <div class="notice hide" id="gateNotice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+        stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.6V12l3 1.8"></path>
+      </svg>
+      <span>
+        <span class="t" id="gateNoticeTitle">Signed out after 66 minutes</span>
+        <span class="d">No activity, so Signal closed the session. Nothing was lost — there
+          is nothing here to save.</span>
+        <span class="r hide" id="gateResume"></span>
+      </span>
+    </div>
+    <p id="gateIntro">Every channel, one view. Access is by invitation — there is no sign-up.</p>
+    <div class="methods">
+      <input type="email" id="email" placeholder="you@cunningcorp.com"
+        autocomplete="email webauthn" enterkeyhint="send">
+      <button class="btn primary wide tall" id="sendLink">Send sign-in link</button>
+    </div>
+    <div class="orrule hide" id="orRule">or</div>
+    <button class="btn wide tall hide" id="passkeySignin">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="9" cy="8" r="3.4"></circle>
+        <path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path>
+        <path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path>
+      </svg>Sign in with a passkey<span class="fastest hide" id="passkeyFastest">Fastest</span></button>
+    <p class="why hide" id="passkeyWhy">Face ID, Touch ID or a security key on this device.</p>
+    <div class="msg" id="authMsg" role="status" aria-live="polite"></div>
   </div>
 </div>
 
@@ -420,8 +524,35 @@ td.t a:hover{color:var(--brand-gold-soft)}
         <button data-d="30" aria-pressed="true">30d</button>
         <button data-d="90">90d</button>
       </div>
-      <button class="btn hide" id="addPasskey">Add a passkey</button>
-      <button class="btn" id="signOut">Sign out</button>
+      <div class="acctmenu">
+        <button class="avatar" id="profileBtn" aria-haspopup="menu" aria-expanded="false"
+          aria-label="Account and preferences"><span id="profileInitials">—</span></button>
+        <div class="menu hide" id="profileMenu" role="menu" aria-labelledby="profileBtn">
+          <div class="who">
+            <span class="em" id="profileEmail">—</span>
+            <span class="rl">Signed in · invited access</span>
+          </div>
+          <button class="mi hide" id="addPasskey" role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <circle cx="9" cy="8" r="3.4"></circle>
+              <path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path>
+              <path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path>
+            </svg>
+            <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span>
+          </button>
+          <div class="note" id="idleNote">Signs out after 66 minutes without activity.</div>
+          <div class="rule"></div>
+          <button class="mi danger" id="signOut" role="menuitem">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <path d="M14 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H14"></path>
+              <path d="M17 8.5 20.5 12 17 15.5M20.5 12H10"></path>
+            </svg>
+            <span>Sign out</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="briefing">
@@ -439,6 +570,7 @@ td.t a:hover{color:var(--brand-gold-soft)}
 </div>
 
 <div id="modalRoot"></div>
+<div id="idleRoot"></div>
 <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
@@ -448,9 +580,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = "https://qeafetctmtnqonhwhhlw.supabase.co";
 const SUPABASE_KEY = "sb_publishable_gs_WsU5HUAs49uF6-A5Wog_Mvo62byI";
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  // Opt in to the passkey (WebAuthn) beta. Magic link stays the primary and
-  // fallback method; passkeys are an optional faster path on supported devices.
-  // Requires @supabase/supabase-js >= 2.105.0 (the @2 import resolves to it).
+  // Passkey (WebAuthn) beta. Magic link stays the primary method and the recovery
+  // route on a new device; passkeys are an optional faster path where supported.
   auth: { experimental: { passkey: true } },
 });
 
@@ -584,9 +715,15 @@ function setScope(next, { reload = false } = {}) {
 }
 
 /* ============================ auth ============================ */
+function authMsg(text, isError = false) {
+  const el = $("#authMsg");
+  el.className = "msg" + (isError ? " err" : "");
+  el.textContent = text;
+}
+
 $("#sendLink").onclick = async () => {
   const email = $("#email").value.trim();
-  if (!email) return ($("#authMsg").textContent = "Enter an email address.");
+  if (!email) return authMsg("Enter an email address.", true);
   $("#sendLink").disabled = true;
   const { error } = await sb.auth.signInWithOtp({
     email,
@@ -598,35 +735,81 @@ $("#sendLink").onclick = async () => {
     },
   });
   $("#sendLink").disabled = false;
-  $("#authMsg").textContent = error
-    ? error.message
-    : "Link sent. Check your inbox, then come back to this tab.";
+  if (error) authMsg(error.message, true);
+  else authMsg("Link sent. Check your inbox, then come back to this tab.");
 };
-$("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
-$("#signOut").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+/* ---------- profile menu ----------
+   Preferences live behind the avatar rather than in the rail: the rail is scope, and a
+   passkey has nothing to do with which account you are looking at. */
+const profileMenu = () => $("#profileMenu");
+function closeProfile() {
+  profileMenu().classList.add("hide");
+  $("#profileBtn").setAttribute("aria-expanded", "false");
+  document.removeEventListener("keydown", onProfileKey);
+  document.removeEventListener("click", onProfileOutside, true);
+}
+function openProfile() {
+  profileMenu().classList.remove("hide");
+  $("#profileBtn").setAttribute("aria-expanded", "true");
+  document.addEventListener("keydown", onProfileKey);
+  document.addEventListener("click", onProfileOutside, true);
+  profileMenu().querySelector(".mi:not(.hide)")?.focus();
+}
+const onProfileKey = (e) => {
+  if (e.key === "Escape") { closeProfile(); $("#profileBtn").focus(); }
+};
+const onProfileOutside = (e) => {
+  if (!e.target.closest(".acctmenu")) closeProfile();
+};
+$("#profileBtn").onclick = (e) => {
+  e.stopPropagation();
+  profileMenu().classList.contains("hide") ? openProfile() : closeProfile();
+};
 
-/* Passkeys (WebAuthn beta). Magic link above stays the primary path and the
-   recovery route for a new device; these buttons only appear where the browser
-   supports platform passkeys, and every failure degrades to a clear message so
-   a passkey problem can never lock anyone out of the email route. */
+function setProfile(email) {
+  $("#profileEmail").textContent = email ?? "—";
+  // Initials from the local part: first.last -> FL, otherwise the first two letters.
+  const local = (email ?? "").split("@")[0];
+  const parts = local.split(/[._-]+/).filter(Boolean);
+  const initials = parts.length > 1
+    ? (parts[0][0] + parts[1][0])
+    : local.slice(0, 2);
+  $("#profileInitials").textContent = initials ? initials.toUpperCase() : "—";
+}
+
+$("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
+$("#signOut").onclick = async () => {
+  lastEmail = null;
+  // Leaving on purpose should not offer to resume, so drop the scope from the URL.
+  history.replaceState(null, "", location.pathname);
+  await sb.auth.signOut();
+  location.reload();
+};
+
+/* Passkeys (WebAuthn beta). The email link above stays the primary path and the
+   recovery route for a new device, so these controls only appear where the browser
+   supports platform passkeys — and every failure degrades to a message that points
+   back at the email route. A passkey problem must never lock anyone out. */
 if (window.PublicKeyCredential) {
   $("#passkeySignin").classList.remove("hide");
+  $("#passkeyWhy").classList.remove("hide");
+  $("#orRule").classList.remove("hide");
   $("#addPasskey").classList.remove("hide");
 }
 $("#passkeySignin").onclick = async () => {
   const btn = $("#passkeySignin");
-  btn.disabled = true; $("#authMsg").textContent = "";
+  btn.disabled = true; authMsg("");
   const { error } = await sb.auth.signInWithPasskey();
   btn.disabled = false;
-  // On success, onAuthStateChange swaps to the app; only handle failure here.
-  if (error) $("#authMsg").textContent =
-    "No passkey found on this device. Use the email link, then add a passkey once you're in.";
+  // On success, onAuthStateChange swaps to the app; only failure is handled here.
+  if (error) authMsg("No passkey found on this device. Use the email link, then add a passkey once you're in.", true);
 };
 $("#addPasskey").onclick = async () => {
   const btn = $("#addPasskey");
   btn.disabled = true;
   const { error } = await sb.auth.registerPasskey();
   btn.disabled = false;
+  closeProfile();
   toast(error ? `Couldn't add a passkey: ${error.message}`
               : "Passkey added — you can sign in with Face ID next time.");
 };
@@ -675,30 +858,28 @@ const scopePlatform = () => {
   return null;
 };
 
-/* Daily-totals scoping. Grain-tolerant on purpose (data-layer request 1):
-   social_daily_totals is platform-grain until account_id is added to it, so we
-   detect the column at runtime. Once it lands, an account scope narrows to that
-   account; until then it can only ever be platform-wide. Deploying this before
-   the migration is therefore safe — the sum below is a no-op at platform grain. */
-const dailyPerAccount = () => DATA.daily.length > 0 && "account_id" in DATA.daily[0];
-function dailyScoped() {
-  const p = scopePlatform();
-  const perAcct = dailyPerAccount();
+/* Daily rows in the current scope. social_daily_totals is now per-account
+   (migration 20260816201608), so the same day+metric appears once per account and
+   anything summing across platforms without narrowing first would double-count. */
+function dailyInScope(opts = {}) {
+  const { rolling = false } = opts;
+  const ids = new Set(scoped().map((a) => a.account_id));
   return DATA.daily.filter((d) =>
-    (p ? d.platform === p : true) &&
-    (SCOPE.kind === "account" && perAcct ? d.account_id === SCOPE.id : true));
+    (SCOPE.kind === "all" ? true : ids.has(d.account_id)) &&
+    (rolling ? isRolling(d.metric) : !isRolling(d.metric)));
 }
 
-/* Is post p in the current scope? Prefers account_id once social_top_posts
-   exposes it (data-layer request 2); until then falls back to matching by
-   platform + display_name — the same brand name can exist on several platforms,
-   so the platform must be compounded in. */
-function postInScope(p) {
-  if (SCOPE.kind === "all") return true;
-  if (SCOPE.kind === "platform") return p.platform === SCOPE.p;
-  if ("account_id" in p) return p.account_id === SCOPE.id;
-  return scoped().some((r) => r.platform === p.platform && r.display_name === p.account);
-}
+/* ============================ access mode ============================
+   social.accounts.access_mode records how an account is actually collected
+   (migration 20260816201610), written by the collectors: public:key, public:oauth,
+   analytics, analytics:failed, none — joined with "+". A standalone "analytics"
+   component means daily analytics genuinely work. This replaces string-matching a
+   sync_runs.message sentence, so the UI can now be definite about a channel that
+   will never have daily figures. */
+const modeParts = (a) => String(a?.access_mode ?? "").split("+").filter(Boolean);
+const hasAnalytics = (a) => modeParts(a).includes("analytics");
+const analyticsFailed = (a) => modeParts(a).includes("analytics:failed");
+const modeKnown = (a) => modeParts(a).length > 0;
 
 /* ============================ the briefing lede ============================
    Assembled only from figures that are actually on the page. Every branch below
@@ -937,7 +1118,13 @@ function kpisHtml() {
   const delta = withDelta.length ? withDelta.reduce((a, r) => a + Number(r[key]), 0) : null;
   const partial = withDelta.length > 0 && withDelta.length < rows.length;
 
-  const inScopePosts = DATA.posts.filter(postInScope);
+  /* social_top_posts now exposes account_id (migration 20260816201609), so posts tie
+     back to an account by id — the platform|display_name compound key is retired. */
+  const ids = new Set(rows.map((r) => r.account_id));
+  const inScopePosts = DATA.posts.filter((p) =>
+    SCOPE.kind === "all" ? true
+      : SCOPE.kind === "platform" ? p.platform === SCOPE.p
+      : ids.has(p.account_id));
   const inRange = inScopePosts.filter((p) => p.published_at && p.published_at.slice(0,10) >= since);
   const eng = inRange.reduce((a,p) => a + (Number(p.engagements)||0), 0);
   const vws = inRange.reduce((a,p) => a + (Number(p.views)||0), 0);
@@ -1005,8 +1192,8 @@ function activityPanel() {
       : hasRoll ? ["roll", "28-day rolling"]
       : ["none", "Nothing yet"];
     const items = live.map((pl) => {
-      const daily = [...new Set(DATA.daily.filter((d) => d.platform === pl && !isRolling(d.metric)).map((d) => d.metric))];
-      const roll = [...new Set(DATA.daily.filter((d) => d.platform === pl && isRolling(d.metric)).map((d) => d.metric))];
+      const daily = [...new Set(dailyInScope().filter((d) => d.platform === pl).map((d) => d.metric))];
+      const roll = [...new Set(dailyInScope({ rolling: true }).filter((d) => d.platform === pl).map((d) => d.metric))];
       const [code, label] = cadFor(pl, daily.length, roll.length);
       const names = daily.length ? daily.map(metricLabel).join(", ")
         : roll.length ? roll.map(metricLabel).join(", ") : "no series collected yet";
@@ -1023,10 +1210,16 @@ function activityPanel() {
     </div>`;
   }
 
-  const scopedDaily = dailyScoped();
-  const rows = scopedDaily.filter((d) => !isRolling(d.metric));
-  const rolling = scopedDaily.filter((d) => isRolling(d.metric));
+  const rows = dailyInScope().filter((d) => (p ? d.platform === p : true));
+  const rolling = dailyInScope({ rolling: true }).filter((d) => (p ? d.platform === p : true));
   const metrics = [...new Set(rows.map((r) => r.metric))];
+
+  /* Accounts in scope that will never have daily analytics, now that access_mode is a
+     value rather than a sentence. "public:key" with no analytics component means no
+     OAuth from that channel: the figures are absent by design, permanently. */
+  const noAnalytics = scoped().filter((a) => modeKnown(a) && !hasAnalytics(a));
+  const failedAnalytics = scoped().filter((a) => analyticsFailed(a));
+  const nameOfAcct = (a) => a.display_name || a.handle || "this account";
 
   let body;
   if (metrics.length) {
@@ -1034,36 +1227,18 @@ function activityPanel() {
   } else if (rolling.length) {
     body = `<div class="empty"><span class="g roll"></span>
       <div>This platform reports these as one rolling 28-day figure, not per day.</div></div>`;
-  } else if (p === "youtube") {
-    /* Two access modes exist per channel: public:key+analytics (full) and public:key
-       alone, which has no token and therefore no daily figures — ever. The mode STRING
-       is not persisted, but the case that matters is: sync-youtube calls finishRun with
-       "public data only; Analytics needs OAuth from this channel" when there is no
-       token, which lands in sync_runs.message and is exposed by social_sync_health —
-       so the Sync health panel below genuinely can answer this, and renders message on
-       every status (not just errors) so that it does.
-       See github.md: the open ask is to promote that out of free text into an
-       access_mode column, so the UI keys on a value instead of a sentence. */
-    /* access_mode (data-layer request 3), surfaced via social_accounts_overview,
-       makes this definite. Until it lands we keep the honest two-cause message.
-       modes are joined with "+", so a standalone "analytics" component means the
-       channel has working Analytics; "public:key" alone (no token) never will. */
-    const ytAcct = SCOPE.kind === "account" ? scoped()[0] : null;
-    if (ytAcct && ytAcct.access_mode != null) {
-      body = ytAcct.access_mode.split("+").includes("analytics")
-        ? `<div class="empty"><span class="g none"></span>
-            <div>Nothing synced in the last ${RANGE} days. This channel's Analytics
-            are connected, so this is a gap in the window, not a limit.</div></div>`
-        : `<div class="empty"><span class="g none"></span>
-            <div>This channel reports public totals only. YouTube Analytics needs OAuth
-            from the channel owner, so it will never have daily figures.</div></div>`;
-    } else {
-      body = `<div class="empty"><span class="g none"></span>
-        <div>No daily analytics for this channel in the last ${RANGE} days.<br>
-        Either it has not consented to the Analytics API — in which case it reports public
-        totals only and never will have these — or nothing has synced in this window.
-        Sync health below will say which.</div></div>`;
-    }
+  } else if (noAnalytics.length && noAnalytics.length === scoped().length) {
+    // Definite now: the collector recorded the mode, so this is missing by design.
+    body = `<div class="empty"><span class="g none"></span>
+      <div>${SCOPE.kind === "account"
+        ? `${esc(nameOfAcct(noAnalytics[0]))} reports public totals only.`
+        : `${plural(noAnalytics.length, "account", "accounts")} here report public totals only.`}
+      Daily figures need OAuth from the channel itself, which it hasn't granted — so these
+      are absent by design, not missing. Connect it again from that channel to add them.</div></div>`;
+  } else if (failedAnalytics.length) {
+    body = `<div class="empty"><span class="g err"></span>
+      <div>The analytics call failed on the last run — this one is a fault, not a gap.
+      See Sync health below.</div></div>`;
   } else {
     body = `<div class="empty"><span class="g none"></span>
       <div>No daily series for this scope${p ? "" : " yet"}.</div></div>`;
@@ -1076,14 +1251,17 @@ function activityPanel() {
         <span class="cad roll">28-day rolling</span></div>
       <div class="accounts" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
         ${[...new Set(rolling.map((r) => r.metric))].sort().map((m) => {
-          /* Sum the latest value per account (rows are day-ascending, so the last
-             row per account is its newest). At platform grain there is a single
-             series keyed "_", so this reduces to its latest value. */
-          const latest = new Map();
-          for (const r of rolling) if (r.metric === m) latest.set(r.account_id ?? "_", r);
-          const val = [...latest.values()].reduce((t, r) => t + (Number(r.value) || 0), 0);
+          /* Per-account rows now, so take each account's latest day and add them:
+             .at(-1) alone would show one account's figure as if it were the total. */
+          const forMetric = rolling.filter((r) => r.metric === m);
+          const latestPer = new Map();
+          for (const r of forMetric) {
+            const prev = latestPer.get(r.account_id);
+            if (!prev || r.day > prev.day) latestPer.set(r.account_id, r);
+          }
+          const total = [...latestPer.values()].reduce((a, r) => a + (Number(r.value) || 0), 0);
           return `<div class="acct" style="border-left-color:var(--avail-rolling);padding:var(--space-3)">
-            <div class="big">${fmt(val)}</div>
+            <div class="big">${fmt(total)}</div>
             <div class="hd" style="margin:0">${esc(metricLabel(m))}</div></div>`;
         }).join("")}
       </div>
@@ -1093,17 +1271,13 @@ function activityPanel() {
     : p === "tiktok" ? `<span class="cad deriv">Derived</span>`
     : metrics.length ? `<span class="cad live">Daily</span>` : "";
 
-  /* social_daily_totals groups by day + platform + metric only — there is no
-     per-account breakdown in the view, so under an account scope these figures are
-     the whole platform's. Say that plainly rather than let a platform number sit
-     under an account heading. See github.md: flagged as a data-layer request. */
-  const platformWide = SCOPE.kind === "account" && !dailyPerAccount();
-  const hint = platformWide
-    ? `These are ${LABEL[p] ?? p}-wide totals, not this account's — the daily metrics view is not broken out per account. ${CAVEAT[p] ?? ""}`
-    : (p ? CAVEAT[p] ?? "" : "Daily series across every connected platform. They are not comparable to each other — narrow to a platform to read them properly.");
+  /* social_daily_totals is per-account since migration 20260816201608, so an account
+     scope now shows that account's own series — the "Platform-wide" caveat is retired. */
+  const hint = p ? CAVEAT[p] ?? ""
+    : "Daily series across every connected platform. They are not comparable to each other — narrow to a platform to read them properly.";
 
   return `<div class="panel">
-    <div class="phead"><h2>Daily activity${platformWide ? ` <span class="cad roll">Platform-wide</span>` : ""}</h2>${cad}</div>
+    <div class="phead"><h2>Daily activity</h2>${cad}</div>
     <p class="hint">${esc(hint)}</p>
     ${body}${rollHtml}
   </div>`;
@@ -1126,10 +1300,17 @@ function acctCard(a) {
   const key = RANGE === 7 ? "followers_delta_7d" : "followers_delta_28d";
   const pctKey = RANGE === 7 ? "followers_pct_7d" : "followers_pct_28d";
   const d = a[key];
+  /* access_mode is now data, so a card can say what this account can ever report.
+     Silent when the mode is unknown or full — a badge on everything says nothing. */
+  const modeChip = analyticsFailed(a)
+    ? `<span class="cad" style="margin-left:auto;color:var(--state-negative)">Analytics failing</span>`
+    : (modeKnown(a) && !hasAnalytics(a)
+      ? `<span class="cad none" style="margin-left:auto;color:var(--text-tertiary)">Public only</span>`
+      : "");
   return `<button class="acct" data-p="${esc(a.platform)}" data-acct="${esc(a.account_id)}">
     <div class="top">
       ${a.avatar_url ? `<img src="${esc(a.avatar_url)}" alt="" loading="lazy">` : ""}
-      <span class="pill ${esc(a.platform)}">${LABEL[a.platform] ?? a.platform}</span>
+      <span class="pill ${esc(a.platform)}">${LABEL[a.platform] ?? a.platform}</span>${modeChip}
     </div>
     <div class="nm">${esc(a.display_name || a.handle || "account")}</div>
     <div class="hd">${esc(a.handle || "")}</div>
@@ -1141,20 +1322,38 @@ function acctCard(a) {
 }
 
 /* ---------- availability ---------- */
+/* AVAIL describes what each platform's API can ever return. access_mode now qualifies
+   that per account (migration 20260816201610): a YouTube channel without the analytics
+   component has no daily figures at all, so under an account scope those cells drop from
+   "lags 2–3 days" to "not provided" — the matrix goes from per-platform to per-account
+   accuracy, which is what the R4 distinction was missing. */
 function availabilityPanel() {
   const live = connectedPlatforms();
   const active = scopePlatform();
+  const rows = scoped();
+  // Only qualify when every account in scope agrees, so a mixed platform view stays honest.
+  const known = rows.filter(modeKnown);
+  const qualify = known.length === rows.length && known.length > 0 && !known.some(hasAnalytics);
+  const ANALYTICS_ROWS = new Set(["Views — daily", "Watch time"]);
+
   const head = PLATFORMS.map((p) =>
     `<div class="mh ${active && active !== p ? "dim" : ""}" style="color:${COLOR[p]}">${SHORT[p]}</div>`).join("");
   const body = AVAIL.map((row) => {
     const cells = PLATFORMS.map((p) => {
-      const code = live.includes(p) ? row[p] : "off";
+      let code = live.includes(p) ? row[p] : "off";
+      if (qualify && p === active && ANALYTICS_ROWS.has(row.m)) code = "none";
       const dim = active && active !== p;
       return `<div class="mc"><span class="g ${code} ${dim ? "dim" : ""}"
         title="${esc(row.m)} — ${esc(GLYPH_TITLE[code])}"></span></div>`;
     }).join("");
     return `<div class="mm">${esc(row.m)}</div>${cells}`;
   }).join("");
+
+  const modeNote = qualify
+    ? `<p class="hint" style="margin-top:var(--space-3);margin-bottom:0">Narrowed by what this
+       scope actually has: no Analytics consent, so the daily rows are off the table rather
+       than merely late.</p>`
+    : "";
 
   return `<div class="panel">
     <h2>Availability</h2>
@@ -1167,6 +1366,7 @@ function availabilityPanel() {
       ${["live","lag","roll","deriv","none","off"].map((c) =>
         `<span><span class="g ${c}"></span>${GLYPH_TITLE[c]}</span>`).join("")}
     </div>
+    ${modeNote}
   </div>`;
 }
 
@@ -1184,13 +1384,21 @@ const COLS = [
 ];
 
 function postsInScope() {
-  let rows = DATA.posts.filter(postInScope);
+  const ids = new Set(scoped().map((r) => r.account_id));
+  let rows = DATA.posts.filter((p) =>
+    SCOPE.kind === "all" ? true
+      : SCOPE.kind === "platform" ? p.platform === SCOPE.p
+      : ids.has(p.account_id));
   if (POSTTYPE !== "all") rows = rows.filter((p) => (p.post_type ?? "") === POSTTYPE);
   return rows;
 }
 
 function postsPanel() {
-  const all = DATA.posts.filter(postInScope);
+  const scopeIds = new Set(scoped().map((r) => r.account_id));
+  const all = DATA.posts.filter((p) =>
+    SCOPE.kind === "all" ? true
+      : SCOPE.kind === "platform" ? p.platform === SCOPE.p
+      : scopeIds.has(p.account_id));
   // Post-type filter is built from the types actually present — no hardcoded list.
   const types = [...new Set(all.map((p) => p.post_type).filter(Boolean))].sort();
   // A type carried in from the URL may not exist in this scope; don't filter to nothing.
@@ -1356,21 +1564,22 @@ function drawDaily() {
   const el = $("#chDaily");
   if (!el) return;
   const p = scopePlatform();
-  const rows = dailyScoped().filter((d) => !isRolling(d.metric));
+  const rows = dailyInScope().filter((d) => (p ? d.platform === p : true));
   if (!rows.length) return;
 
   const days = [...new Set(rows.map((r) => r.day))].sort();
   const metrics = [...new Set(rows.map((r) => r.metric))].sort();
-  /* Sum every in-scope row for a day+metric: across accounts once the view is
-     per-account, across the (single) platform-grain row before then. A day with
-     no row at all stays null — a gap, not a zero — so YouTube's 2–3 day lag reads
-     as absence rather than a cliff to the floor. */
-  const agg = new Map();
+  /* social_daily_totals is per-account now, so a day+metric can carry several rows.
+     Sum them into one bucket per day+metric — keying by platform alone would have
+     kept only the last account's value, and summing blind across PLATFORMS would
+     double-count. Buckets also record whether ANY row existed, so a missing day stays
+     null rather than becoming a zero (YouTube's lag must read as absence). */
+  const bucket = new Map();
   for (const r of rows) {
     const k = `${r.day}|${r.metric}`;
-    agg.set(k, (agg.get(k) ?? 0) + (Number(r.value) || 0));
+    bucket.set(k, (bucket.get(k) ?? 0) + (Number(r.value) || 0));
   }
-  const sumFor = (d, m) => { const k = `${d}|${m}`; return agg.has(k) ? agg.get(k) : null; };
+  const valueFor = (d, m) => bucket.has(`${d}|${m}`) ? bucket.get(`${d}|${m}`) : null;
 
   // Headline metric as bars, the rest as thin lines on a right axis.
   const head = metrics.includes("views") ? "views" : metrics.includes("reach") ? "reach" : metrics[0];
@@ -1381,12 +1590,12 @@ function drawDaily() {
   charts.d = new Chart(el, {
     data:{ labels: days.map(shortDate), datasets:[
       { type:"bar", label:metricLabel(head), yAxisID:"y",
-        data: days.map((d) => sumFor(d, head)),
+        data: days.map((d) => valueFor(d, head)),
         backgroundColor: p ? (COLOR[p] ?? cssVar("--state-progress")) : cssVar("--state-progress"),
         borderRadius:2, borderSkipped:false, order:3 },
       ...rest.map((m, i) => ({
         type:"line", label:metricLabel(m), yAxisID:"y1",
-        data: days.map((d) => sumFor(d, m)),
+        data: days.map((d) => valueFor(d, m)),
         borderColor: ramp[i % ramp.length], borderWidth:1.5,
         pointRadius:0, pointHoverRadius:3, tension:.3, order:1,
       })),
@@ -1543,31 +1752,161 @@ $("#syncBtn").onclick = async () => {
   }
 };
 
-/* ============================ boot ============================ */
-/* Idle logout: sign out after 66 minutes without interaction. The timer runs
-   only while signed in and resets on any activity. Client-side by design — a
-   belt-and-braces cap on top of the token's own lifetime, fine for an internal
-   tool where the browser is the only client. */
-const IDLE_MINUTES = 66;
-const IDLE_MS = IDLE_MINUTES * 60 * 1000;
-let idleTimer = null;
-function armIdleLogout() {
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(async () => {
-    await sb.auth.signOut();               // -> onAuthStateChange(null) -> gate
-    $("#authMsg").textContent = `Signed out after ${IDLE_MINUTES} minutes of inactivity.`;
-  }, IDLE_MS);
-}
-function disarmIdleLogout() { clearTimeout(idleTimer); idleTimer = null; }
-["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((ev) =>
-  addEventListener(ev, () => { if (idleTimer) armIdleLogout(); }, { passive: true }));
+/* ============================ idle logout ============================
+   Signs out after IDLE_MINUTES without interaction, with a warning in the last
+   WARN_SECONDS so the sign-out is never a surprise. Client-side by design: a cap on
+   top of the token's own lifetime, fine for an internal tool where the browser is
+   the only client.
 
+   Two things the timer alone got wrong, and why the dialog exists:
+
+   1. Silent sign-out looks like a bug. Coming back to an auth gate with no
+      explanation reads as "it logged me out for no reason" — the same
+      missing-by-design vs missing-because-broken problem R4 exists to fix. The
+      warning states the rule, and the gate afterwards states what happened.
+   2. mousemove must not dismiss it. The activity listeners re-arm on any movement,
+      so a cursor drifting across the screen would silently cancel the warning and
+      the user would never learn the rule. While the warning is up, auto-rearm is
+      suspended and only an explicit click (or Escape, which means "I'm here")
+      counts as presence. */
+const IDLE_MINUTES = 66;
+const WARN_SECONDS = 90;
+const IDLE_MS = IDLE_MINUTES * 60 * 1000;
+let idleTimer = null, warnTimer = null, tickTimer = null, warnOpen = false;
+let lastEmail = null;   // in memory only, so the gate can prefill after an idle sign-out
+
+function armIdleLogout() {
+  if (warnOpen) return;                        // the dialog owns the clock while it is up
+  clearTimeout(idleTimer); clearTimeout(warnTimer);
+  warnTimer = setTimeout(openIdleWarning, Math.max(0, IDLE_MS - WARN_SECONDS * 1000));
+  idleTimer = setTimeout(() => idleSignOut(), IDLE_MS);
+}
+function disarmIdleLogout() {
+  clearTimeout(idleTimer); clearTimeout(warnTimer); clearTimeout(tickTimer);
+  idleTimer = warnTimer = tickTimer = null;
+  closeIdleWarning();
+}
+async function idleSignOut() {
+  closeIdleWarning();
+  await sb.auth.signOut();                     // -> onAuthStateChange(null) -> gate
+  showIdleGate();
+}
+
+/* The gate's designed signed-out state (brief §1.1). No reload happens, so the URL still
+   holds the scope — name it, so signing back in reads as resuming a view rather than
+   starting again. Read from the URL, not from DATA, which is empty by this point. */
+function gateScopeLabel() {
+  const q = new URLSearchParams(location.search);
+  const parts = [];
+  if (q.get("account")) parts.push("an account view");
+  else if (PLATFORMS.includes(q.get("platform"))) parts.push(LABEL[q.get("platform")]);
+  else parts.push("Overview");
+  parts.push(`${Number(q.get("range")) || 30} days`);
+  if (q.get("type")) parts.push(titleise(q.get("type")));
+  return parts.join(" · ");
+}
+
+function showIdleGate() {
+  $("#gateNoticeTitle").textContent = `Signed out after ${IDLE_MINUTES} minutes`;
+  $("#gateResume").innerHTML = `Waiting for you: <b>${esc(gateScopeLabel())}</b>`;
+  $("#gateResume").classList.remove("hide");
+  $("#gateNotice").classList.remove("hide");
+  $("#gateIntro").classList.add("hide");
+  authMsg("");
+  if (lastEmail) $("#email").value = lastEmail;
+  // A passkey resumes instantly; the email round-trip does not. Flagged only here, where
+  // someone is trying to get back in — the documented hierarchy itself is unchanged.
+  if (window.PublicKeyCredential) $("#passkeyFastest").classList.remove("hide");
+  $("#sendLink").textContent = "Email me a link to resume";
+}
+
+function resetGate() {
+  $("#gateNotice").classList.add("hide");
+  $("#gateIntro").classList.remove("hide");
+  $("#passkeyFastest").classList.add("hide");
+  $("#sendLink").textContent = "Send sign-in link";
+}
+
+function closeIdleWarning() {
+  warnOpen = false;
+  clearTimeout(tickTimer); tickTimer = null;
+  const root = $("#idleRoot");
+  if (root.innerHTML) root.innerHTML = "";
+  document.removeEventListener("keydown", onIdleKey);
+}
+const onIdleKey = (e) => {
+  // Escape means "I'm still here" — dismissing a warning is presence, not consent to leave.
+  if (e.key === "Escape") { e.preventDefault(); staySignedIn(); }
+};
+function staySignedIn() {
+  closeIdleWarning();
+  armIdleLogout();
+  toast(`Still signed in. The ${IDLE_MINUTES}-minute idle timer has restarted.`);
+}
+
+function openIdleWarning(secs) {
+  if (warnOpen || !$("#app") || $("#app").classList.contains("hide")) return;
+  warnOpen = true;
+  const total = secs ?? WARN_SECONDS;
+  const until = Date.now() + total * 1000;
+
+  $("#idleRoot").innerHTML = `<div class="scrim" role="alertdialog" aria-modal="true"
+      aria-labelledby="idleTitle" aria-describedby="idleBody">
+    <div class="modal">
+      <h2 id="idleTitle">Still there?</h2>
+      <p class="k" id="idleBody" style="margin-bottom:0">Signal signs you out after
+        ${IDLE_MINUTES} minutes without activity, so an unattended browser can't leave the
+        numbers on screen. Nothing is lost either way — there is nothing here to save.</p>
+      <div class="countdown">
+        <span class="n" id="idleN" aria-hidden="true">${total}</span>
+        <span class="u">seconds left</span>
+      </div>
+      <div class="bar"><i id="idleBar" style="width:100%"></i></div>
+      <div class="foot">
+        <button class="btn" data-idle-out>Sign out now</button>
+        <button class="btn primary" data-idle-stay>Keep me signed in</button>
+      </div>
+    </div></div>`;
+
+  $("[data-idle-stay]").onclick = staySignedIn;
+  $("[data-idle-out]").onclick = () => { lastEmail = null; idleSignOut(); };
+  document.addEventListener("keydown", onIdleKey);
+  $("[data-idle-stay]").focus();
+  // Announced once, not per second — a live region ticking every second is unusable.
+  toast(`Signing out in ${total} seconds without activity.`, total * 1000);
+
+  const tick = () => {
+    if (!warnOpen) return;
+    const left = Math.max(0, until - Date.now());
+    const n = $("#idleN"), bar = $("#idleBar");
+    if (!n || !bar) return;
+    n.textContent = Math.ceil(left / 1000);
+    bar.style.width = (left / (total * 1000) * 100).toFixed(1) + "%";
+    if (left > 0) tickTimer = setTimeout(tick, 250);
+  };
+  tick();
+}
+
+["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((ev) =>
+  addEventListener(ev, () => { if (idleTimer && !warnOpen) armIdleLogout(); }, { passive: true }));
+
+/* Nobody can wait 66 minutes to check a dialog. Run signalIdleWarn() in the console
+   to open it immediately; signalIdleWarn(10) opens it with 10 seconds on the clock. */
+window.signalIdleWarn = (secs) => {
+  clearTimeout(idleTimer); clearTimeout(warnTimer);
+  warnOpen = false;
+  openIdleWarning(secs);
+};
+
+/* ============================ boot ============================ */
 let booted = false;
 function applySession(session) {
   const signedIn = !!session;
+  $("#idleNote").textContent = `Signs out after ${IDLE_MINUTES} minutes without activity.`;
   $("#gate").classList.toggle("hide", signedIn);
   $("#app").classList.toggle("hide", !signedIn);
-  if (signedIn) armIdleLogout(); else disarmIdleLogout();
+  if (signedIn) { lastEmail = session.user?.email ?? lastEmail; setProfile(session.user?.email); armIdleLogout(); resetGate(); }
+  else { disarmIdleLogout(); closeProfile(); }
   if (signedIn && !booted) { booted = true; readUrl(); syncRangeButtons(); load(); }
   if (!signedIn) booted = false;
 }
