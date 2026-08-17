@@ -1531,7 +1531,7 @@ function drawAudience() {
       data: days.map((d) => agg[`${d}|${g}`] ?? null),
       borderColor: COLOR[g] ?? cssVar("--state-progress"),
       backgroundColor: (COLOR[g] ?? cssVar("--state-progress")) + "1f",
-      borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true, fill:true,
+      borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:false, fill:true,
     }));
   } else {
     const accounts = [...new Set(rows.map((r) => r.account_id))];
@@ -1547,7 +1547,7 @@ function drawAudience() {
       borderColor: base,
       backgroundColor: base + "14",
       borderWidth: 2, borderDash: i === 0 ? [] : i === 1 ? [5,3] : [2,3],
-      pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:true,
+      pointRadius:0, pointHoverRadius:4, tension:.3, spanGaps:false,
       fill: accounts.length === 1,
     }));
   }
