@@ -1,10 +1,12 @@
 # Signal — design handoff, direction 2a
 
-Companion to `signal-2a.html`. That file is the deliverable: a single, self-contained,
-buildless page, drop-in for `index.html`. This document is deliverable 4 of
-`DESIGN-BRIEF.md` — what is structural versus decorative, what to reuse, the interaction
-contract, and the three things that are requests to the data layer rather than
-assumptions.
+Deliverable 4 of `DESIGN-BRIEF.md`: what is structural versus decorative, where design
+expects reuse, and what was asked of the data layer.
+
+Companion to `prototypes/signal-2a.html` — a single, buildless page in drop-in shape for
+`index.html`. Its siblings carry the rest: **`tokens.md`** (deliverable 2, the two-layer
+token rule and every value) and **`interactions.md`** (deliverable 3, states, URL scheme,
+responsive, accessibility). This document does not repeat them.
 
 Nothing here touches edge functions, the database, cron, or auth behaviour.
 
@@ -35,39 +37,7 @@ Against the brief's requirements:
 
 ---
 
-## 2 · Tokens — the two-layer rule
-
-`:root` has exactly two layers, and **hex appears only in the first**.
-
-1. **Brand layer** — the Handbook palette verbatim (`--brand-plum`, `--brand-gold`,
-   `--brand-peri`, `--plat-youtube`…). Nothing outside layer 2 may reference these.
-2. **Semantic layer** — what components actually use.
-
-A palette change is therefore a one-line edit in layer 1. If you find yourself writing a
-hex anywhere else, the token is missing — add it rather than inline it.
-
-| Family | Tokens | Note |
-|---|---|---|
-| Surface | `base` `raised` `overlay` `sunken` | Page / panel / control / well |
-| Border | `subtle` `default` `strong` | Inside panel / outlines it / selected edge |
-| Text | `primary` `secondary` `tertiary` `on-accent` | `on-accent` is for the periwinkle button only |
-| State | `positive` `negative` `progress` `neutral` | Gold is the light, so gold is up |
-| Data | `youtube` `instagram` `facebook` `tiktok` | Encoding only — see §8 |
-| Availability | `live` `lagged` `rolling` `absent` `error` | New family; the R4 workhorse |
-| Type | `--font-display` `--font-head` `--font-body` + 7 sizes | Roles unchanged from the Handbook |
-| Scale | `--space-1…7`, `--radius-sm/md/lg/pill` | 4px base |
-| Motion | `--dur-fast/base`, `--ease-out` | Short. This is a tool, not a show. |
-
-JS reads platform colours back out of the tokens via `cssVar()` so Chart.js and CSS
-cannot drift apart. Keep that — do not re-declare the hexes in the script.
-
-**Fonts:** all five Handbook faces are now committed to `fonts/` in the repo
-(`GlamourAbsolute-400`, `GlamourAbsoluteExtended-400`, `Graphik-400`, `Graphik-600`,
-`Recoleta-300`) and the `@font-face` rules point at them. Nothing further to do.
-
----
-
-## 3 · Structural vs decorative
+## 2 · Structural vs decorative
 
 **Structural — build once, reuse.** These carry meaning; changing them changes what the
 page asserts.
@@ -93,7 +63,7 @@ area-fill opacity, skeleton shimmer, exact panel padding, chart tension.
 
 ---
 
-## 4 · Reuse
+## 3 · Reuse
 
 Small enough to stay one file, but these are the seams if it ever splits:
 
@@ -108,76 +78,7 @@ Small enough to stay one file, but these are the seams if it ever splits:
 
 ---
 
-## 5 · Interaction contract
-
-**URL scheme.** `?platform=<slug>` · `?account=<uuid>` · `?range=7|30|90` · `?type=<post_type>`.
-Defaults omitted. `pushState` on change, `popstate` restores — back button works, links
-are shareable. On load, a scope pointing at a vanished account falls back to Overview via
-`replaceState` so the bad URL doesn't persist.
-
-**States, per panel.** Loading → skeletons (never a spinner, never a blank). Empty → its
-own wording per panel, never a shared "no data"; the empty state says *why* and, where the
-cause is ambiguous, names both possibilities. Error → message plus retry. Filtered → the
-scope bar names it and offers Clear.
-
-**The one deliberate ambiguity.** ~~The YouTube daily empty state names two possible
-causes~~ — **resolved.** `access_mode` shipped, so the empty state is now definite: a
-channel without the `analytics` component reports public totals only and always will.
-
-**Idle sign-out.** 66 minutes of inactivity, warned at 90 seconds, with a designed
-signed-out state on the gate (brief §1.1 asks for a treatment, not a status line). Three
-design rules:
-
-- *A silent sign-out looks like a bug.* Landing on an auth gate with no explanation reads
-  as "it logged me out for no reason" — the same missing-by-design versus
-  missing-because-broken confusion R4 exists to remove. So the warning states the rule
-  before it happens, and the gate states what happened after.
-- *`mousemove` must not dismiss it.* The activity listeners re-arm on any movement, so a
-  drifting cursor would silently cancel the warning and the user would never learn the
-  rule. While the dialog is open, auto-rearm is suspended and only an explicit click — or
-  Escape, which means "I'm here" — counts as presence.
-- *Coming back should resume, not restart.* No reload happens, so the URL still holds the
-  scope. The gate names the view being held ("Waiting for you: Instagram · 30 days"), read
-  from the URL rather than from data, and the send button becomes "Email me a link to
-  resume". Where passkeys exist the passkey route is marked *Fastest* — only here, where
-  someone is trying to get back in; the documented hierarchy is otherwise unchanged.
-  A deliberate sign-out clears the URL, because leaving on purpose shouldn't offer to
-  resume.
-
-The dialog is `role="alertdialog"`, focus lands on "Keep me signed in", and the countdown
-is `aria-hidden` with a single announcement instead: a live region ticking every second is
-unusable. It stays in gold and periwinkle because a scheduled sign-out is routine, not a
-failure — terracotta is reserved for things that actually broke. Sign-out does **not**
-reload, so the URL keeps the scope and signing back in returns to the same view; the gate
-prefills the email from the in-memory session, with nothing written to storage.
-
-Nobody can wait 66 minutes to review a dialog, so `signalIdleWarn()` in the console opens
-it immediately and `signalIdleWarn(10)` opens it with 10 seconds on the clock. It only
-shortens the clock — remove it if you'd rather not ship a test hook.
-
-**Sign-in.** Two methods, and the design keeps them visibly separate: the email link is
-primary (periwinkle, the layout's one glow), then an `or` rule, then the passkey button
-outlined. Stacked without that seam they read as one control and the passkey looks like a
-subtitle. Passkey controls are hidden unless `window.PublicKeyCredential` exists, so the
-card is honest on unsupported devices, and every passkey failure points back at the email
-route — a passkey problem must never lock anyone out. "Add a passkey" sits in the rail
-foot, where you are already signed in.
-
-Two fixes worth keeping: the email field overrides `-webkit-autofill` (Chrome and Safari
-paint their own yellow field and ignore `background-color`; the 100px inset shadow is the
-only way to repaint it), and `.msg` reserves two lines so the card doesn't jump when a
-message appears. The subhead no longer claims email is the only way in.
-
-**Responsive.** Panel grids collapse at 1150px. The rail goes full-width and static at
-900px — that is a collapse, not a designed mobile layout. See §7.
-
-**Accessibility.** `aria-sort` on sortable headers with nulls sinking; `aria-current` on
-rail nodes; `aria-pressed` on range and filter chips; `:focus-visible` throughout;
-`aria-live` toast; modal has `role="dialog"`/`aria-modal` and Escape/scrim close.
-
----
-
-## 6 · Requests to the data layer
+## 4 · Requests to the data layer
 
 **All three shipped on 2026-08-16** (migrations `20260816201608/9/10`), and
 `signal-2a.html` has been rebuilt against them. Kept here as the record of why they were
@@ -215,7 +116,7 @@ than string-matching a `sync_runs.message` sentence:
 
 ---
 
-## 7 · Open items for the code pass
+## 5 · Open items for the code pass
 
 Known, deliberate, and not defects:
 
@@ -239,7 +140,7 @@ the URL).
 
 ---
 
-## 8 · Unchanged, and to stay that way
+## 6 · Unchanged, and to stay that way
 
 Carried over from `CLAUDE.md` and `README.md` without alteration:
 
