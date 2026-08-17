@@ -410,6 +410,33 @@ td.t a:hover{color:var(--brand-gold-soft)}
 @media(prefers-reduced-motion:reduce){.sk,.pulse,.led.running{animation:none}}
 
 /* ---------- modal ---------- */
+/* ---------- reads queue ---------- */
+.read{border:1px solid var(--border-default);border-radius:var(--radius-md);
+  padding:var(--space-4) var(--space-5);margin-bottom:var(--space-3);background:var(--surface-raised)}
+.read .toprow{display:flex;align-items:baseline;gap:var(--space-3);flex-wrap:wrap}
+.read .ttl{font-family:var(--font-head);font-weight:300;font-size:1.15rem;color:var(--text-primary)}
+.read .lane{font-size:var(--text-micro);text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-tertiary);border:1px solid var(--border-default);border-radius:5px;
+  padding:2px var(--space-2)}
+.read .meta{font-size:var(--text-label);color:var(--text-tertiary);margin-top:var(--space-1)}
+.read .err{font-size:var(--text-label);color:var(--state-negative);margin-top:var(--space-2)}
+.read .actions{display:flex;gap:var(--space-2);margin-top:var(--space-3);align-items:center}
+.read details{margin-top:var(--space-3)}
+.read summary{cursor:pointer;font-size:var(--text-label);color:var(--text-secondary)}
+.read summary:hover{color:var(--text-primary)}
+.mdprev{margin-top:var(--space-3);padding:var(--space-4) var(--space-5);
+  border-left:2px solid var(--border-strong);color:var(--text-secondary);
+  font-size:var(--text-body);line-height:1.7;max-width:70ch}
+.mdprev h2{font-family:var(--font-head);font-weight:300;color:var(--text-primary);
+  font-size:1.2rem;margin:var(--space-5) 0 var(--space-2)}
+.mdprev a{color:var(--brand-gold-soft)}
+.mdprev em{font-style:italic} .mdprev strong{font-weight:600}
+.pubrow{display:flex;align-items:baseline;gap:var(--space-3);padding:var(--space-2) 0;
+  border-bottom:1px solid var(--border-subtle);font-size:var(--text-body)}
+.pubrow:last-child{border-bottom:0}
+.pubrow .when{color:var(--text-tertiary);font-size:var(--text-label);font-variant-numeric:tabular-nums}
+.pubrow .sha{margin-left:auto;color:var(--text-tertiary);font-size:var(--text-micro);font-family:ui-monospace,monospace}
+
 .scrim{position:fixed;inset:0;background:rgba(12,8,18,.72);backdrop-filter:blur(6px);
   display:grid;place-items:center;z-index:60;padding:var(--space-5)}
 .modal{width:100%;max-width:30rem;background:var(--surface-raised);border:1px solid var(--border-default);
@@ -575,6 +602,10 @@ td.t a:hover{color:var(--brand-gold-soft)}
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// Markdown preview for the Reads queue. marked renders, DOMPurify sanitises --
+// the copy is our own service-role-inserted text, but render defensively anyway.
+import { marked } from "https://esm.sh/marked@12";
+import DOMPurify from "https://esm.sh/dompurify@3";
 
 /* ============================ config ============================ */
 const SUPABASE_URL = "https://qeafetctmtnqonhwhhlw.supabase.co";
@@ -692,7 +723,8 @@ function readUrl() {
   const q = new URLSearchParams(location.search);
   const r = Number(q.get("range"));
   if ([7,30,90].includes(r)) RANGE = r;
-  if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
+  if (q.get("view") === "reads") SCOPE = { kind:"reads" };
+  else if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
   else if (PLATFORMS.includes(q.get("platform"))) SCOPE = { kind:"platform", p:q.get("platform") };
   else SCOPE = { kind:"all" };
   if (q.get("type")) POSTTYPE = q.get("type");
@@ -701,6 +733,7 @@ function writeUrl(push = true) {
   const q = new URLSearchParams();
   if (SCOPE.kind === "platform") q.set("platform", SCOPE.p);
   if (SCOPE.kind === "account") q.set("account", SCOPE.id);
+  if (SCOPE.kind === "reads") q.set("view", "reads");
   if (RANGE !== 30) q.set("range", String(RANGE));
   if (POSTTYPE !== "all") q.set("type", POSTTYPE);
   const url = location.pathname + (q.toString() ? "?" + q : "");
@@ -819,12 +852,13 @@ async function load() {
   LOADING = true;
   render();
   const since = daysAgoISO(RANGE);
-  const [ov, ser, day, post, syn] = await Promise.all([
+  const [ov, ser, day, post, syn, reads] = await Promise.all([
     sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
     sb.from("social_account_series").select("*").gte("day", since).order("day"),
     sb.from("social_daily_totals").select("*").gte("day", since).order("day"),
     sb.from("social_top_posts").select("*").order("published_at", { ascending:false, nullsFirst:false }).limit(200),
     sb.from("social_sync_health").select("*"),
+    sb.from("reads_queue").select("*").order("created_at", { ascending:false }),
   ]);
   const err = [ov, ser, day, post, syn].find((r) => r.error);
   LOADING = false;
@@ -833,6 +867,9 @@ async function load() {
   DATA = {
     overview: ov.data ?? [], series: ser.data ?? [], daily: day.data ?? [],
     posts: post.data ?? [], sync: syn.data ?? [],
+    // Queue read failing shouldn't take the dashboard down with it -- the Reads
+    // view shows its own error state instead.
+    reads: reads.error ? null : (reads.data ?? []),
   };
   // A scope pointing at an account that no longer exists falls back to Overview.
   if (SCOPE.kind === "account" && !DATA.overview.some((a) => a.account_id === SCOPE.id)) {
@@ -957,6 +994,131 @@ function briefing() {
   return { dateline, history: historyLabel, a, b };
 }
 
+/* ============================ reads queue ============================
+   The publishing half of PORTAL-PUBLISH-SPEC. The portal is a launch button,
+   not an editor: copy is locked upstream (copylock), so the preview is
+   read-only and the only verbs here are Publish and Retry. */
+
+const LANE_LABEL = { screen:"Screen", type:"Type", business:"Business" };
+
+function mdPreview(markdown) {
+  const body = markdown.replace(/^---[\s\S]*?---\s*/, "");
+  return DOMPurify.sanitize(marked.parse(body));
+}
+
+function readsHtml() {
+  if (DATA.reads === null) {
+    return `<div class="panel"><div class="empty">
+      <h3>The queue could not be read</h3>
+      <div>Reload to try again. If it persists, the reads_queue table or its
+      read policy is the place to look.</div>
+      <div class="connectrow"><button class="btn" data-retry>Reload</button></div></div></div>`;
+  }
+  const queue = DATA.reads.filter((r) => ["ready","publishing","failed"].includes(r.status));
+  const published = DATA.reads.filter((r) => r.status === "published")
+    .sort((a,b) => (b.published_at ?? "").localeCompare(a.published_at ?? ""));
+
+  const card = (r) => `
+    <div class="read" data-read="${esc(r.id)}">
+      <div class="toprow">
+        <span class="ttl">${esc(r.title)}</span>
+        <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span>
+      </div>
+      <div class="meta">${esc(r.target_query ? `for \u201c${r.target_query}\u201d` : "")}
+        ${r.word_count ? ` · ${fmt(r.word_count)} words` : ""} · queued ${shortDate(r.created_at)}</div>
+      ${r.status === "failed" ? `<div class="err">Failed: ${esc(r.error ?? "no detail recorded")}</div>` : ""}
+      <details>
+        <summary>Preview</summary>
+        <div class="mdprev">${mdPreview(r.markdown)}</div>
+      </details>
+      <div class="actions">
+        ${r.status === "publishing"
+          ? `<button class="btn primary" disabled>Publishing\u2026</button>
+             <span class="meta">Committing to aubreynorth \u2014 the deploy takes about two minutes.</span>`
+          : `<button class="btn primary" data-publish="${esc(r.id)}">
+               ${r.status === "failed" ? "Retry" : "Publish"}</button>
+             <span class="meta">Publishes to aubreynorth.com within ~2 minutes.</span>`}
+      </div>
+    </div>`;
+
+  return `
+  <div class="panel">
+    <h2>Queue</h2>
+    <p class="hint">Approved and waiting. Copy is locked before it arrives here \u2014
+      publishing is the only decision this screen makes.</p>
+    ${queue.length ? queue.map(card).join("") : `<div class="empty">Nothing waiting.</div>`}
+  </div>
+  <div class="panel">
+    <h2>Published</h2>
+    ${published.length ? published.map((r) => `
+      <div class="pubrow">
+        <a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a>
+        <span class="when">${shortDate(r.published_at)}</span>
+        <span class="sha">${esc((r.commit_sha ?? "").slice(0,7))}</span>
+      </div>`).join("") : `<div class="empty">Nothing published from the queue yet.</div>`}
+  </div>`;
+}
+
+function confirmPublish(row) {
+  const root = $("#modalRoot");
+  root.innerHTML = `<div class="scrim" role="dialog" aria-modal="true" aria-labelledby="pubTitle">
+    <div class="modal">
+      <h2 id="pubTitle">Publish \u201c${esc(row.title)}\u201d?</h2>
+      <p class="k">This commits the article to aubreynorth and the site deploys it \u2014
+        live at aubreynorth.com/reads/${esc(row.slug)}/ within about two minutes.
+        Taking it down again is a git operation, not a button.</p>
+      <div class="foot">
+        <button class="btn" data-cancel>Cancel</button>
+        <button class="btn primary" data-confirm>Publish</button>
+      </div>
+    </div></div>`;
+  const untrap = trapFocus(root.querySelector(".modal"));
+  const close = () => { untrap(); root.innerHTML = ""; };
+  return new Promise((resolve) => {
+    root.querySelector("[data-cancel]").onclick = () => { close(); resolve(false); };
+    root.querySelector("[data-confirm]").onclick = () => { close(); resolve(true); };
+    root.querySelector(".scrim").addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { close(); resolve(false); }
+    });
+    root.querySelector("[data-confirm]").focus();
+  });
+}
+
+async function refreshReads() {
+  const { data, error } = await sb.from("reads_queue").select("*")
+    .order("created_at", { ascending:false });
+  if (!error) { DATA.reads = data ?? []; if (SCOPE.kind === "reads") render(); }
+}
+
+async function publishRead(id) {
+  const row = (DATA.reads ?? []).find((r) => r.id === id);
+  if (!row) return;
+  if (!(await confirmPublish(row))) return;
+
+  // Optimistic: the guard in publish-read is the real lock; this is just honest UI.
+  row.status = "publishing"; render();
+
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/publish-read`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: SUPABASE_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) toast(`Published \u2014 live in ~2 minutes at ${body.url}`, 8000);
+    else toast(body.error ?? `Publish failed (${res.status})`, 8000);
+  } catch (e) {
+    toast(`Publish failed: ${e.message}`, 8000);
+  } finally {
+    await refreshReads();   // the queue row is the source of truth either way
+  }
+}
+
 /* ============================ render ============================ */
 function render() {
   renderRail();
@@ -978,7 +1140,9 @@ function renderError(msg) {
 function renderScopeBar() {
   const rows = scoped();
   let title = "Overview", sub = "all platforms · all accounts";
-  if (SCOPE.kind === "platform") {
+  if (SCOPE.kind === "reads") {
+    title = "Reads"; sub = "Aubrey North publishing queue";
+  } else if (SCOPE.kind === "platform") {
     title = LABEL[SCOPE.p] ?? SCOPE.p;
     sub = plural(rows.length, "account", "accounts");
   } else if (SCOPE.kind === "account") {
@@ -1013,6 +1177,7 @@ function renderRail() {
     const { label, meta, kind, key, cls: extra = "", colour, hollow } = opts;
     const current =
       (kind === "all" && SCOPE.kind === "all") ||
+      (kind === "reads" && SCOPE.kind === "reads") ||
       (kind === "platform" && SCOPE.kind === "platform" && SCOPE.p === key) ||
       (kind === "account" && SCOPE.kind === "account" && SCOPE.id === key);
     return `<button class="node ${extra}" data-kind="${kind}" data-key="${esc(key ?? "")}"
@@ -1042,11 +1207,19 @@ function renderRail() {
       }).replace(/<span class="dot"[^>]*><\/span>/, "");
     }
   }
+  // Publishing lives under the analytics scopes: its own room, same corridor.
+  const ready = (DATA.reads ?? []).filter((r) => ["ready","failed"].includes(r.status)).length;
+  html += node({
+    label:"Reads", meta: DATA.reads === null ? "!" : (ready ? String(ready) : ""),
+    kind:"reads", key:"", cls:"group",
+  });
+
   $("#rail").innerHTML = html;
   $$("#rail .node").forEach((b) => b.onclick = () => {
     const { kind, key } = b.dataset;
     if (kind === "connect") return openConnect(key);
     if (kind === "all") return setScope({ kind:"all" });
+    if (kind === "reads") return setScope({ kind:"reads" });
     if (kind === "platform") return setScope({ kind:"platform", p:key });
     if (kind === "account") return setScope({ kind:"account", id:key });
   });
@@ -1078,6 +1251,7 @@ function skeletonHtml() {
 
 /* ---------- the view ---------- */
 function viewHtml() {
+  if (SCOPE.kind === "reads") return readsHtml();
   if (!DATA.overview.length) {
     return `<div class="panel"><div class="empty">
       <h3>Nothing connected yet</h3>
@@ -1622,6 +1796,8 @@ function wire() {
   $$("[data-type]").forEach((b) => b.onclick = () => {
     POSTTYPE = b.dataset.type; writeUrl(); render();
   });
+  $$("[data-publish]").forEach((b) => b.onclick = () => publishRead(b.dataset.publish));
+  $("[data-retry]")?.addEventListener("click", load);
 }
 
 $("#clearScope").onclick = () => setScope({ kind:"all" });
