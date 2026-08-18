@@ -46,3 +46,9 @@ verify_jwt = true
 # Contents API. Requires the GITHUB_TOKEN secret.
 [functions.publish-read]
 verify_jwt = true
+
+# read-diff is the read-only "what changed" companion to publish-read: it compares a
+# queued Read against the live file in aubreynorth. Same verify_jwt posture, same
+# GITHUB_TOKEN secret (Contents read only). Never writes.
+[functions.read-diff]
+verify_jwt = true
