@@ -319,13 +319,15 @@ main{padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-4
 /* ---------- account cards ---------- */
 .accounts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-3)}
 .acct{background:var(--surface-overlay);border:1px solid var(--border-subtle);
-  border-left:3px solid var(--border-default);border-radius:var(--radius-md);
-  padding:var(--space-4);text-align:left;transition:var(--dur-fast);width:100%}
+  border-radius:var(--radius-md);padding:var(--space-4) var(--space-4) var(--space-4) calc(var(--space-4) + 3px);
+  text-align:left;transition:var(--dur-fast);width:100%;position:relative;overflow:hidden}
+.acct::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--acct-accent,var(--border-default))}
 .acct:hover{border-color:var(--border-strong)}
-.acct[data-p="youtube"]{border-left-color:var(--data-youtube)}
-.acct[data-p="instagram"]{border-left-color:var(--data-instagram)}
-.acct[data-p="facebook"]{border-left-color:var(--data-facebook)}
-.acct[data-p="tiktok"]{border-left-color:var(--data-tiktok)}
+.acct[data-p="youtube"]{--acct-accent:var(--data-youtube)}
+.acct[data-p="instagram"]{--acct-accent:var(--data-instagram)}
+.acct[data-p="facebook"]{--acct-accent:var(--data-facebook)}
+.acct[data-p="tiktok"]{--acct-accent:var(--data-tiktok)}
 .acct .top{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
 .acct img{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--border-default);flex:none}
 .acct .nm{font-weight:600;font-size:var(--text-body);color:var(--text-primary);
@@ -460,6 +462,142 @@ td.t a:hover{color:var(--brand-gold-soft)}
   text-transform:uppercase;color:var(--text-tertiary);margin-bottom:var(--space-2)}
 .modal .foot{display:flex;gap:var(--space-2);justify-content:flex-end;margin-top:var(--space-5)}
 
+/* ---------- Scenario · Aubrey North wordmark ---------- */
+@font-face{font-family:'Scenario';font-weight:700;font-display:swap;src:url(fonts/Scenario-700.ttf) format('truetype')}
+
+/* ============================ launcher ============================
+   The post-auth home (direction 1c). Two glossy surfaces: Signal (analytics) and
+   Reads (Aubrey North publishing). Reads carries its division identity in
+   Terracotta; Signal keeps periwinkle. */
+#launcher{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:var(--space-6);
+  background:radial-gradient(760px 460px at 50% -12%,rgba(142,139,216,.13),transparent 62%),
+             radial-gradient(620px 420px at 50% 118%,rgba(200,162,76,.07),transparent 60%),var(--surface-base)}
+.launchwrap{width:100%;max-width:840px;display:flex;flex-direction:column;gap:var(--space-7)}
+.launchtop{display:flex;align-items:center;gap:var(--space-3)}
+.launchtop .mark{width:26px;height:26px;flex:none}
+.launchtop .wm{font-family:var(--font-display);font-size:12px;letter-spacing:.24em;color:var(--text-tertiary)}
+.launchtop .spacer{flex:1}
+.launchtop .lem{font-size:var(--text-micro);color:var(--text-tertiary);letter-spacing:.02em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40ch}
+.slabrow{display:flex;gap:var(--space-5);justify-content:center}
+.slab{all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;flex:1;max-width:380px;
+  min-height:340px;border-radius:22px;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:var(--space-6);border:1px solid var(--border-default);box-shadow:0 26px 60px rgba(0,0,0,.5);
+  transition:transform var(--dur-base) var(--ease-out),box-shadow var(--dur-base) var(--ease-out),filter var(--dur-base) var(--ease-out)}
+.slab .sheen{position:absolute;inset:0;pointer-events:none;background:linear-gradient(128deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,0) 30%)}
+.slab .edge{position:absolute;top:0;left:0;right:0;height:4px}
+.slab .cnr{position:absolute;top:26px;left:26px}
+.slab .body{position:relative;display:flex;flex-direction:column;align-items:flex-start}
+.slab .eyebrow{font-size:var(--text-micro);letter-spacing:.18em;text-transform:uppercase;font-weight:600;margin-bottom:var(--space-2)}
+.slab .nm{font-family:var(--font-head);font-weight:300;font-size:44px;line-height:1;letter-spacing:-.02em;color:var(--text-primary);margin-bottom:var(--space-3)}
+.slab .ds{color:var(--text-secondary);font-size:var(--text-body);line-height:1.55;margin:0 0 var(--space-4);max-width:26ch;text-wrap:pretty}
+.slab .stat{font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;border-radius:var(--radius-pill);padding:4px 13px;border:1px solid var(--border-strong);color:var(--text-tertiary);white-space:nowrap}
+.slab.signal{background:linear-gradient(155deg,var(--surface-overlay),var(--surface-sunken))}
+.slab.signal .edge{background:var(--brand-peri);box-shadow:0 0 20px rgba(142,139,216,.7)}
+.slab.signal .eyebrow{color:var(--brand-peri)}
+.slab.signal .stat{color:var(--brand-gold)}
+.slab.signal:hover{transform:translateY(-5px);filter:brightness(1.06);box-shadow:0 34px 74px rgba(142,139,216,.26)}
+.slab.reads{background:linear-gradient(155deg,#2A2130,#150E17)}
+.slab.reads .edge{background:var(--brand-terracotta);box-shadow:0 0 20px rgba(192,89,59,.7)}
+.slab.reads .an{font-family:'Scenario',Georgia,serif;font-weight:700;font-size:21px;color:var(--brand-terracotta);letter-spacing:.01em}
+.slab.reads .eyebrow{font-family:'Scenario',Georgia,serif;font-weight:700;letter-spacing:.1em;color:var(--brand-terracotta)}
+.slab.reads .stat{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.slab.reads:hover{transform:translateY(-5px);filter:brightness(1.06);box-shadow:0 34px 74px rgba(192,89,59,.26)}
+.slab:focus-visible{outline:2px solid var(--state-progress);outline-offset:3px}
+@media(max-width:720px){
+  #launcher{place-items:stretch;padding:var(--space-4)}
+  .launchwrap{gap:var(--space-5);justify-content:center;flex:1}
+  .slabrow{flex-direction:column;align-items:stretch}
+  .slab{max-width:none;min-height:172px;padding:var(--space-5)}
+  .slab .nm{font-size:34px}
+}
+
+/* ============================ reads surface ============================
+   Reads is its own surface, not an analytics scope — so it drops the scope bar,
+   range switcher, Sync now and briefing, and wears an Aubrey North header. */
+#reads{min-height:100vh;min-height:100dvh;background:var(--surface-base);display:flex;flex-direction:column}
+.readtop{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6);
+  border-bottom:1px solid var(--border-subtle);background:var(--surface-raised);position:sticky;top:0;z-index:10;
+  backdrop-filter:blur(12px);flex-wrap:wrap}
+.hublink{display:inline-flex;align-items:center;gap:var(--space-2);background:none;border:1px solid var(--border-default);
+  border-radius:var(--radius-pill);padding:5px var(--space-3);color:var(--text-secondary);font-size:var(--text-label);transition:var(--dur-fast)}
+.hublink:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.hublink .mark{width:16px;height:16px;flex:none}
+.readid{display:flex;flex-direction:column;gap:2px}
+.readid .an{font-family:'Scenario',Georgia,serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand-terracotta)}
+.readid h1{margin:0;font-family:var(--font-head);font-weight:300;font-size:var(--figure-md);letter-spacing:-.01em;color:var(--text-primary);line-height:1}
+.readtop .spacer{flex:1}
+.readtop .count{font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary);
+  border:1px solid var(--border-default);border-radius:var(--radius-pill);padding:3px var(--space-3);white-space:nowrap}
+#readsView{flex:1;max-width:900px;width:100%;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)}
+.monthhead{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary);
+  margin:var(--space-4) 0 var(--space-2);padding-bottom:var(--space-2);border-bottom:1px solid var(--border-subtle)}
+.monthhead:first-child{margin-top:0}
+.readsig{display:inline-flex;align-items:center;gap:var(--space-2);color:var(--state-progress);font-size:var(--text-label)}
+.readsig .led{width:7px;height:7px;border-radius:50%;background:var(--state-progress);animation:pulse 1.4s ease-in-out infinite;flex:none}
+@media(max-width:720px){
+  .readtop{padding:var(--space-3) var(--space-4)}
+  #readsView{padding:var(--space-4)}
+}
+
+/* ---------- reads card + preview polish ---------- */
+.read summary{list-style:none;display:inline-flex;align-items:center;gap:var(--space-2);
+  padding:var(--space-2) var(--space-3);border:1px solid var(--border-default);border-radius:var(--radius-pill);
+  width:max-content;transition:var(--dur-fast)}
+.read summary::-webkit-details-marker{display:none}
+.read summary:hover,.read details[open] summary{color:var(--text-primary);border-color:var(--border-strong)}
+.mdprev{border-left:0;background:var(--surface-sunken);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md);padding:var(--space-5) var(--space-6);color:var(--text-secondary);
+  font-size:var(--text-lead);line-height:1.78;max-width:68ch;text-wrap:pretty}
+.mdprev>p:first-of-type{color:var(--text-primary)}
+.mdprev p{margin:0 0 var(--space-4)}
+.mdprev p:last-child{margin-bottom:0}
+.mdprev h2{font-size:1.25rem;margin:var(--space-5) 0 var(--space-2)}
+.mdprev h3{font-family:var(--font-head);font-weight:300;color:var(--text-primary);font-size:1.05rem;margin:var(--space-4) 0 var(--space-2)}
+.mdprev ul,.mdprev ol{margin:0 0 var(--space-4);padding-left:1.4em}
+.mdprev li{margin:0 0 var(--space-2)}
+.mdprev blockquote{margin:0 0 var(--space-4);padding:var(--space-1) 0 var(--space-1) var(--space-4);
+  border-left:2px solid var(--brand-terracotta);color:var(--text-primary);font-style:italic}
+.mdprev hr{border:0;border-top:1px solid var(--border-default);margin:var(--space-5) 0}
+.mdprev code{font-family:ui-monospace,monospace;font-size:.88em;background:var(--surface-overlay);padding:1px 5px;border-radius:4px}
+.mdprev pre{background:var(--surface-overlay);padding:var(--space-4);border-radius:var(--radius-md);overflow:auto;margin:0 0 var(--space-4)}
+.mdprev pre code{background:none;padding:0}
+.mdprev img{max-width:100%;height:auto;border-radius:var(--radius-md);margin:var(--space-3) 0}
+.mdprev a{color:var(--brand-gold-soft);text-decoration:underline;text-underline-offset:2px}
+.mdprev a:hover{color:var(--brand-gold)}
+
+/* ---------- "what changed" diff (read-diff), Update cards only ----------
+   Adds are gold, deletions terracotta struck-through — the product's up/down colour
+   language (cls()). Read-only: the disclosure never offers accept/reject. */
+.whatchanged .diffbody{margin-top:var(--space-3)}
+.diffnote{font-size:var(--text-label);color:var(--text-secondary)}
+.diffnote.err{color:var(--state-negative)}
+.fmchanges{margin:0 0 var(--space-3);padding-left:1.2em;font-size:var(--text-label);color:var(--text-secondary)}
+.fmchanges b{color:var(--text-primary);font-weight:600}
+.diff{background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--radius-md);
+  padding:var(--space-3) 0;overflow:auto;font-family:ui-monospace,monospace;font-size:.82rem;line-height:1.6;max-width:68ch}
+.dl{display:flex;gap:var(--space-3);padding:0 var(--space-4);white-space:pre-wrap;word-break:break-word}
+.dl .dm{flex:none;width:1ch;text-align:center;color:var(--text-tertiary);user-select:none}
+.dl .dt{flex:1}
+.dl.add{background:rgba(200,162,76,.10)}
+.dl.add .dm,.dl.add .dt{color:var(--state-positive)}
+.dl.del{background:rgba(192,89,59,.10)}
+.dl.del .dm,.dl.del .dt{color:var(--state-negative);text-decoration:line-through}
+.dl.eq{color:var(--text-tertiary)}
+
+/* card metadata + pre-flight checks + update awareness */
+.read .tagupd{font-size:var(--text-micro);text-transform:uppercase;letter-spacing:.08em;color:var(--state-progress);
+  border:1px solid rgba(142,139,216,.5);border-radius:5px;padding:2px var(--space-2)}
+.readdesc{font-size:var(--text-label);color:var(--text-secondary);line-height:1.55;margin-top:var(--space-2);max-width:74ch;text-wrap:pretty}
+.tags{display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}
+.tagchip{font-size:var(--text-micro);color:var(--text-tertiary);border:1px solid var(--border-subtle);border-radius:var(--radius-pill);padding:2px var(--space-2)}
+.checks{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3);margin-top:var(--space-4)}
+.chk{font-size:var(--text-label);display:inline-flex;align-items:center;gap:var(--space-2)}
+.chk.ok{color:var(--state-positive)}
+.chk.warn{color:var(--state-negative);font-weight:600}
+.chkitem{font-size:var(--text-micro);color:var(--state-negative);background:rgba(192,89,59,.1);
+  border:1px solid rgba(192,89,59,.3);border-radius:var(--radius-sm);padding:2px var(--space-2)}
+
 /* ---------- idle warning ---------- */
 /* Same modal shell as Connect. A pending sign-out is a normal security event, not a
    fault, so it stays in gold and periwinkle — terracotta is reserved for things that
@@ -476,6 +614,50 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);
   background:var(--surface-overlay);border:1px solid var(--border-default);
   padding:.6rem 1rem;border-radius:9px;font-size:.85rem;z-index:70;box-shadow:var(--shadow-overlay)}
+
+/* ============================ gloss pass ============================
+   The launcher's glossy surface, carried gracefully end-to-end: a faint top
+   specular sheen layered into the raised planes, a 1px top highlight, and a
+   periwinkle-lit sheen on the primary action. Deliberately restrained — gloss on
+   the cards, dialogs and the one glow; the big chrome (rail, scope bar, inputs)
+   stays matte so the effect reads considered rather than heavy. */
+.authcard{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 140px),var(--surface-raised);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 24px 60px rgba(0,0,0,.42)}
+.panel{
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 120px),var(--surface-raised);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),var(--shadow-panel)}
+.kpi{
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,0) 90px),var(--surface-raised);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),var(--shadow-panel)}
+.acct{
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,0) 70px),var(--surface-overlay);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.read{
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0) 90px),var(--surface-raised);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.menu{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 90px),var(--surface-raised);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),var(--shadow-overlay)}
+.modal{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 130px),var(--surface-raised);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),var(--shadow-overlay)}
+.sheet{
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 110px),var(--surface-raised)}
+/* Primary action: a tight, bright specular at the very top that falls off fast (a
+   highlight, not a half-fill), plus a faint convex shade toward the base. The shadow
+   carries the layout's single periwinkle glow. */
+.btn.primary{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.30) 0%,rgba(255,255,255,.06) 20%,rgba(255,255,255,0) 40%),
+    linear-gradient(180deg,rgba(255,255,255,0) 58%,rgba(20,14,27,.14) 100%),
+    var(--state-progress);
+  border-color:var(--state-progress);
+  border-top-color:rgba(255,255,255,.55);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 18px rgba(142,139,216,.30)}
+.btn.primary:hover{filter:brightness(1.05);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 10px 26px rgba(142,139,216,.44)}
+.btn.primary:disabled{box-shadow:none}
 
 /* ============================================================================
    MOBILE — folded from the signal-mobile comp (design v3). Everything below the
@@ -667,19 +849,57 @@ td.t a:hover{color:var(--brand-gold-soft)}
     <button class="btn wide tall hide" id="passkeySignin">
       <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-        <circle cx="9" cy="8" r="3.4"></circle>
-        <path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path>
-        <path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path>
+        <circle cx="8" cy="8" r="3.3"></circle>
+        <path d="M2.8 19c.5-3.2 2.6-5 5.2-5 .8 0 1.6.2 2.2.5"></path>
+        <circle cx="17.4" cy="12.2" r="2.4"></circle>
+        <path d="M15.5 13.7 12 17.2"></path>
+        <path d="M13.4 15.8l1.5 1.5M12 17.2l1.5 1.5"></path>
       </svg>Sign in with a passkey<span class="fastest hide" id="passkeyFastest">Fastest</span></button>
     <p class="why hide" id="passkeyWhy">Face ID, Touch ID or a security key on this device.</p>
     <div class="msg" id="authMsg" role="status" aria-live="polite"></div>
   </div>
 </div>
 
+<!-- ================= LAUNCHER ================= -->
+<!-- Post-auth home. Signal (analytics) and Reads (Aubrey North publishing) as glossy surfaces. -->
+<div id="launcher" class="hide">
+  <div class="launchwrap">
+    <header class="launchtop">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      <span class="wm">CUNNING CORP · OPERATIONS</span>
+      <span class="spacer"></span>
+      <span class="lem" id="launchEmail"></span>
+      <button class="btn" id="launcherSignOut">Sign out</button>
+    </header>
+    <div class="slabrow">
+      <button class="slab signal" id="tileSignal" aria-label="Open Signal">
+        <span class="sheen"></span><span class="edge"></span>
+        <svg class="mark cnr" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+        <span class="body">
+          <span class="eyebrow">Social intelligence</span>
+          <span class="nm">Signal</span>
+          <span class="ds">Every channel, one view. Reach, watch time and posts across YouTube, Instagram, TikTok and Facebook.</span>
+          <span class="stat" id="tileSignalStatus">Loading…</span>
+        </span>
+      </button>
+      <button class="slab reads" id="tileReads" aria-label="Open Reads">
+        <span class="sheen"></span><span class="edge"></span>
+        <span class="an cnr">AN</span>
+        <span class="body">
+          <span class="eyebrow">Aubrey North</span>
+          <span class="nm">Reads</span>
+          <span class="ds">Publish approved writing to aubreynorth.com. Copy is locked before it lands here — the only decision is when it goes live.</span>
+          <span class="stat" id="tileReadsStatus">Loading…</span>
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= APP ================= -->
 <div id="app" class="hide">
   <aside class="rail">
-    <div class="brandrow">
+    <div class="brandrow" id="railHome" role="button" tabindex="0" style="cursor:pointer" title="Cunning Corp home">
       <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
         <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
         <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/>
@@ -702,11 +922,13 @@ td.t a:hover{color:var(--brand-gold-soft)}
          the same purpose (#syncBtn/#connectBtn/#profileBtn/#range). Wired in a
          later phase; inert until then. -->
     <header class="mtop">
-      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
-        <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
-        <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
-      <span class="wm">SIGNAL</span>
-      <span class="cc">Cunning Corp</span>
+      <button id="mHome" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:var(--space-3)" aria-label="Cunning Corp home">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/>
+          <circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+        <span class="wm">SIGNAL</span>
+        <span class="cc">Cunning Corp</span>
+      </button>
       <span class="mspacer"></span>
       <button class="mavatar" id="mProfileBtn" aria-haspopup="dialog" aria-label="Account and preferences"><span id="mProfileInitials">—</span></button>
     </header>
@@ -748,9 +970,11 @@ td.t a:hover{color:var(--brand-gold-soft)}
           <button class="mi hide" id="addPasskey" role="menuitem">
             <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-              <circle cx="9" cy="8" r="3.4"></circle>
-              <path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path>
-              <path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path>
+              <circle cx="8" cy="8" r="3.3"></circle>
+              <path d="M2.8 19c.5-3.2 2.6-5 5.2-5 .8 0 1.6.2 2.2.5"></path>
+              <circle cx="17.4" cy="12.2" r="2.4"></circle>
+              <path d="M15.5 13.7 12 17.2"></path>
+              <path d="M13.4 15.8l1.5 1.5M12 17.2l1.5 1.5"></path>
             </svg>
             <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span>
           </button>
@@ -789,6 +1013,23 @@ td.t a:hover{color:var(--brand-gold-soft)}
         Sync now</button>
     </div>
   </div>
+</div>
+
+<!-- ================= READS SURFACE ================= -->
+<div id="reads" class="hide">
+  <header class="readtop">
+    <button class="hublink" id="readsHub" aria-label="Back to Cunning Corp home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      Cunning Corp
+    </button>
+    <div class="readid">
+      <span class="an">Aubrey North</span>
+      <h1>Reads</h1>
+    </div>
+    <span class="spacer"></span>
+    <span class="count" id="readsCount">—</span>
+  </header>
+  <main id="readsView"></main>
 </div>
 
 <div id="modalRoot"></div>
@@ -864,6 +1105,7 @@ const GLYPH_TITLE = {
 /* ============================ state ============================ */
 let RANGE = 30;
 let SCOPE = { kind:"all" };            // {kind:'all'} | {kind:'platform',p} | {kind:'account',id}
+let SURFACE = null;                    // null = launcher (home) | 'signal' | 'reads'
 let POSTTYPE = "all";
 let LOADING = true;
 let charts = {};
@@ -919,28 +1161,102 @@ function readUrl() {
   const q = new URLSearchParams(location.search);
   const r = Number(q.get("range"));
   if ([7,30,90].includes(r)) RANGE = r;
-  if (q.get("view") === "reads") SCOPE = { kind:"reads" };
-  else if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
+  const surf = q.get("surface");
+  if (surf === "reads" || q.get("view") === "reads") SURFACE = "reads";   // legacy ?view=reads still works
+  else if (surf === "signal" || q.get("platform") || q.get("account") || q.get("type")) SURFACE = "signal";
+  else SURFACE = null;                                                    // bare URL -> launcher
+  if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
   else if (PLATFORMS.includes(q.get("platform"))) SCOPE = { kind:"platform", p:q.get("platform") };
   else SCOPE = { kind:"all" };
   if (q.get("type")) POSTTYPE = q.get("type");
 }
 function writeUrl(push = true) {
   const q = new URLSearchParams();
-  if (SCOPE.kind === "platform") q.set("platform", SCOPE.p);
-  if (SCOPE.kind === "account") q.set("account", SCOPE.id);
-  if (SCOPE.kind === "reads") q.set("view", "reads");
-  if (RANGE !== 30) q.set("range", String(RANGE));
-  if (POSTTYPE !== "all") q.set("type", POSTTYPE);
+  if (SURFACE === "reads") q.set("surface", "reads");
+  else if (SURFACE === "signal") {
+    q.set("surface", "signal");
+    if (SCOPE.kind === "platform") q.set("platform", SCOPE.p);
+    if (SCOPE.kind === "account") q.set("account", SCOPE.id);
+    if (RANGE !== 30) q.set("range", String(RANGE));
+    if (POSTTYPE !== "all") q.set("type", POSTTYPE);
+  }
+  // launcher carries no params — a bare URL is home
   const url = location.pathname + (q.toString() ? "?" + q : "");
   if (push) history.pushState(null, "", url); else history.replaceState(null, "", url);
 }
-addEventListener("popstate", () => { readUrl(); syncRangeButtons(); render(); });
+addEventListener("popstate", () => { readUrl(); syncRangeButtons(); applySurfaceVisibility(); renderSurface(); });
 
 function setScope(next, { reload = false } = {}) {
   SCOPE = next;
   writeUrl();
   if (reload) load(); else render();
+}
+
+/* ============================ surfaces ============================
+   The launcher is the home; Signal and Reads are the two surfaces reached from it.
+   Reads left the analytics rail entirely — a publishing queue has no use for scope,
+   range, Sync now or the briefing, so it gets its own chrome rather than borrowing
+   theirs (resolves the mode-vs-scope tension in the Reads design brief). */
+function applySurfaceVisibility() {
+  $("#launcher").classList.toggle("hide", SURFACE !== null);
+  $("#app").classList.toggle("hide", SURFACE !== "signal");
+  $("#reads").classList.toggle("hide", SURFACE !== "reads");
+}
+function renderSurface() {
+  if (SURFACE === "reads") renderReadsSurface();
+  else if (SURFACE === "signal") render();
+  else renderLauncher();
+}
+function showSurface(name, { push = true } = {}) {
+  SURFACE = name;
+  writeUrl(push);
+  applySurfaceVisibility();
+  renderSurface();
+  if (!warnOpen) armIdleLogout();
+  scrollTo(0, 0);
+}
+function renderLauncher() {
+  $("#launchEmail").textContent = lastEmail ?? "";
+  const rows = DATA.sync || [];
+  const latest = rows.map((r) => r.started_at).filter(Boolean).sort().at(-1);
+  const nAcc = (DATA.overview || []).length;
+  $("#tileSignalStatus").textContent = LOADING ? "Loading…"
+    : latest ? `Synced ${ago(latest)}${nAcc ? ` · ${plural(nAcc, "account", "accounts")}` : ""}`
+    : nAcc ? plural(nAcc, "account", "accounts") : "Nothing connected yet";
+  if (DATA.reads === null) $("#tileReadsStatus").textContent = "Queue unavailable";
+  else {
+    const w = (DATA.reads || []).filter((r) => ["ready","failed","publishing"].includes(r.status)).length;
+    $("#tileReadsStatus").textContent = LOADING ? "Loading…" : (w ? `${w} waiting` : "Queue clear");
+  }
+}
+function readsSkeleton() {
+  return `<div class="panel"><div class="sk line" style="width:22%;height:16px"></div>
+    <div class="sk line" style="width:55%"></div>
+    <div class="sk block" style="height:120px;margin-top:16px"></div></div>`;
+}
+function renderReadsSurface() {
+  const ready = (DATA.reads ?? []).filter((r) => ["ready","failed","publishing"].includes(r.status)).length;
+  $("#readsCount").textContent = DATA.reads === null ? "queue unavailable" : (ready ? `${ready} waiting` : "queue clear");
+  $("#readsView").innerHTML = LOADING ? readsSkeleton() : readsHtml();
+  if (!LOADING) wireReads();
+}
+function wireReads() {
+  $$("#readsView [data-publish]").forEach((b) => b.onclick = () => publishRead(b.dataset.publish));
+  $("#readsView [data-retry]")?.addEventListener("click", load);
+  // "What changed" is lazy: the read-diff call (a GitHub round-trip) fires only when a
+  // reviewer opens the disclosure, and only once per card.
+  $$("#readsView details.whatchanged").forEach((d) => {
+    d.addEventListener("toggle", () => {
+      if (d.open && !d.dataset.loaded) { d.dataset.loaded = "1"; loadReadDiff(d); }
+    });
+  });
+}
+async function doSignOut() {
+  lastEmail = null;
+  // Leaving on purpose should not offer to resume, so drop everything from the URL.
+  history.replaceState(null, "", location.pathname);
+  await sb.auth.signOut();
+  location.reload();
 }
 
 /* ============================ auth ============================ */
@@ -1010,13 +1326,14 @@ function setProfile(email) {
 }
 
 $("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
-$("#signOut").onclick = async () => {
-  lastEmail = null;
-  // Leaving on purpose should not offer to resume, so drop the scope from the URL.
-  history.replaceState(null, "", location.pathname);
-  await sb.auth.signOut();
-  location.reload();
-};
+$("#signOut").onclick = doSignOut;
+$("#launcherSignOut").onclick = doSignOut;
+$("#tileSignal").onclick = () => showSurface("signal");
+$("#tileReads").onclick = () => showSurface("reads");
+$("#readsHub").onclick = () => showSurface(null);
+$("#railHome").onclick = () => showSurface(null);
+$("#railHome").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showSurface(null); } };
+$("#mHome").onclick = () => showSurface(null);
 
 /* Passkeys (WebAuthn beta). The email link above stays the primary path and the
    recovery route for a new device, so these controls only appear where the browser
@@ -1049,7 +1366,7 @@ $("#addPasskey").onclick = async () => {
 /* ============================ data ============================ */
 async function load() {
   LOADING = true;
-  render();
+  renderSurface();
   const since = daysAgoISO(RANGE);
   const [ov, ser, day, post, syn, reads] = await Promise.all([
     sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
@@ -1077,7 +1394,7 @@ async function load() {
   if (SCOPE.kind === "platform" && !DATA.overview.some((a) => a.platform === SCOPE.p)) {
     SCOPE = { kind:"all" }; writeUrl(false);
   }
-  render();
+  renderSurface();
 }
 
 const connectedPlatforms = () => [...new Set(DATA.overview.map((r) => r.platform))];
@@ -1200,9 +1517,40 @@ function briefing() {
 
 const LANE_LABEL = { screen:"Screen", type:"Type", business:"Business" };
 
+/* Cached "What changed" diffs, keyed by queue-row id, so a re-render (e.g. publishing
+   another card) doesn't collapse an open disclosure or re-hit read-diff/GitHub. A row's
+   queued markdown and its live file are both stable within a session — copy is locked
+   upstream and a published row loses its disclosure — so the cache needs no invalidation. */
+const readDiffCache = new Map();
+
 function mdPreview(markdown) {
   const body = markdown.replace(/^---[\s\S]*?---\s*/, "");
-  return DOMPurify.sanitize(marked.parse(body));
+  const clean = DOMPurify.sanitize(marked.parse(body));
+  // Make preview links safe and correct: relative /reads/... resolve against the live
+  // site, and every link opens a new tab so a click never navigates the portal away.
+  const tmp = document.createElement("div");
+  tmp.innerHTML = clean;
+  tmp.querySelectorAll("a[href]").forEach((a) => {
+    const h = a.getAttribute("href");
+    if (h && h.startsWith("/")) a.setAttribute("href", "https://aubreynorth.com" + h);
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener noreferrer");
+  });
+  return tmp.innerHTML;
+}
+
+/* Pre-flight: the same checks publish-read enforces server-side (description 140-160,
+   slug shape, lane, frontmatter present), run client-side so a doomed publish is caught
+   before the click rather than coming back as a failed row. Reporting only — the portal
+   still cannot edit the copy (copylock); it just says what upstream must fix. */
+function preflight(r) {
+  const issues = [];
+  const d = (r.description ?? "").length;
+  if (d < 140 || d > 160) issues.push(`Description is ${d} characters (needs 140–160)`);
+  if (!/^[a-z0-9-]+$/.test(r.slug ?? "")) issues.push(`Slug “${r.slug ?? ""}” must be lowercase letters, numbers and hyphens`);
+  if (!["screen","type","business"].includes(r.lane)) issues.push(`Lane “${r.lane ?? ""}” is not screen, type or business`);
+  if (!/^---[\s\S]*?---/.test(r.markdown ?? "")) issues.push("No frontmatter block found");
+  return issues;
 }
 
 function readsHtml() {
@@ -1217,55 +1565,95 @@ function readsHtml() {
   const published = DATA.reads.filter((r) => r.status === "published")
     .sort((a,b) => (b.published_at ?? "").localeCompare(a.published_at ?? ""));
 
-  const card = (r) => `
+  const card = (r) => {
+    const issues = preflight(r);
+    const ok = issues.length === 0;
+    const update = !!(r.published_at || r.commit_sha);   // published before -> this is a re-publish
+    // A diff fetched earlier this session survives re-renders: restore it open and
+    // already-loaded so wireReads doesn't refetch it.
+    const cachedDiff = update ? readDiffCache.get(r.id) : null;
+    return `
     <div class="read" data-read="${esc(r.id)}">
       <div class="toprow">
         <span class="ttl">${esc(r.title)}</span>
         <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span>
+        ${update ? `<span class="tagupd">Update</span>` : ""}
       </div>
-      <div class="meta">${esc(r.target_query ? `for “${r.target_query}”` : "")}
-        ${r.word_count ? ` · ${fmt(r.word_count)} words` : ""} · queued ${shortDate(r.created_at)}</div>
+      <div class="meta">${esc(r.target_query ? `for “${r.target_query}”` : "Aubrey North")}${r.word_count ? ` · ${fmt(r.word_count)} words` : ""} · queued ${shortDate(r.created_at)}${update ? ` · last published ${shortDate(r.published_at)}` : ""}</div>
+      ${r.description ? `<div class="readdesc">${esc(r.description)}</div>` : ""}
+      ${(r.tags && r.tags.length) ? `<div class="tags">${r.tags.map((t) => `<span class="tagchip">${esc(t)}</span>`).join("")}</div>` : ""}
       ${r.status === "failed" ? `<div class="err">Failed: ${esc(r.error ?? "no detail recorded")}</div>` : ""}
       <details>
-        <summary>Preview</summary>
+        <summary>Read before publishing</summary>
         <div class="mdprev">${mdPreview(r.markdown)}</div>
       </details>
+      ${update ? `<details class="whatchanged" data-diff="${esc(r.id)}"${cachedDiff ? ` open data-loaded="1"` : ``}>
+        <summary>What changed</summary>
+        <div class="diffbody" data-diffbody>${cachedDiff ?? `<span class="diffnote">Loading…</span>`}</div>
+      </details>` : ""}
+      <div class="checks">
+        ${ok
+          ? `<span class="chk ok">✓ Passes publish checks${update ? " · replaces the live version" : ""}</span>`
+          : `<span class="chk warn">Can’t publish yet</span>${issues.map((i) => `<span class="chkitem">${esc(i)}</span>`).join("")}`}
+      </div>
       <div class="actions">
         ${r.status === "publishing"
           ? `<button class="btn primary" disabled>Publishing…</button>
-             <span class="meta">Committing to aubreynorth — the deploy takes about two minutes.</span>`
-          : `<button class="btn primary" data-publish="${esc(r.id)}">
-               ${r.status === "failed" ? "Retry" : "Publish"}</button>
-             <span class="meta">Publishes to aubreynorth.com within ~2 minutes.</span>`}
+             <span class="readsig"><span class="led"></span>Committing to aubreynorth — the deploy takes about two minutes.</span>`
+          : ok
+            ? `<button class="btn primary" data-publish="${esc(r.id)}">${r.status === "failed" ? "Retry" : (update ? "Publish update" : "Publish")}</button>
+               <span class="meta">${update ? "Replaces the live article" : "Publishes to aubreynorth.com"} within ~2 minutes.</span>`
+            : `<button class="btn primary" disabled>${update ? "Publish update" : "Publish"}</button>
+               <span class="meta">Copy is fixed upstream — once corrected it can publish.</span>`}
       </div>
+    </div>`;
+  };
+
+  // Published history grows monotonically — group by month so it keeps a rhythm.
+  const groups = [];
+  for (const r of published) {
+    const key = r.published_at
+      ? new Date(r.published_at).toLocaleDateString(undefined, { month:"long", year:"numeric" })
+      : "Undated";
+    let g = groups.find((x) => x.key === key);
+    if (!g) groups.push(g = { key, rows: [] });
+    g.rows.push(r);
+  }
+  const pubRow = (r) => `
+    <div class="pubrow">
+      <a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a>
+      <span class="when">${shortDate(r.published_at)}</span>
+      <span class="sha">${esc((r.commit_sha ?? "").slice(0,7))}</span>
     </div>`;
 
   return `
   <div class="panel">
     <h2>Queue</h2>
-    <p class="hint">Approved and waiting. Copy is locked before it arrives here —
-      publishing is the only decision this screen makes.</p>
-    ${queue.length ? queue.map(card).join("") : `<div class="empty">Nothing waiting.</div>`}
+    <p class="hint">Approved and waiting. Copy is locked before it reaches this screen —
+      publishing is the only decision made here.</p>
+    ${queue.length ? queue.map(card).join("") : `<div class="empty">
+       <h3>Nothing waiting</h3>
+       <div>Reads are drafted and approved in a Cowork session. Once approved, each one
+       lands here ready to publish — there is nothing to write in the portal.</div></div>`}
   </div>
   <div class="panel">
     <h2>Published</h2>
-    ${published.length ? published.map((r) => `
-      <div class="pubrow">
-        <a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a>
-        <span class="when">${shortDate(r.published_at)}</span>
-        <span class="sha">${esc((r.commit_sha ?? "").slice(0,7))}</span>
-      </div>`).join("") : `<div class="empty">Nothing published from the queue yet.</div>`}
+    ${published.length
+      ? groups.map((g) => `<div class="monthhead">${esc(g.key)}</div>${g.rows.map(pubRow).join("")}`).join("")
+      : `<div class="empty">Nothing published from the queue yet.</div>`}
   </div>`;
 }
 
 function confirmPublish(row) {
+  if (isMobile()) return confirmPublishSheet(row);
+  const update = !!(row.published_at || row.commit_sha);
   const root = $("#modalRoot");
   root.innerHTML = `<div class="scrim" role="dialog" aria-modal="true" aria-labelledby="pubTitle">
     <div class="modal">
-      <h2 id="pubTitle">Publish “${esc(row.title)}”?</h2>
+      <h2 id="pubTitle">${update ? "Publish an update to" : "Publish"} “${esc(row.title)}”?</h2>
       <p class="k">This commits the article to aubreynorth and the site deploys it —
         live at aubreynorth.com/reads/${esc(row.slug)}/ within about two minutes.
-        Taking it down again is a git operation, not a button.</p>
+        ${update ? "It replaces the version currently live. " : ""}Taking it down again is a git operation, not a button.</p>
       <div class="foot">
         <button class="btn" data-cancel>Cancel</button>
         <button class="btn primary" data-confirm>Publish</button>
@@ -1283,10 +1671,43 @@ function confirmPublish(row) {
   });
 }
 
+/* Mobile confirm is a bottom sheet, matching every other mobile confirm (Reads brief
+   §5). Any close that isn't an explicit Publish resolves false — publishing never
+   happens by accident. */
+function confirmPublishSheet(row) {
+  const update = !!(row.published_at || row.commit_sha);
+  return new Promise((resolve) => {
+    let settled = false;
+    const onKey = (e) => { if (e.key === "Escape") finish(false); };
+    const finish = (v) => {
+      if (settled) return; settled = true;
+      document.removeEventListener("keydown", onKey, true);
+      closeSheet();
+      resolve(v);
+    };
+    openSheet(`
+      <h2 id="pubTitle">${update ? "Publish an update to" : "Publish"} “${esc(row.title)}”?</h2>
+      <div class="scroll">
+        <p style="padding:0 var(--space-3) var(--space-4);margin:0;font-size:var(--text-label);color:var(--text-secondary);line-height:1.6">
+          This commits the article to aubreynorth and the site deploys it — live at
+          aubreynorth.com/reads/${esc(row.slug)}/ within about two minutes. ${update ? "It replaces the version currently live. " : ""}Taking it down
+          again is a git operation, not a button.</p>
+        <div style="display:flex;flex-direction:column;gap:var(--space-2);padding:0 var(--space-3)">
+          <button class="btn primary wide tall" data-confirm>Publish</button>
+          <button class="btn wide tall" data-cancel>Cancel</button>
+        </div>
+      </div>`, { labelledby: "pubTitle" });
+    document.addEventListener("keydown", onKey, true);
+    $("#sheetRoot [data-confirm]").onclick = () => finish(true);
+    $("#sheetRoot [data-cancel]").onclick = () => finish(false);
+    $("#sheetRoot .scrim").addEventListener("click", (e) => { if (e.target === e.currentTarget) finish(false); });
+  });
+}
+
 async function refreshReads() {
   const { data, error } = await sb.from("reads_queue").select("*")
     .order("created_at", { ascending:false });
-  if (!error) { DATA.reads = data ?? []; if (SCOPE.kind === "reads") render(); }
+  if (!error) { DATA.reads = data ?? []; renderSurface(); }
 }
 
 async function publishRead(id) {
@@ -1295,7 +1716,7 @@ async function publishRead(id) {
   if (!(await confirmPublish(row))) return;
 
   // Optimistic: the guard in publish-read is the real lock; this is just honest UI.
-  row.status = "publishing"; render();
+  row.status = "publishing"; renderSurface();
 
   try {
     const { data:{ session } } = await sb.auth.getSession();
@@ -1316,6 +1737,87 @@ async function publishRead(id) {
   } finally {
     await refreshReads();   // the queue row is the source of truth either way
   }
+}
+
+/* ============================ what changed (read-diff) ============================
+   Read-only diff of a queued Update against the live article, via the read-diff edge
+   function. The function returns both bodies plus the frontmatter deltas; the line diff
+   is computed here so the function stays thin (the portal already loads text libraries).
+   Lazy and read-only — opening it never touches the queue or the copy. */
+async function loadReadDiff(details) {
+  const id = details.dataset.diff;
+  const box = details.querySelector("[data-diffbody]");
+  box.innerHTML = `<span class="diffnote">Loading…</span>`;   // reset, so a retry never shows a stale error
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    // The 66-minute idle logout can lapse a session mid-review; degrade to a clear
+    // prompt instead of throwing on session.access_token.
+    if (!session) {
+      box.innerHTML = `<span class="diffnote err">Your session has expired — sign in again to compare against the live version.</span>`;
+      details.dataset.loaded = "";   // retry once signed back in
+      return;
+    }
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/read-diff`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: SUPABASE_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      box.innerHTML = `<span class="diffnote err">${esc(body.error ?? `Couldn’t load the diff (${res.status})`)}</span>`;
+      details.dataset.loaded = "";   // a bad response can be retried by reopening
+      return;
+    }
+    const html = renderReadDiff(body);
+    readDiffCache.set(id, html);      // survive re-renders; reopen is instant, no refetch
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = `<span class="diffnote err">Couldn’t load the diff: ${esc(e.message)}</span>`;
+    details.dataset.loaded = "";     // let a reopen retry a transient failure
+  }
+}
+
+/* Shape a read-diff response into markup. exists:false and identical are honest short
+   circuits; otherwise the frontmatter deltas lead and the body line-diff follows. */
+function renderReadDiff(d) {
+  if (d.exists === false) return `<span class="diffnote">New — nothing live to compare yet.</span>`;
+  const fm = d.frontmatter_changes ?? [];
+  const fmHtml = fm.length
+    ? `<ul class="fmchanges">${fm.map((c) => `<li><b>${esc(c.field)}</b> changed</li>`).join("")}</ul>`
+    : "";
+  if (d.identical && !fm.length) return `<span class="diffnote">Already matches what’s live.</span>`;
+  const lines = d.identical
+    ? `<div class="diffnote">No copy changes — frontmatter only.</div>`
+    : lineDiff(d.live_body ?? "", d.queued_body ?? "");
+  return fmHtml + lines;
+}
+
+/* Minimal LCS line diff. Single articles opened one at a time, so an O(n·m) table is
+   nothing. Unchanged lines stay as context so an edit reads in place rather than as a
+   wall of adds and deletes. */
+function lineDiff(a, b) {
+  const A = a.replace(/\s+$/, "").split("\n"), B = b.replace(/\s+$/, "").split("\n");
+  const n = A.length, m = B.length;
+  const dp = Array.from({ length:n+1 }, () => new Array(m+1).fill(0));
+  for (let i=n-1; i>=0; i--) for (let j=m-1; j>=0; j--)
+    dp[i][j] = A[i] === B[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const rows = [];
+  let i=0, j=0;
+  while (i<n && j<m) {
+    if (A[i] === B[j]) { rows.push(["eq", A[i]]); i++; j++; }
+    else if (dp[i+1][j] >= dp[i][j+1]) { rows.push(["del", A[i]]); i++; }
+    else { rows.push(["add", B[j]]); j++; }
+  }
+  while (i<n) { rows.push(["del", A[i]]); i++; }
+  while (j<m) { rows.push(["add", B[j]]); j++; }
+  const mark = { eq:" ", add:"+", del:"−" };
+  return `<div class="diff">${rows.map(([op, ln]) =>
+    `<div class="dl ${op}"><span class="dm">${mark[op]}</span><span class="dt">${esc(ln) || " "}</span></div>`
+  ).join("")}</div>`;
 }
 
 /* ============================ render ============================ */
@@ -1377,7 +1879,6 @@ function renderRail() {
     const { label, meta, kind, key, cls: extra = "", colour, hollow } = opts;
     const current =
       (kind === "all" && SCOPE.kind === "all") ||
-      (kind === "reads" && SCOPE.kind === "reads") ||
       (kind === "platform" && SCOPE.kind === "platform" && SCOPE.p === key) ||
       (kind === "account" && SCOPE.kind === "account" && SCOPE.id === key);
     return `<button class="node ${extra}" data-kind="${kind}" data-key="${esc(key ?? "")}"
@@ -1407,19 +1908,11 @@ function renderRail() {
       }).replace(/<span class="dot"[^>]*><\/span>/, "");
     }
   }
-  // Publishing lives under the analytics scopes: its own room, same corridor.
-  const readyReads = (DATA.reads ?? []).filter((r) => ["ready","failed"].includes(r.status)).length;
-  html += node({
-    label:"Reads", meta: DATA.reads === null ? "!" : (readyReads ? String(readyReads) : ""),
-    kind:"reads", key:"", cls:"group",
-  });
-
   $("#rail").innerHTML = html;
   $$("#rail .node").forEach((b) => b.onclick = () => {
     const { kind, key } = b.dataset;
     if (kind === "connect") return openConnect(key);
     if (kind === "all") return setScope({ kind:"all" });
-    if (kind === "reads") return setScope({ kind:"reads" });
     if (kind === "platform") return setScope({ kind:"platform", p:key });
     if (kind === "account") return setScope({ kind:"account", id:key });
   });
@@ -1451,7 +1944,6 @@ function skeletonHtml() {
 
 /* ---------- the view ---------- */
 function viewHtml() {
-  if (SCOPE.kind === "reads") return readsHtml();
   if (!DATA.overview.length) {
     return `<div class="panel"><div class="empty">
       <h3>Nothing connected yet</h3>
@@ -2201,9 +2693,12 @@ async function idleSignOut() {
    starting again. Read from the URL, not from DATA, which is empty by this point. */
 function gateScopeLabel() {
   const q = new URLSearchParams(location.search);
+  const surf = q.get("surface");
+  if (surf === "reads" || q.get("view") === "reads") return "Reads · Aubrey North";
+  // Launcher (bare URL): nothing specific was held, so don't offer to resume a view.
+  if (surf !== "signal" && !q.get("platform") && !q.get("account") && !q.get("type")) return "";
   const parts = [];
-  if (q.get("view") === "reads") parts.push("the Reads queue");
-  else if (q.get("account")) parts.push("an account view");
+  if (q.get("account")) parts.push("an account view");
   else if (PLATFORMS.includes(q.get("platform"))) parts.push(LABEL[q.get("platform")]);
   else parts.push("Overview");
   parts.push(`${Number(q.get("range")) || 30} days`);
@@ -2213,8 +2708,9 @@ function gateScopeLabel() {
 
 function showIdleGate() {
   $("#gateNoticeTitle").textContent = `Signed out after ${IDLE_MINUTES} minutes`;
-  $("#gateResume").innerHTML = `Waiting for you: <b>${esc(gateScopeLabel())}</b>`;
-  $("#gateResume").classList.remove("hide");
+  const held = gateScopeLabel();
+  if (held) { $("#gateResume").innerHTML = `Waiting for you: <b>${esc(held)}</b>`; $("#gateResume").classList.remove("hide"); }
+  else $("#gateResume").classList.add("hide");
   $("#gateNotice").classList.remove("hide");
   $("#gateIntro").classList.add("hide");
   authMsg("");
@@ -2370,15 +2866,11 @@ function openScope() {
     for (const a of kids) html += node({ label: a.display_name || a.handle || "account",
       meta: fmt(a.followers), kind: "account", key: a.account_id, extra: "child", showdot: false });
   }
-  const readyReads = (DATA.reads ?? []).filter((r) => ["ready","failed"].includes(r.status)).length;
-  html += node({ label: "Reads", meta: DATA.reads === null ? "!" : (readyReads ? String(readyReads) : ""),
-    kind: "reads", key: "", extra: "group" });
   openSheet(`<h2 id="mScopeTitle">Scope</h2><div class="scroll">${html}</div>`, { labelledby: "mScopeTitle" });
   $$("#sheetRoot .node").forEach((b) => b.onclick = () => {
     const { kind, key } = b.dataset;
     if (kind === "connect") { closeSheet(); return openConnect(key); }
     if (kind === "all") setScope({ kind: "all" });
-    else if (kind === "reads") setScope({ kind: "reads" });
     else if (kind === "platform") setScope({ kind: "platform", p: key });
     else if (kind === "account") setScope({ kind: "account", id: key });
     closeSheet(); scrollTop();
@@ -2392,7 +2884,7 @@ function openProfileSheet() {
   const email = $("#mProfileBtn").dataset.email || "—";
   const passkeyItem = window.PublicKeyCredential ? `<button class="mi" data-sheet-passkey>
     <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-      <circle cx="9" cy="8" r="3.4"></circle><path d="M3.6 19.2c.6-3 2.8-4.6 5.4-4.6"></path><path d="M14.6 13.4h6.2M18.4 13.4v6M20.8 17.2h-2.4"></path></svg>
+      <circle cx="8" cy="8" r="3.3"></circle><path d="M2.8 19c.5-3.2 2.6-5 5.2-5 .8 0 1.6.2 2.2.5"></path><circle cx="17.4" cy="12.2" r="2.4"></circle><path d="M15.5 13.7 12 17.2"></path><path d="M13.4 15.8l1.5 1.5M12 17.2l1.5 1.5"></path></svg>
     <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span></button>` : "";
   openSheet(`<h2 id="mProfTitle" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Account</h2><div class="scroll">
     <div class="who-head"><span class="em">${esc(email)}</span><span class="rl">Signed in · invited access</span></div>
@@ -2433,7 +2925,7 @@ $("#mSyncBtn").onclick = () => $("#syncBtn").click();
    Connect becomes a sheet. Everything else is shared. Re-render on breakpoint
    cross so a rotate/resize swaps layouts. */
 const isMobile = () => matchMedia("(max-width:720px)").matches;
-matchMedia("(max-width:720px)").addEventListener("change", () => { if (booted) render(); });
+matchMedia("(max-width:720px)").addEventListener("change", () => { if (booted) renderSurface(); });
 
 function briefingHtml() {
   const b = briefing();
@@ -2582,11 +3074,16 @@ function applySession(session) {
   const signedIn = !!session;
   $("#idleNote").textContent = `Signs out after ${IDLE_MINUTES} minutes without activity.`;
   $("#gate").classList.toggle("hide", signedIn);
-  $("#app").classList.toggle("hide", !signedIn);
-  if (signedIn) { lastEmail = session.user?.email ?? lastEmail; setProfile(session.user?.email); armIdleLogout(); resetGate(); }
-  else { disarmIdleLogout(); closeProfile(); }
-  if (signedIn && !booted) { booted = true; readUrl(); syncRangeButtons(); load(); }
-  if (!signedIn) booted = false;
+  if (signedIn) {
+    lastEmail = session.user?.email ?? lastEmail;
+    setProfile(session.user?.email);
+    $("#launchEmail").textContent = lastEmail ?? "";
+    armIdleLogout(); resetGate();
+    if (!booted) { booted = true; readUrl(); syncRangeButtons(); applySurfaceVisibility(); load(); }
+  } else {
+    ["#launcher", "#app", "#reads"].forEach((s) => $(s).classList.add("hide"));
+    disarmIdleLogout(); closeProfile(); booted = false;
+  }
 }
 sb.auth.onAuthStateChange((_e, session) => applySession(session));
 applySession((await sb.auth.getSession()).data.session);

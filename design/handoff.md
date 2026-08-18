@@ -17,6 +17,62 @@ sessions have no push credentials by design; Demetri is the deploy gate.
 
 ---
 
+## 0 · Update for Cowork — launcher, Reads surface, polish (18 Aug 2026)
+
+Since 2a shipped, upstream folded the mobile comp into one responsive `index.html` and the
+data session added the Reads publishing queue (first-draft visuals) per
+`docs/PORTAL-PUBLISH-SPEC.md`. This design copy (`prototypes/signal-2a.html`, kept in step
+with the project's `Signal Portal.html`) now **leads `main`** with the work below — for
+Cowork to fold into `index.html` and push. Design-only: no schema, auth, edge-function or
+cron change.
+
+**A · Launcher is the post-auth home (direction 1c).** Gate → launcher → Signal or Reads.
+Two glossy slabs: Signal (periwinkle, the analytics dashboard) and Reads (Terracotta,
+Aubrey North; wordmark in the AN face **Scenario** — new `@font-face`, `fonts/Scenario-700.ttf`).
+New `SURFACE` router: `?surface=signal|reads`, bare URL = launcher; legacy `?view=reads`
+still resolves to Reads (`applySurfaceVisibility()`/`renderSurface()`/`showSurface()`).
+Back to home: rail brandrow (`#railHome`), mobile logo (`#mHome`), Reads hub link
+(`#readsHub`). Idle logout arms on any surface; the gate resume label is surface-aware.
+
+**B · Reads left the analytics rail to become its own surface** (`#reads`) — resolves
+weakness #1 of `DESIGN-BRIEF-READS.md`: no scope bar, range, Sync now or briefing around a
+publishing queue. Aubrey North header (Scenario eyebrow + Recoleta "Reads" + hub link +
+waiting-count). The "Reads" node is removed from the rail and the mobile scope sheet.
+
+**C · Reads polish** (rest of the brief): `.mdprev` styled to cover every markdown element;
+`mdPreview()` opens links in a new tab and absolutizes relative `/reads/…` to aubreynorth.com;
+animated periwinkle "Committing…" state; month-grouped Published history; guidance empty
+state; mobile bottom-sheet publish confirm. Lanes stay **neutral** — Terracotta already means
+negative, so the division accent wasn't mapped (brief §3, resolved consciously). Publish flow
+logic unchanged (optimistic flip, re-read, Retry through the same path).
+
+**D · Three review features** (read-only, copylock intact): faithful preview (C); client-side
+**pre-flight** mirroring `publish-read`'s checks (description 140–160, slug, lane, frontmatter)
+that disables a doomed publish with the reason instead of returning a failed row;
+**update-vs-new awareness** (a re-publish is tagged "Update", labelled "replaces the live
+version", confirm copy adjusts). Card metadata added: SEO description + tag chips.
+
+**E · Gloss pass** — restrained specular sheen + 1px highlight on raised surfaces (auth card,
+panels, KPIs, account/read cards, menu, modal, sheet) and a refined specular + periwinkle glow
+on the primary action. Chrome (rail, scope bar, inputs) stays matte. Pure CSS layered into
+existing `background`/`box-shadow`.
+
+**F · Fix** — the `.acct` platform accent moved from `border-left` to an `overflow`-clipped
+`::before` bar (`--acct-accent` per platform) so it can never break out of the rounded card.
+
+**Needs a backend to finish** — the queued-vs-live **diff** ("what changed") is specced in
+`PORTAL-READ-DIFF-SPEC.md` (a `read-diff` edge function; `verify_jwt`, reuses `GITHUB_TOKEN`,
+read-only). The portal would render it lazily behind a "What changed" disclosure on Update cards.
+
+**Two review-only hooks** live in this design copy and are **dropped in production**:
+`signalIdleWarn()` and `signalReadsDemo()` (seeds the Reads surface so preview/pre-flight/update
+are reviewable without signing in). Intentional, not drift.
+
+**Do not change:** copylock (no copy editing, no unpublish button), the security posture, the
+availability glyph set and per-account logic, one-glow-per-layout, and everything in §6.
+
+---
+
 ## 1 · What changed, and why
 
 Direction 2a is **1c's scope rail plus 1b's briefing header**. The rail is navigation;
