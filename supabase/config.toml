@@ -41,3 +41,8 @@ verify_jwt = false
 # raw response shape, writing nothing to the database.
 [functions.probe]
 verify_jwt = true
+
+# publish-read publishes queued Reads to the aubreynorth repo via the GitHub
+# Contents API. Requires the GITHUB_TOKEN secret.
+[functions.publish-read]
+verify_jwt = true
