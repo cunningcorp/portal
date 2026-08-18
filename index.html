@@ -1517,6 +1517,12 @@ function briefing() {
 
 const LANE_LABEL = { screen:"Screen", type:"Type", business:"Business" };
 
+/* Cached "What changed" diffs, keyed by queue-row id, so a re-render (e.g. publishing
+   another card) doesn't collapse an open disclosure or re-hit read-diff/GitHub. A row's
+   queued markdown and its live file are both stable within a session — copy is locked
+   upstream and a published row loses its disclosure — so the cache needs no invalidation. */
+const readDiffCache = new Map();
+
 function mdPreview(markdown) {
   const body = markdown.replace(/^---[\s\S]*?---\s*/, "");
   const clean = DOMPurify.sanitize(marked.parse(body));
@@ -1563,6 +1569,9 @@ function readsHtml() {
     const issues = preflight(r);
     const ok = issues.length === 0;
     const update = !!(r.published_at || r.commit_sha);   // published before -> this is a re-publish
+    // A diff fetched earlier this session survives re-renders: restore it open and
+    // already-loaded so wireReads doesn't refetch it.
+    const cachedDiff = update ? readDiffCache.get(r.id) : null;
     return `
     <div class="read" data-read="${esc(r.id)}">
       <div class="toprow">
@@ -1578,9 +1587,9 @@ function readsHtml() {
         <summary>Read before publishing</summary>
         <div class="mdprev">${mdPreview(r.markdown)}</div>
       </details>
-      ${update ? `<details class="whatchanged" data-diff="${esc(r.id)}">
+      ${update ? `<details class="whatchanged" data-diff="${esc(r.id)}"${cachedDiff ? ` open data-loaded="1"` : ``}>
         <summary>What changed</summary>
-        <div class="diffbody" data-diffbody><span class="diffnote">Loading…</span></div>
+        <div class="diffbody" data-diffbody>${cachedDiff ?? `<span class="diffnote">Loading…</span>`}</div>
       </details>` : ""}
       <div class="checks">
         ${ok
@@ -1738,8 +1747,16 @@ async function publishRead(id) {
 async function loadReadDiff(details) {
   const id = details.dataset.diff;
   const box = details.querySelector("[data-diffbody]");
+  box.innerHTML = `<span class="diffnote">Loading…</span>`;   // reset, so a retry never shows a stale error
   try {
     const { data:{ session } } = await sb.auth.getSession();
+    // The 66-minute idle logout can lapse a session mid-review; degrade to a clear
+    // prompt instead of throwing on session.access_token.
+    if (!session) {
+      box.innerHTML = `<span class="diffnote err">Your session has expired — sign in again to compare against the live version.</span>`;
+      details.dataset.loaded = "";   // retry once signed back in
+      return;
+    }
     const res = await fetch(`${SUPABASE_URL}/functions/v1/read-diff`, {
       method: "POST",
       headers: {
@@ -1755,7 +1772,9 @@ async function loadReadDiff(details) {
       details.dataset.loaded = "";   // a bad response can be retried by reopening
       return;
     }
-    box.innerHTML = renderReadDiff(body);
+    const html = renderReadDiff(body);
+    readDiffCache.set(id, html);      // survive re-renders; reopen is instant, no refetch
+    box.innerHTML = html;
   } catch (e) {
     box.innerHTML = `<span class="diffnote err">Couldn’t load the diff: ${esc(e.message)}</span>`;
     details.dataset.loaded = "";     // let a reopen retry a transient failure
