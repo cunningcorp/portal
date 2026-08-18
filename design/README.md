@@ -25,10 +25,7 @@ connect flow, idle logout. Single file, no build step. Signed out it shows the a
 correct, since nothing is visible pre-auth. It needs `fonts/` alongside it, which the repo
 has.
 
-This file and the shipped `index.html` are the same page, with **one intentional
-difference**: the prototype keeps the `signalIdleWarn()` console hook so the 66-minute idle
-dialog can be reviewed without waiting. Production drops it. Read that as deliberate, not
-drift.
+This file and the shipped `index.html` share a lineage, but the design copy now **leads `main`**: it adds the post-auth **launcher** (direction 1c), moves **Reads** into its own Aubrey North surface, and carries the Reads review features, the end-to-end gloss pass and the `.acct` accent fix. See `handoff.md` §0 for the full delta Cowork folds into `index.html`. Two review-only hooks live here and are dropped in production — `signalIdleWarn()` and `signalReadsDemo()` — deliberate, not drift.
 
 **`prototypes/directions-1a-1b-1c.html` — the exploration.** The three earlier directions
 side by side (1a Console, 1b Briefing, 1c Board) plus the token sheet rendered visually.
@@ -57,4 +54,4 @@ scheme. §5 of the handoff lists what is still open: the 200-row post cap, mobil
 grid collapse, chart re-instantiation per render, `innerHTML` concatenation, and arrow-key
 roving focus in the profile menu.
 
-Built against `cunningcorp/portal@08d22f7eeb7b`, 17 Aug 2026.
+Built against `cunningcorp/portal@a19cfbc3302c`, 18 Aug 2026. Read `handoff.md` §0 first for the launcher / Reads-surface / polish update; the rest of the package documents the 2a foundation it builds on.
