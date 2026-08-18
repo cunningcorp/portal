@@ -1,0 +1,11 @@
+# GitHub Pages (Jekyll) build configuration.
+#
+# The portal is served from the repo root. The design package under design/ holds
+# the prototypes — and each prototype (signal-2a.html, signal-mobile.html, the
+# 1a/1b/1c explorations) is a *complete, self-contained sign-in surface* with its
+# own Supabase client. Serving them from the live site would mean several sign-in
+# surfaces instead of one. Excluding design/ keeps exactly one — index.html at the
+# root — while the prototypes stay in the repo as design artifacts, just not
+# deployed. (Jekyll already ignores _-prefixed paths like _handoff automatically.)
+exclude:
+  - design
