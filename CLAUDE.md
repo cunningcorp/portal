@@ -30,9 +30,9 @@ pg_cron ───daily──▶ sync-all ──▶ sync-youtube │ sync-instagr
                                        └──▶ platform APIs ──▶ social.* tables
 ```
 
-Everything deployed is mirrored in `supabase/` — eight migrations and nine edge functions,
-extracted verbatim from the live project. Treat those files as the source of truth and
-redeploy from them; do not hand-edit the remote and let the two drift.
+Everything deployed is mirrored in `supabase/` — thirteen migrations and eleven edge
+functions, extracted verbatim from the live project. Treat those files as the source of
+truth and redeploy from them; do not hand-edit the remote and let the two drift.
 
 ---
 
@@ -243,8 +243,8 @@ accordingly. A newly connected platform populates its own tab with no code chang
   connect → probe → fix → sync loop. Supersedes `SETUP.md` where they disagree.
 - `SETUP.md` — schema reference and longer-form background
 - `GO-LIVE.md` — hosting, Squarespace DNS, Pages and Supabase auth
-- `supabase/migrations/` — the eight migrations, in order
-- `supabase/functions/` — all nine functions as deployed
+- `supabase/migrations/` — the thirteen migrations, in order
+- `supabase/functions/` — all eleven functions as deployed
 - `CREDENTIALS.md` — the three developer consoles and the connect → probe → fix loop
 - `probe` — read-only diagnostic; returns raw API payloads, writes nothing. Use it before
   trusting any parser.
