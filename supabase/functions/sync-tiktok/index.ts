@@ -70,6 +70,17 @@ async function deriveDaily(sb: any, accountId: string) {
   if (!data || data.length < 2) return 0;
 
   const [curr, prev] = data;
+  // Only attribute movement to a single day when the two snapshots are consecutive.
+  // A missed sync leaves a multi-day gap; recording the whole delta against one day
+  // would invent a spike and dividing it would interpolate -- both break the product's
+  // "a gap is absence, not zero" rule (the spanGaps:false decision), so leave the gap
+  // as a hole instead (CLAUDE.md rough edge 5).
+  const gapDays = Math.round(
+    (new Date(`${curr.captured_on}T00:00:00Z`).getTime() -
+      new Date(`${prev.captured_on}T00:00:00Z`).getTime()) / 86_400_000,
+  );
+  if (gapDays !== 1) return 0;
+
   const rows = [
     ["followers_gained", (curr.followers ?? 0) - (prev.followers ?? 0)],
     ["views", (curr.total_views ?? 0) - (prev.total_views ?? 0)],

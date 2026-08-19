@@ -36,9 +36,9 @@ const MEDIA_FIELDS = [
 
 const unix = (d: string) => Math.floor(new Date(`${d}T00:00:00Z`).getTime() / 1000);
 
-async function tryFetch(url: string, label: string) {
+async function tryFetch(url: string, label: string, init?: RequestInit) {
   try {
-    return await fetchJson(url);
+    return await fetchJson(url, init);
   } catch (e) {
     // Meta retires metrics without warning. A single dead metric should cost us
     // that metric, not the whole run.
@@ -103,10 +103,12 @@ async function syncAccount(sb: any, account: Account) {
   let rows = 0;
   try {
     const token = await accessToken(sb, account);
-    const auth = `access_token=${token}`;
+    // Pass the token as a Bearer header, not a query param, so it can't leak into
+    // proxy/platform request logs (CLAUDE.md rough edge 6).
+    const AUTH = { headers: { Authorization: `Bearer ${token}` } };
 
     // --- 1. Profile ---------------------------------------------------------
-    const me = await fetchJson(`${GRAPH}/me?fields=${PROFILE_FIELDS}&${auth}`);
+    const me = await fetchJson(`${GRAPH}/me?fields=${PROFILE_FIELDS}`, AUTH);
 
     await sb.from("account_snapshots").upsert({
       account_id: account.id,
@@ -132,8 +134,8 @@ async function syncAccount(sb: any, account: Account) {
     // --- 2. Time-series insights -------------------------------------------
     // `reach` is one of the few account metrics that still supports time_series.
     const ts = await tryFetch(
-      `${GRAPH}/${id}/insights?metric=reach&period=day&metric_type=time_series&since=${since}&until=${until}&${auth}`,
-      "reach time_series",
+      `${GRAPH}/${id}/insights?metric=reach&period=day&metric_type=time_series&since=${since}&until=${until}`,
+      "reach time_series", AUTH,
     );
     const tsRows: any[] = [];
     for (const m of ts?.data ?? []) {
@@ -162,8 +164,8 @@ async function syncAccount(sb: any, account: Account) {
     const totalRows: any[] = [];
     for (const [metric, stored] of Object.entries(TOTALS)) {
       const r = await tryFetch(
-        `${GRAPH}/${id}/insights?metric=${metric}&metric_type=total_value&period=day&since=${since}&until=${until}&${auth}`,
-        `${metric} total_value`,
+        `${GRAPH}/${id}/insights?metric=${metric}&metric_type=total_value&period=day&since=${since}&until=${until}`,
+        `${metric} total_value`, AUTH,
       );
       const value = r?.data?.[0]?.total_value?.value;
       if (typeof value === "number") totalRows.push(dailyRow(account.id, today(), stored, value));
@@ -173,8 +175,8 @@ async function syncAccount(sb: any, account: Account) {
     // --- 4. Follows and unfollows ------------------------------------------
     // Replaces the old follower_count metric, which no longer exists on this API.
     const fu = await tryFetch(
-      `${GRAPH}/${id}/insights?metric=follows_and_unfollows&metric_type=total_value&breakdown=follow_type&period=day&since=${since}&until=${until}&${auth}`,
-      "follows_and_unfollows",
+      `${GRAPH}/${id}/insights?metric=follows_and_unfollows&metric_type=total_value&breakdown=follow_type&period=day&since=${since}&until=${until}`,
+      "follows_and_unfollows", AUTH,
     );
     const breakdown = fu?.data?.[0]?.total_value?.breakdowns?.[0]?.results ?? [];
     const fuRows: any[] = [];
@@ -187,7 +189,7 @@ async function syncAccount(sb: any, account: Account) {
     rows += await writeDaily(sb, fuRows);
 
     // --- 5. Media and per-media insights ------------------------------------
-    const media = await tryFetch(`${GRAPH}/${id}/media?fields=${MEDIA_FIELDS}&limit=40&${auth}`, "media list");
+    const media = await tryFetch(`${GRAPH}/${id}/media?fields=${MEDIA_FIELDS}&limit=40`, "media list", AUTH);
 
     for (const m of media?.data ?? []) {
       const productType = String(m.media_product_type ?? m.media_type ?? "").toUpperCase();
@@ -207,7 +209,7 @@ async function syncAccount(sb: any, account: Account) {
       const metrics = productType === "STORY"
         ? "views,reach,replies"
         : "views,reach,likes,comments,shares,saved,total_interactions";
-      const ins = await tryFetch(`${GRAPH}/${m.id}/insights?metric=${metrics}&${auth}`, `media insights ${m.id}`);
+      const ins = await tryFetch(`${GRAPH}/${m.id}/insights?metric=${metrics}`, `media insights ${m.id}`, AUTH);
 
       const bag: Record<string, number> = {};
       for (const row of ins?.data ?? []) {

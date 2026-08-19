@@ -29,9 +29,9 @@ import {
 const V = Deno.env.get("META_API_VERSION") ?? "v25.0";
 const GRAPH = `https://graph.facebook.com/${V}`;
 
-async function tryFetch(url: string, label: string) {
+async function tryFetch(url: string, label: string, init?: RequestInit) {
   try {
-    return await fetchJson(url);
+    return await fetchJson(url, init);
   } catch (e) {
     console.warn(`[meta] ${label} failed: ${e}`);
     return null;
@@ -72,9 +72,13 @@ async function writeDaily(sb: any, rows: any[]) {
 async function syncInstagram(sb: any, account: Account, token: string) {
   let rows = 0;
   const id = account.external_id;
+  // Bearer header, not a query param, so the token can't leak into request logs
+  // (CLAUDE.md rough edge 6).
+  const AUTH = { headers: { Authorization: `Bearer ${token}` } };
 
   const prof = await fetchJson(
-    `${GRAPH}/${id}?fields=username,name,profile_picture_url,followers_count,follows_count,media_count&access_token=${token}`,
+    `${GRAPH}/${id}?fields=username,name,profile_picture_url,followers_count,follows_count,media_count`,
+    AUTH,
   );
 
   await sb.from("account_snapshots").upsert({
@@ -98,15 +102,15 @@ async function syncInstagram(sb: any, account: Account, token: string) {
   const until = unix(today());
 
   const ts = await tryFetch(
-    `${GRAPH}/${id}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${token}`,
-    `ig timeseries ${id}`,
+    `${GRAPH}/${id}/insights?metric=reach&period=day&since=${since}&until=${until}`,
+    `ig timeseries ${id}`, AUTH,
   );
   if (ts) rows += await writeDaily(sb, foldTimeseries(account.id, ts));
 
   for (const metric of ["views", "accounts_engaged", "total_interactions"]) {
     const tv = await tryFetch(
-      `${GRAPH}/${id}/insights?metric=${metric}&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${token}`,
-      `ig ${metric} ${id}`,
+      `${GRAPH}/${id}/insights?metric=${metric}&metric_type=total_value&period=day&since=${since}&until=${until}`,
+      `ig ${metric} ${id}`, AUTH,
     );
     const total = tv?.data?.[0]?.total_value?.value;
     if (typeof total === "number") {
@@ -121,8 +125,8 @@ async function syncInstagram(sb: any, account: Account, token: string) {
   }
 
   const media = await tryFetch(
-    `${GRAPH}/${id}/media?fields=id,caption,media_type,media_product_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count&limit=40&access_token=${token}`,
-    `ig media ${id}`,
+    `${GRAPH}/${id}/media?fields=id,caption,media_type,media_product_type,permalink,thumbnail_url,media_url,timestamp,like_count,comments_count&limit=40`,
+    `ig media ${id}`, AUTH,
   );
 
   for (const m of media?.data ?? []) {
@@ -143,8 +147,8 @@ async function syncInstagram(sb: any, account: Account, token: string) {
       ? "views,reach,replies"
       : "views,reach,likes,comments,shares,saved,total_interactions";
     const ins = await tryFetch(
-      `${GRAPH}/${m.id}/insights?metric=${metrics}&access_token=${token}`,
-      `ig media insights ${m.id}`,
+      `${GRAPH}/${m.id}/insights?metric=${metrics}`,
+      `ig media insights ${m.id}`, AUTH,
     );
     const bag: Record<string, number> = {};
     for (const row of ins?.data ?? []) bag[row.name] = Number(row.values?.[0]?.value ?? 0);
@@ -169,9 +173,12 @@ async function syncInstagram(sb: any, account: Account, token: string) {
 async function syncFacebook(sb: any, account: Account, token: string) {
   let rows = 0;
   const id = account.external_id;
+  // Bearer header, not a query param (CLAUDE.md rough edge 6).
+  const AUTH = { headers: { Authorization: `Bearer ${token}` } };
 
   const page = await fetchJson(
-    `${GRAPH}/${id}?fields=name,username,link,followers_count,fan_count,picture.type(large)&access_token=${token}`,
+    `${GRAPH}/${id}?fields=name,username,link,followers_count,fan_count,picture.type(large)`,
+    AUTH,
   );
 
   await sb.from("account_snapshots").upsert({
@@ -193,8 +200,8 @@ async function syncFacebook(sb: any, account: Account, token: string) {
   const until = unix(today());
 
   const ins = await tryFetch(
-    `${GRAPH}/${id}/insights?metric=page_impressions_unique,page_post_engagements,page_video_views,page_fan_adds&period=day&since=${since}&until=${until}&access_token=${token}`,
-    `fb insights ${id}`,
+    `${GRAPH}/${id}/insights?metric=page_impressions_unique,page_post_engagements,page_video_views,page_fan_adds&period=day&since=${since}&until=${until}`,
+    `fb insights ${id}`, AUTH,
   );
   if (ins) {
     rows += await writeDaily(sb, foldTimeseries(account.id, ins, {
@@ -206,8 +213,8 @@ async function syncFacebook(sb: any, account: Account, token: string) {
   }
 
   const posts = await tryFetch(
-    `${GRAPH}/${id}/posts?fields=id,message,permalink_url,created_time,full_picture,shares,likes.summary(true).limit(0),comments.summary(true).limit(0)&limit=30&access_token=${token}`,
-    `fb posts ${id}`,
+    `${GRAPH}/${id}/posts?fields=id,message,permalink_url,created_time,full_picture,shares,likes.summary(true).limit(0),comments.summary(true).limit(0)&limit=30`,
+    `fb posts ${id}`, AUTH,
   );
 
   for (const p of posts?.data ?? []) {
@@ -224,8 +231,8 @@ async function syncFacebook(sb: any, account: Account, token: string) {
     if (!post) continue;
 
     const pin = await tryFetch(
-      `${GRAPH}/${p.id}/insights?metric=post_impressions_unique,post_video_views&access_token=${token}`,
-      `fb post insights ${p.id}`,
+      `${GRAPH}/${p.id}/insights?metric=post_impressions_unique,post_video_views`,
+      `fb post insights ${p.id}`, AUTH,
     );
     const bag: Record<string, number> = {};
     for (const row of pin?.data ?? []) bag[row.name] = Number(row.values?.[0]?.value ?? 0);

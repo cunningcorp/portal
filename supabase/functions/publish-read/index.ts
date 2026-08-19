@@ -17,6 +17,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { encodeBase64 } from "jsr:@std/encoding/base64";
 
 const REPO = "cunningcorp/aubreynorth";
 const BRANCH = "main";
@@ -141,7 +142,7 @@ Deno.serve(async (req: Request) => {
     body: JSON.stringify({
       message: `Publish Read: ${row.title}`,
       branch: BRANCH,
-      content: btoa(String.fromCharCode(...new TextEncoder().encode(finalMarkdown))),
+      content: encodeBase64(new TextEncoder().encode(finalMarkdown)),
       ...(existingSha ? { sha: existingSha } : {}),
     }),
   });
