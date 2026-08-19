@@ -20,7 +20,9 @@ import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js@2";
 const META_V = Deno.env.get("META_API_VERSION") ?? "v25.0";
 
 const CORS = {
-  "Access-Control-Allow-Origin": "*",
+  // Locked to the portal origin -- probe returns raw upstream payloads (tokens are
+  // masked, but real account/profile data is not), so don't expose them cross-origin.
+  "Access-Control-Allow-Origin": "https://portal.cunningcorp.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 

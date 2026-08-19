@@ -10,6 +10,16 @@ import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 const META_V = Deno.env.get("META_API_VERSION") ?? "v25.0";
 
+// Post-connect landing is restricted to the portal's own origin so a tampered
+// oauth_states.redirect_to can't turn the OAuth flow into an open redirect.
+// Anything else falls through to the built-in success page below.
+const ALLOWED_REDIRECT_ORIGIN = "https://portal.cunningcorp.com";
+function safeRedirect(target: string | null | undefined): string | null {
+  if (!target) return null;
+  try { return new URL(target).origin === ALLOWED_REDIRECT_ORIGIN ? target : null; }
+  catch { return null; }
+}
+
 function sb(): SupabaseClient {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -295,20 +305,21 @@ Deno.serve(async (req: Request) => {
 
   const db = sb();
 
-  const { data: st } = await db
+  // Claim the state atomically: the conditional update both consumes it and returns
+  // the row, so two concurrent callbacks can't both pass an unconsumed check (TOCTOU).
+  const { data: claimedStates } = await db
     .from("oauth_states")
-    .select("*")
+    .update({ consumed_at: new Date().toISOString() })
     .eq("state", state)
     .is("consumed_at", null)
     .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
+    .select("*");
+  const st = claimedStates?.[0];
 
   if (!st) {
     return page("Expired or invalid link",
       text("That connect link has already been used or has expired. Start again from the portal."), false);
   }
-
-  await db.from("oauth_states").update({ consumed_at: new Date().toISOString() }).eq("state", state);
 
   const redirectUri = `${Deno.env.get("SUPABASE_URL")}/functions/v1/oauth-callback`;
 
@@ -320,10 +331,11 @@ Deno.serve(async (req: Request) => {
     else if (st.platform === "tiktok")    connected = await connectTikTok(db, code, redirectUri);
     else throw new Error(`unknown platform ${st.platform}`);
 
-    if (st.redirect_to) {
+    const dest = safeRedirect(st.redirect_to);
+    if (dest) {
       return new Response(null, {
         status: 302,
-        headers: { Location: `${st.redirect_to}#connected=${connected.length}` },
+        headers: { Location: `${dest}#connected=${connected.length}` },
       });
     }
 

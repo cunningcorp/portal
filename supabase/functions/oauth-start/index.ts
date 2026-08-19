@@ -23,7 +23,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const CORS = {
-  "Access-Control-Allow-Origin": "*",
+  // Locked to the portal origin, consistent with publish-read/read-diff.
+  "Access-Control-Allow-Origin": "https://portal.cunningcorp.com",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
