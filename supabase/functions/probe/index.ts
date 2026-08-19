@@ -192,43 +192,49 @@ Deno.serve(async (req: Request) => {
     if (platform === "instagram" && igLogin) {
       // Business Login for Instagram -- graph.instagram.com, Instagram User token.
       const t = cred.access_token;
+      // Bearer header, not a query param (CLAUDE.md rough edge 6).
+      const auth = { headers: { Authorization: `Bearer ${t}` } };
       const G = `https://graph.instagram.com/${META_V}`;
       const since = unix(daysAgo(14)), until = unix(today());
       const id = (cred.extra as any)?.ig_user_id ?? acct.external_id;
       calls = [
-        { label: "me (profile)", url: `${G}/me?fields=user_id,username,name,account_type,profile_picture_url,followers_count,follows_count,media_count&access_token=${t}`,
+        { label: "me (profile)", url: `${G}/me?fields=user_id,username,name,account_type,profile_picture_url,followers_count,follows_count,media_count`, init: auth,
           note: "account_type must be BUSINESS or CREATOR for insights to exist at all" },
-        { label: "insights reach (time_series)", url: `${G}/${id}/insights?metric=reach&period=day&metric_type=time_series&since=${since}&until=${until}&access_token=${t}`,
+        { label: "insights reach (time_series)", url: `${G}/${id}/insights?metric=reach&period=day&metric_type=time_series&since=${since}&until=${until}`, init: auth,
           note: "one of the few account metrics that still supports time_series" },
-        { label: "insights views (total_value)", url: `${G}/${id}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}&access_token=${t}`,
+        { label: "insights views (total_value)", url: `${G}/${id}/insights?metric=views&metric_type=total_value&period=day&since=${since}&until=${until}`, init: auth,
           note: "views replaced impressions across all versions from 21 Apr 2025" },
-        { label: "insights follows_and_unfollows", url: `${G}/${id}/insights?metric=follows_and_unfollows&metric_type=total_value&breakdown=follow_type&period=day&since=${since}&until=${until}&access_token=${t}`,
+        { label: "insights follows_and_unfollows", url: `${G}/${id}/insights?metric=follows_and_unfollows&metric_type=total_value&breakdown=follow_type&period=day&since=${since}&until=${until}`, init: auth,
           note: "replaces the old follower_count metric; needs 100+ followers or it returns nothing" },
-        { label: "media", url: `${G}/${id}/media?fields=id,caption,media_type,media_product_type,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=3&access_token=${t}` },
+        { label: "media", url: `${G}/${id}/media?fields=id,caption,media_type,media_product_type,permalink,thumbnail_url,timestamp,like_count,comments_count&limit=3`, init: auth },
       ];
     }
 
     if (platform === "instagram" && !igLogin) {
       // Page-linked Instagram -- graph.facebook.com, Page token.
       const t = cred.access_token;
+      // Bearer header, not a query param (CLAUDE.md rough edge 6).
+      const auth = { headers: { Authorization: `Bearer ${t}` } };
       const G = `https://graph.facebook.com/${META_V}`;
       const since = unix(daysAgo(14)), until = unix(today());
       calls = [
-        { label: "ig profile (via Page token)", url: `${G}/${acct.external_id}?fields=username,name,followers_count,follows_count,media_count&access_token=${t}` },
-        { label: "ig insights reach", url: `${G}/${acct.external_id}/insights?metric=reach&period=day&since=${since}&until=${until}&access_token=${t}` },
-        { label: "ig media", url: `${G}/${acct.external_id}/media?fields=id,caption,media_product_type,permalink,timestamp,like_count,comments_count&limit=3&access_token=${t}` },
+        { label: "ig profile (via Page token)", url: `${G}/${acct.external_id}?fields=username,name,followers_count,follows_count,media_count`, init: auth },
+        { label: "ig insights reach", url: `${G}/${acct.external_id}/insights?metric=reach&period=day&since=${since}&until=${until}`, init: auth },
+        { label: "ig media", url: `${G}/${acct.external_id}/media?fields=id,caption,media_product_type,permalink,timestamp,like_count,comments_count&limit=3`, init: auth },
       ];
     }
 
     if (platform === "facebook") {
       const t = cred.access_token;
+      // Bearer header, not a query param (CLAUDE.md rough edge 6).
+      const auth = { headers: { Authorization: `Bearer ${t}` } };
       const G = `https://graph.facebook.com/${META_V}`;
       const since = unix(daysAgo(14)), until = unix(today());
       calls = [
-        { label: "page fields", url: `${G}/${acct.external_id}?fields=name,username,link,followers_count,fan_count&access_token=${t}` },
-        { label: "page insights", url: `${G}/${acct.external_id}/insights?metric=page_impressions_unique,page_post_engagements,page_video_views,page_fan_adds&period=day&since=${since}&until=${until}&access_token=${t}`,
+        { label: "page fields", url: `${G}/${acct.external_id}?fields=name,username,link,followers_count,fan_count`, init: auth },
+        { label: "page insights", url: `${G}/${acct.external_id}/insights?metric=page_impressions_unique,page_post_engagements,page_video_views,page_fan_adds&period=day&since=${since}&until=${until}`, init: auth,
           note: "Meta has retired many Page metrics; any that error here should come out of the collector's list" },
-        { label: "page posts", url: `${G}/${acct.external_id}/posts?fields=id,message,permalink_url,created_time,shares,likes.summary(true).limit(0),comments.summary(true).limit(0)&limit=3&access_token=${t}` },
+        { label: "page posts", url: `${G}/${acct.external_id}/posts?fields=id,message,permalink_url,created_time,shares,likes.summary(true).limit(0),comments.summary(true).limit(0)&limit=3`, init: auth },
       ];
     }
 
