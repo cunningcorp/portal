@@ -64,6 +64,54 @@ function rewriteFrontmatter(markdown: string): { out: string; error?: string } {
   return { out: markdown.slice(0, m.index) + `---\n${fm}\n---` + markdown.slice(m.index + m[0].length) };
 }
 
+// Hype words banned by VOICE-RULES.md. This is the server-side enforcement copy of
+// that list; keep the two in step. Word-boundary, case-insensitive; "leverage" only
+// as a verb is hard to detect cheaply, so it is flagged wherever it appears.
+const HYPE = [
+  "revolutionary", "game-changing", "game changer", "unleash", "unlock", "supercharge",
+  "turbocharge", "disrupt", "disruptive", "cutting-edge", "next-level", "world-class",
+  "seamless", "effortless", "mind-blowing", "jaw-dropping", "best-in-class", "paradigm",
+  "synergy", "leverage", "delve", "elevate", "empower",
+];
+
+function bodyOf(markdown: string): string {
+  const m = /^---\r?\n[\s\S]*?\r?\n---/.exec(markdown);
+  return m ? markdown.slice(m.index + m[0].length) : markdown;
+}
+
+/**
+ * The six voice checks (READS-EDITOR-DESIGN) + the "all suggestions reviewed" gate,
+ * run server-side so a bad payload cannot be forced past the UI. Returns a list of
+ * human-readable failures; empty means it passes.
+ */
+function contentFailures(row: {
+  title?: string; description?: string; markdown: string;
+  suggestions?: unknown; lane?: string;
+}): string[] {
+  const out: string[] = [];
+  const body = bodyOf(row.markdown);
+  const all = `${row.title ?? ""}\n${row.description ?? ""}\n${body}`;
+
+  if (all.includes("!")) out.push("contains an exclamation mark (title, description, or body)");
+
+  const hits = HYPE.filter((w) => new RegExp(`\\b${w.replace(/[-\s]/g, "[-\\s]")}\\b`, "i").test(all));
+  if (hits.length) out.push(`hype words present: ${hits.join(", ")}`);
+
+  const h2 = (body.match(/^##\s+\S/gm) ?? []).length;
+  if (h2 < 2 || h2 > 4) out.push(`body has ${h2} H2 headings; must be 2-4`);
+
+  const links = [...body.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1].trim());
+  const leaked = links.filter((u) => /claude\.ai|localhost|anthropic\.com/i.test(u));
+  if (leaked.length) out.push(`non-public link(s) in body: ${leaked.join(", ")}`);
+  const badInternal = links.filter((u) => /^reads\//i.test(u));
+  if (badInternal.length) out.push(`internal link(s) not root-relative (need a leading /): ${badInternal.join(", ")}`);
+
+  const sugg = Array.isArray(row.suggestions) ? row.suggestions : [];
+  if (sugg.length) out.push(`${sugg.length} unreviewed fix suggestion(s) — accept or reject them first`);
+
+  return out;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -113,6 +161,16 @@ Deno.serve(async (req: Request) => {
   if (!(["screen", "type", "business"].includes(row.lane))) return fail(`lane '${row.lane}' invalid`);
   const dlen = (row.description ?? "").length;
   if (dlen < 140 || dlen > 160) return fail(`description is ${dlen} chars; must be 140-160`);
+
+  // Business safety gate: an automated named-brand Read cannot go live until the
+  // sources have been reviewed and ticked. This is the backstop for the lane.
+  if (row.lane === "business" && row.sources_checked !== true) {
+    return fail("Business Read requires the sources to be checked before publishing");
+  }
+
+  // The voice checks, enforced server-side (not just in the editor UI).
+  const probs = contentFailures(row);
+  if (probs.length) return fail(`cannot publish: ${probs.join("; ")}`);
 
   const { out: finalMarkdown, error: fmErr } = rewriteFrontmatter(row.markdown);
   if (fmErr) return fail(fmErr);

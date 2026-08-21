@@ -832,6 +832,116 @@ td.t a:hover{color:var(--brand-gold-soft)}
   .empty h3{margin:0 0 var(--space-2);font-family:var(--font-head);font-weight:300;color:var(--text-secondary);font-size:1.05rem}
   .connectrow{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-4)}
 }
+/* ============================ reads editor (v2) ============================
+   Triage columns + the editor surface. Reuses the portal tokens throughout; the
+   only site-specific colours (paper/ink/rust) are scoped to .anprev, the preview
+   panel, because that panel deliberately mimics aubreynorth.com. */
+.lanechips{display:flex;gap:var(--space-2);margin:0 0 var(--space-4);flex-wrap:wrap}
+.lanechip{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--text-tertiary);border:1px solid var(--border-default);background:none;
+  border-radius:var(--radius-pill);padding:.3rem .8rem;cursor:pointer}
+.lanechip[aria-pressed="true"]{color:var(--text-primary);border-color:var(--border-strong);background:var(--surface-overlay)}
+.triage{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4);align-items:start}
+.tcol{background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--space-4);min-width:0}
+.tcol>h3{margin:0 0 var(--space-3);font-family:var(--font-head);font-weight:400;font-size:var(--text-body);
+  display:flex;align-items:center;gap:var(--space-2)}
+.tcol>h3 .n{margin-left:auto;font-size:var(--text-micro);color:var(--text-tertiary);font-family:inherit}
+.tcol.draft>h3{color:var(--text-tertiary)} .tcol.in_review>h3{color:var(--state-progress)}
+.tcol.ready>h3{color:var(--state-positive)} .tcol.published>h3{color:var(--brand-gold-soft)}
+.tcard{width:100%;text-align:left;background:var(--surface-overlay);border:1px solid var(--border-default);
+  border-radius:var(--radius-md);padding:var(--space-3);margin-bottom:var(--space-2);cursor:pointer;
+  display:block;transition:border-color var(--dur-fast)}
+.tcard:hover{border-color:var(--border-strong)}
+.tcard .lane{font-size:var(--text-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--brand-terracotta)}
+.tcard .ttl{display:block;font-family:var(--font-head);font-weight:300;font-size:1.05rem;color:var(--text-primary);margin:2px 0}
+.tcard .meta{font-size:var(--text-micro);color:var(--text-tertiary)}
+.tcard .flags{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+.tflag{font-size:var(--text-micro);border-radius:var(--radius-pill);padding:2px 8px;border:1px solid var(--border-default)}
+.tflag.fix{color:var(--state-progress);border-color:var(--state-progress)}
+.tflag.src{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.tcol .empty{font-size:var(--text-micro);color:var(--text-tertiary);padding:var(--space-2) 0}
+.tcard.pub{cursor:default} .tcard.pub a{color:var(--text-primary);text-decoration:none} .tcard.pub a:hover{color:var(--brand-gold-soft)}
+
+/* editor */
+.edhead{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap}
+.edhead .back{background:none;border:0;color:var(--text-secondary);cursor:pointer;font:inherit;font-size:var(--text-label)}
+.edstatus{font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;border-radius:var(--radius-pill);
+  padding:3px 10px;border:1px solid var(--border-default);color:var(--text-tertiary)}
+.edstatus.in_review{color:var(--state-progress);border-color:var(--state-progress)}
+.edstatus.ready{color:var(--state-positive);border-color:rgba(200,162,76,.5)}
+.edsaved{font-size:var(--text-micro);color:var(--text-tertiary)}
+.edhead .grow{flex:1}
+.editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--space-4);align-items:start}
+.edcard{background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-4)}
+.edcard h3{margin:0 0 var(--space-3);font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary)}
+.edfield{margin-bottom:var(--space-3)}
+.edfield label{display:block;font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary);margin-bottom:4px}
+.edfield input{width:100%;background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);padding:.55rem .7rem;font:inherit}
+.edfield input.big{font-family:var(--font-head);font-weight:300;font-size:1.2rem}
+.cc{font-size:var(--text-micro);color:var(--text-tertiary);margin-top:3px}
+.cc.ok{color:var(--brand-gold)} .cc.bad{color:var(--state-negative)}
+.btoolbar{display:flex;gap:var(--space-2);margin-bottom:var(--space-3)}
+.btoolbar button{background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-secondary);padding:.35rem .7rem;font:inherit;font-size:var(--text-label);cursor:pointer}
+.btoolbar button:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.bblock{border:0;border-left:2px solid transparent;background:none;color:var(--text-primary);
+  font:inherit;line-height:1.6;padding:.2rem 0 .2rem var(--space-3);margin:0 0 var(--space-2);outline:none;white-space:pre-wrap;word-break:break-word}
+.bblock:focus{border-left-color:var(--state-progress)}
+.bblock.h2{font-family:var(--font-head);font-weight:400;font-size:1.15rem;color:var(--text-primary)}
+/* rich marks inside a block (Route A WYSIWYG) */
+.bblock strong,.bblock b{font-weight:600;color:var(--text-primary)}
+.bblock a{color:var(--brand-gold-soft);text-decoration:underline;text-underline-offset:2px}
+.bblock code{font-family:ui-monospace,monospace;font-size:.9em;background:var(--surface-sunken);padding:1px 4px;border-radius:4px}
+.suggestbtn{margin-top:var(--space-2);background:none;border:1px solid var(--state-progress);color:var(--state-progress);
+  border-radius:var(--radius-pill);padding:.3rem .8rem;font:inherit;font-size:var(--text-micro);cursor:pointer}
+.suggestbtn:disabled{opacity:.4;cursor:default;border-color:var(--border-default);color:var(--text-tertiary)}
+
+/* suggestion stepper */
+.stepper{border:1px solid var(--state-progress);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-4);background:var(--surface-raised)}
+.stepper .top{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--state-progress);margin-bottom:var(--space-3)}
+.stepper .top .n{margin-left:auto;color:var(--text-tertiary)}
+.sug-o{color:var(--text-tertiary);text-decoration:line-through;text-decoration-color:var(--brand-terracotta);margin-bottom:var(--space-2);line-height:1.55}
+.sug-s{color:var(--text-primary);line-height:1.55}
+.sug-s .lab,.sug-o .lab{display:block;font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.sug-s .lab{color:var(--brand-gold)} .sug-o .lab{color:var(--text-tertiary)}
+.sug-reason{font-size:var(--text-micro);color:var(--text-tertiary);margin:var(--space-2) 0 var(--space-3);font-style:italic}
+.stepacts{display:flex;gap:var(--space-2)}
+
+/* before-publish checks + sources */
+.pchecks{display:flex;flex-direction:column;gap:6px}
+.pchk{font-size:var(--text-label);display:flex;align-items:flex-start;gap:8px;color:var(--text-secondary)}
+.pchk .dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:5px;background:var(--state-negative)}
+.pchk.ok .dot{background:var(--state-positive)}
+.srcrow{display:flex;gap:var(--space-2);align-items:baseline;padding:var(--space-2) 0;border-top:1px solid var(--border-subtle);font-size:var(--text-label)}
+.srcrow a{color:var(--brand-terracotta)}
+.srctoggle{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3);font-size:var(--text-label);color:var(--text-secondary);cursor:pointer}
+.srcpanel{border-color:var(--brand-terracotta)}
+
+/* preview panel — deliberately the aubreynorth.com look (scoped site values) */
+.anprev{background:#F6F3EC;border-radius:var(--radius-md);padding:var(--space-5);color:#22201C;max-width:100%;overflow:hidden}
+.anprev .eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#B24A2B;margin-bottom:var(--space-2)}
+.anprev h1{font-family:var(--font-head);font-weight:300;font-size:1.7rem;line-height:1.15;color:#22201C;margin:0 0 var(--space-3)}
+.anprev h2{font-family:var(--font-head);font-weight:400;font-size:1.2rem;color:#22201C;margin:var(--space-4) 0 var(--space-2)}
+.anprev p{line-height:1.7;margin:0 0 var(--space-3);max-width:68ch}
+.anprev strong{color:#000;font-weight:600}
+.anprev a{color:#B24A2B;text-decoration:underline}
+.anprev blockquote{border-left:2px solid #B24A2B;margin:0 0 var(--space-3);padding-left:var(--space-3);color:#4a463f}
+.anprev ul{margin:0 0 var(--space-3) var(--space-4);line-height:1.7}
+
+/* inline link popover (replaces window.prompt on the Link toolbar button) */
+.linkpop{margin-top:var(--space-2);background:var(--surface-sunken);border:1px solid var(--border-default);
+  border-radius:var(--radius-md);padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)}
+.linkpop label{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary)}
+.linkpop input{background:var(--surface-base);border:1px solid var(--border-default);border-radius:var(--radius-md);
+  color:var(--text-primary);padding:.5rem .6rem;font:inherit}
+.linkpop .row{display:flex;gap:var(--space-2);justify-content:flex-end}
+
+@media(max-width:900px){
+  .triage{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .editor{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:720px){
+  .triage{grid-template-columns:minmax(0,1fr)}
+}
 </style>
 </head>
 <body>
@@ -1255,22 +1365,541 @@ function readsSkeleton() {
     <div class="sk line" style="width:55%"></div>
     <div class="sk block" style="height:120px;margin-top:16px"></div></div>`;
 }
+/* ============================ reads editor (v2) ============================
+   The Reads surface is now an editor. Triage (status columns + lane filter) is the
+   default; opening a Read swaps in the editor. Writes go through the authenticated
+   UPDATE policy (content + status draft|in_review|ready only); Publish stays the
+   edge function's job. See PORTAL-EDITOR-SPEC / READS-EDITOR-DESIGN. */
+let EDIT = null;      // reads_queue id being edited, or null (triage)
+let DRAFT = null;     // working copy of the row being edited
+let LANEF = "all";    // triage lane filter
+let STEP = 0;         // suggestion stepper index
+
+const bodyMd = (md) => {
+  const m = /^---\r?\n[\s\S]*?\r?\n---/.exec(md ?? "");
+  return m ? (md.slice(m.index + m[0].length)).replace(/^\s*\n/, "") : (md ?? "");
+};
+
 function renderReadsSurface() {
   const ready = (DATA.reads ?? []).filter((r) => ["ready","failed","publishing"].includes(r.status)).length;
-  $("#readsCount").textContent = DATA.reads === null ? "queue unavailable" : (ready ? `${ready} waiting` : "queue clear");
-  $("#readsView").innerHTML = LOADING ? readsSkeleton() : readsHtml();
-  if (!LOADING) wireReads();
+  $("#readsCount").textContent = DATA.reads === null ? "queue unavailable" : (ready ? `${ready} ready` : "queue clear");
+  const v = $("#readsView");
+  if (LOADING) { v.innerHTML = readsSkeleton(); return; }
+  if (DATA.reads === null) {
+    v.innerHTML = `<div class="panel"><div class="empty"><h3>The queue could not be read</h3>
+      <div>Reload to try again. If it persists, the reads_queue table or its read policy is the place to look.</div>
+      <div class="connectrow"><button class="btn" data-retry>Reload</button></div></div></div>`;
+    v.querySelector("[data-retry]")?.addEventListener("click", load);
+    return;
+  }
+  if (EDIT && !(DATA.reads ?? []).some((r) => r.id === EDIT)) { EDIT = null; DRAFT = null; }
+  if (EDIT && DRAFT) { v.innerHTML = editorHtml(); wireEditor(); }
+  else { v.innerHTML = triageHtml(); wireTriage(); }
 }
-function wireReads() {
-  $$("#readsView [data-publish]").forEach((b) => b.onclick = () => publishRead(b.dataset.publish));
-  $("#readsView [data-retry]")?.addEventListener("click", load);
-  // "What changed" is lazy: the read-diff call (a GitHub round-trip) fires only when a
-  // reviewer opens the disclosure, and only once per card.
-  $$("#readsView details.whatchanged").forEach((d) => {
-    d.addEventListener("toggle", () => {
-      if (d.open && !d.dataset.loaded) { d.dataset.loaded = "1"; loadReadDiff(d); }
+
+/* ---- triage ---- */
+function triageHtml() {
+  const all = DATA.reads ?? [];
+  const laneOk = (r) => LANEF === "all" || r.lane === LANEF;
+  const chips = ["all","screen","type","business"]
+    .map((l) => `<button class="lanechip" data-lane="${l}" aria-pressed="${LANEF===l}">${l==="all"?"All":LANE_LABEL[l]}</button>`).join("");
+  const cols = [["draft","Draft"],["in_review","In review"],["ready","Ready"],["published","Published"]];
+  const col = ([st,label]) => {
+    let rows = st === "ready"
+      ? all.filter((r) => ["ready","publishing","failed"].includes(r.status) && laneOk(r))
+      : all.filter((r) => r.status === st && laneOk(r));
+    rows = st === "published"
+      ? rows.sort((a,b) => (b.published_at ?? "").localeCompare(a.published_at ?? ""))
+      : rows.sort((a,b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+    const body = rows.length
+      ? rows.map((r) => st === "published" ? pubCard(r) : triageCard(r)).join("")
+      : `<div class="empty">—</div>`;
+    return `<div class="tcol ${st}"><h3>${label}<span class="n">${rows.length}</span></h3>${body}</div>`;
+  };
+  return `<div class="lanechips">${chips}</div><div class="triage">${cols.map(col).join("")}</div>`;
+}
+function triageCard(r) {
+  const nSug = Array.isArray(r.suggestions) ? r.suggestions.length : 0;
+  const needSrc = r.lane === "business" && !r.sources_checked;
+  const failed = r.status === "failed";
+  return `<button class="tcard" data-open="${esc(r.id)}">
+    <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}${failed ? " · failed" : ""}</span>
+    <span class="ttl">${esc(r.title || "Untitled")}</span>
+    <span class="meta">${esc(r.target_query ? `“${r.target_query}”` : "Aubrey North")}${r.word_count ? ` · ${fmt(r.word_count)} words` : ""} · ${shortDate(r.created_at)}</span>
+    ${(nSug || needSrc) ? `<span class="flags">${nSug ? `<span class="tflag fix">${nSug} fix ${nSug===1?"suggestion":"suggestions"}</span>` : ""}${needSrc ? `<span class="tflag src">Sources unchecked</span>` : ""}</span>` : ""}
+  </button>`;
+}
+function pubCard(r) {
+  return `<div class="tcard pub">
+    <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span>
+    <span class="ttl"><a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a></span>
+    <span class="meta">${shortDate(r.published_at)} · ${esc((r.commit_sha ?? "").slice(0,7))}</span>
+  </div>`;
+}
+function wireTriage() {
+  $$("#readsView .lanechip").forEach((b) => b.onclick = () => { LANEF = b.dataset.lane; renderReadsSurface(); });
+  $$("#readsView .tcard[data-open]").forEach((b) => b.onclick = () => openEditor(b.dataset.open));
+}
+
+/* ---- open / save ---- */
+async function openEditor(id) {
+  const row = (DATA.reads ?? []).find((r) => r.id === id);
+  if (!row) return;
+  DRAFT = {
+    title: row.title ?? "", description: row.description ?? "", target_query: row.target_query ?? "",
+    tags: (row.tags ?? []).slice(),
+    body: (row.body_markdown && row.body_markdown.trim()) ? row.body_markdown : bodyMd(row.markdown),
+    suggestions: (row.suggestions ?? []).slice(), sources: (row.sources ?? []).slice(),
+    sources_checked: !!row.sources_checked, lane: row.lane, slug: row.slug, status: row.status,
+    published_at: row.published_at, commit_sha: row.commit_sha,
+  };
+  EDIT = id; STEP = 0;
+  renderReadsSurface();
+  // Opening a draft flips it to in_review (a persisted status change); reflect it on
+  // the chip in place so it shows the new state without a rebuild.
+  if (row.status === "draft" && await saveDraft({ status: "in_review" })) {
+    const chip = $("#readsView .edstatus");
+    if (chip) { chip.className = "edstatus in_review"; chip.textContent = "in review"; }
+  }
+}
+function closeEditor() { EDIT = null; DRAFT = null; STEP = 0; renderReadsSurface(); }
+
+/** Rebuild the full markdown payload from the original frontmatter + edited fields + body. */
+function recombine() {
+  const row = (DATA.reads ?? []).find((r) => r.id === EDIT);
+  const orig = row?.markdown ?? "";
+  const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(orig);
+  let fm = m ? m[1] : `title: ""\ndescription: ""\nlane: ${DRAFT.lane}\ndraft: true\ntags: []`;
+  const setF = (f, v) => {
+    const re = new RegExp(`^${f}:.*$`, "m");
+    if (re.test(fm)) fm = fm.replace(re, `${f}: ${v}`); else fm += `\n${f}: ${v}`;
+  };
+  setF("title", `"${(DRAFT.title || "").replace(/"/g, '\\"')}"`);
+  setF("description", `"${(DRAFT.description || "").replace(/"/g, '\\"')}"`);
+  setF("lane", DRAFT.lane);
+  setF("tags", `[${(DRAFT.tags || []).map((t) => `"${t}"`).join(", ")}]`);
+  return `---\n${fm}\n---\n\n${(DRAFT.body || "").replace(/^\n+/, "")}\n`;
+}
+async function saveDraft(patch = {}) {
+  Object.assign(DRAFT, patch);
+  const payload = {
+    title: DRAFT.title, description: DRAFT.description, target_query: DRAFT.target_query,
+    tags: DRAFT.tags, body_markdown: DRAFT.body, markdown: recombine(),
+    suggestions: DRAFT.suggestions, sources: DRAFT.sources, sources_checked: DRAFT.sources_checked,
+  };
+  if (patch.status) payload.status = patch.status;
+  const { error } = await sb.from("reads_queue").update(payload).eq("id", EDIT);
+  if (error) { toast(`Save failed: ${error.message}`, 6000); return false; }
+  const row = (DATA.reads ?? []).find((r) => r.id === EDIT);
+  if (row) Object.assign(row, payload);
+  const s = $("#edSaved"); if (s) s.textContent = "Saved · just now";
+  return true;
+}
+
+/* ---- body blocks (light rich-text over markdown source + live preview) ---- */
+function blocksFromBody(body) {
+  return (body || "").split(/\n{2,}/).map((b) => b.trim()).filter(Boolean).map((b) =>
+    /^##\s+/.test(b) ? { type: "h2", text: b.replace(/^##\s+/, "") } : { type: "p", text: b });
+}
+/* ---- Route A WYSIWYG: a block holds RENDERED html (bold looks bold). renderInline
+   turns a block's markdown into a constrained rich fragment; serializeBlock turns the
+   edited html back into markdown for storage/publish. A block only renders rich if it
+   round-trips exactly (canRichify); anything exotic (images, lists, underscore-emphasis,
+   code the set below doesn't cover) stays an editable RAW-markdown block, so no authored
+   copy is ever lost. publish-read still receives full markdown, unchanged. ---- */
+function renderInline(md) {
+  return DOMPurify.sanitize(marked.parseInline(md ?? ""),
+    { ALLOWED_TAGS: ["strong", "em", "b", "i", "a", "code", "del", "s", "br"], ALLOWED_ATTR: ["href"] });
+}
+function escMd(s) { return s.replace(/([\\`*\[\]])/g, "\\$1"); }
+function nodeToMd(node) {
+  if (node.nodeType === 3) return escMd(node.nodeValue);
+  if (node.nodeType !== 1) return "";
+  const tag = node.tagName.toLowerCase();
+  const inner = [...node.childNodes].map(nodeToMd).join("");
+  if (tag === "strong" || tag === "b") return inner.trim() ? `**${inner}**` : inner;
+  if (tag === "em" || tag === "i") return inner.trim() ? `*${inner}*` : inner;
+  if (tag === "code") return `\`${inner}\``;
+  if (tag === "del" || tag === "s") return `~~${inner}~~`;
+  if (tag === "a") return `[${inner}](${node.getAttribute("href") || ""})`;
+  if (tag === "br") return "\n";
+  return inner;   // unwrap spans/divs the browser may inject
+}
+function serializeBlock(el) {
+  if (el.dataset.raw === "1") return (el.textContent || "").trim();
+  return [...el.childNodes].map(nodeToMd).join("").trim();
+}
+/** A block renders as rich WYSIWYG only if md -> html -> md is exact — the no-loss gate. */
+function canRichify(md) {
+  const el = document.createElement("div");
+  el.innerHTML = renderInline(md);
+  return serializeBlock(el) === md;
+}
+function bodyFromBlocks() {
+  return $$("#edBody .bblock").map((el) =>
+    (el.dataset.type === "h2" ? "## " : "") + serializeBlock(el)
+  ).filter((s) => s.replace(/^##\s*/, "").trim()).join("\n\n");
+}
+
+/* ---- editor view ---- */
+function editorHtml() {
+  const d = DRAFT;
+  const dlen = (d.description || "").length;
+  const ccCls = dlen >= 140 && dlen <= 160 ? "ok" : (dlen ? "bad" : "");
+  const checks = editorChecks();
+  const canPublish = checks.every((c) => c.ok);
+  const update = !!(d.published_at || d.commit_sha);
+  const blocks = blocksFromBody(d.body).map((b) => {
+    const cls = `bblock ${b.type === "h2" ? "h2" : ""}`;
+    // Rich WYSIWYG when the block round-trips exactly; otherwise edit raw markdown (no loss).
+    return canRichify(b.text)
+      ? `<div class="${cls}" contenteditable="true" data-type="${b.type}">${renderInline(b.text)}</div>`
+      : `<div class="${cls}" contenteditable="true" data-type="${b.type}" data-raw="1">${esc(b.text)}</div>`;
+  }).join("");
+
+  return `
+  <div class="edhead">
+    <button class="back" id="edBack">← Queue</button>
+    <span class="edstatus ${esc(d.status)}">${esc((d.status || "").replace("_"," "))}</span>
+    <span class="edsaved" id="edSaved">Saved</span>
+    <span class="grow"></span>
+    ${d.status !== "ready" ? `<button class="btn" id="edReady">Mark ready</button>` : ""}
+    <button class="btn primary" id="edPublish"${canPublish ? "" : " disabled"}>${update ? "Publish update" : "Publish"}</button>
+  </div>
+  ${stepperHtml()}
+  <div class="editor">
+    <div class="edcol">
+      <div class="edcard">
+        <h3>Frontmatter</h3>
+        <div class="edfield"><label>Title</label><input class="big" id="edTitle" value="${esc(d.title)}"></div>
+        <div class="edfield"><label>Description (the SEO line)</label>
+          <input id="edDesc" value="${esc(d.description)}">
+          <div class="cc ${ccCls}" id="edCC">${dlen} / 140–160</div></div>
+        <div class="edfield"><label>Target query</label><input id="edTarget" value="${esc(d.target_query)}"></div>
+        <div class="edfield"><label>Tags (comma separated)</label><input id="edTags" value="${esc((d.tags||[]).join(", "))}"></div>
+      </div>
+      <div class="edcard">
+        <h3>Body</h3>
+        <div class="btoolbar">
+          <button data-fmt="bold" title="Bold selection">B</button>
+          <button data-fmt="link" title="Link selection">Link</button>
+          <button data-fmt="h2" title="Toggle H2 on the focused block">H2</button>
+        </div>
+        <div id="edBody">${blocks}</div>
+        <button class="suggestbtn" id="edSuggest">✦ Suggest fixes for this paragraph</button>
+      </div>
+    </div>
+    <div class="edcol">
+      <div class="edcard">
+        <h3>Preview</h3>
+        <div class="anprev" id="edPrev">${previewHtml()}</div>
+      </div>
+      <div class="edcard">
+        <h3>Before publish</h3>
+        <div class="pchecks">${checks.map((c) => `<div class="pchk ${c.ok?"ok":""}"><span class="dot"></span>${esc(c.label)}</div>`).join("")}</div>
+      </div>
+      ${update ? `<div class="edcard">
+        <h3>What changed</h3>
+        <details class="whatchanged" data-diff="${esc(EDIT)}">
+          <summary>Compare with the live version</summary>
+          <div class="diffbody" data-diffbody><span class="diffnote">Loading…</span></div>
+        </details>
+      </div>` : ""}
+      ${d.lane === "business" ? `<div class="edcard srcpanel">
+        <h3>Sources</h3>
+        ${(d.sources||[]).length ? (d.sources||[]).map((s) => `<div class="srcrow"><span>${esc(s.claim ?? "")}</span><a href="${esc(s.url ?? "#")}" target="_blank" rel="noopener">${esc(s.publisher ?? "source")}</a></div>`).join("") : `<div class="empty">No sources attached.</div>`}
+        <label class="srctoggle"><input type="checkbox" id="edSrcChk"${d.sources_checked?" checked":""}> Sources checked</label>
+      </div>` : ""}
+    </div>
+  </div>`;
+}
+function previewHtml() {
+  const d = DRAFT;
+  return `<div class="eyebrow">${esc(LANE_LABEL[d.lane] ?? d.lane)}</div>
+    <h1>${esc(d.title || "Untitled")}</h1>${mdPreview(recombine())}`;
+}
+function editorChecks() {
+  const d = DRAFT;
+  const dlen = (d.description || "").length;
+  const body = d.body || "";
+  const all = `${d.title}\n${d.description}\n${body}`;
+  const HYPE = /\b(revolutionary|game[-\s]changing|game changer|unleash|unlock|supercharge|turbocharge|disrupt|disruptive|cutting[-\s]edge|next[-\s]level|world[-\s]class|seamless|effortless|mind[-\s]blowing|jaw[-\s]dropping|best[-\s]in[-\s]class|paradigm|synergy|leverage|delve|elevate|empower)\b/i;
+  const h2 = (body.match(/^##\s+\S/gm) ?? []).length;
+  const links = [...body.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
+  const badLink = links.some((u) => /claude\.ai|localhost|anthropic\.com/i.test(u) || /^reads\//i.test(u));
+  const out = [
+    { ok: dlen >= 140 && dlen <= 160, label: `Description ${dlen} chars (needs 140–160)` },
+    { ok: !all.includes("!"), label: "No exclamation marks" },
+    { ok: !HYPE.test(all), label: "No hype words" },
+    { ok: h2 >= 2 && h2 <= 4, label: `${h2} H2 headings (needs 2–4)` },
+    { ok: !badLink, label: "Internal links root-relative, no external" },
+    { ok: (d.suggestions || []).length === 0, label: "All fix suggestions reviewed" },
+  ];
+  if (d.lane === "business") out.push({ ok: !!d.sources_checked, label: "Sources checked (Business)" });
+  return out;
+}
+
+/* ---- suggestion stepper ---- */
+function stepperHtml() {
+  const s = (DRAFT.suggestions || []);
+  if (!s.length) return "";
+  if (STEP >= s.length) STEP = s.length - 1;
+  const cur = s[STEP];
+  return `<div class="stepper">
+    <div class="top">Review fixes<span class="n">${STEP+1} of ${s.length}</span></div>
+    <div class="sug-o"><span class="lab">Original</span>${esc(cur.original)}</div>
+    <div class="sug-s"><span class="lab">Suggested</span>${esc(cur.suggested)}</div>
+    <div class="sug-reason">${esc(cur.reason || "")}</div>
+    <div class="stepacts">
+      <button class="btn" id="sugReject">Reject</button>
+      <button class="btn" id="sugSkip">Skip</button>
+      <button class="btn primary" id="sugAccept">Accept</button>
+    </div>
+  </div>`;
+}
+async function acceptSuggestion() {
+  const s = DRAFT.suggestions[STEP]; if (!s) return;
+  if (s.original && DRAFT.body.includes(s.original)) DRAFT.body = DRAFT.body.replace(s.original, s.suggested);
+  else toast("Original text not found — it may have been edited; skipping apply.", 5000);
+  DRAFT.suggestions.splice(STEP, 1);
+  await saveDraft({});
+  renderReadsSurface();
+}
+async function rejectSuggestion() {
+  DRAFT.suggestions.splice(STEP, 1);
+  await saveDraft({});
+  renderReadsSurface();
+}
+
+/* ---- wiring ---- */
+function wireEditor() {
+  $("#edBack").onclick = () => closeEditor();
+  $("#edReady") && ($("#edReady").onclick = async () => { flushBody(); if (await saveDraft({ status: "ready" })) renderReadsSurface(); });
+  $("#edPublish").onclick = () => publishFromEditor();
+
+  $("#edTitle").onblur = () => saveDraft({ title: $("#edTitle").value });
+  $("#edTarget").onblur = () => saveDraft({ target_query: $("#edTarget").value });
+  $("#edTags").onblur = () => saveDraft({ tags: $("#edTags").value.split(",").map((t) => t.trim()).filter(Boolean) });
+  const desc = $("#edDesc");
+  desc.oninput = () => {
+    const n = desc.value.length, cc = $("#edCC");
+    cc.textContent = `${n} / 140–160`;
+    cc.className = "cc " + (n >= 140 && n <= 160 ? "ok" : (n ? "bad" : ""));
+  };
+  desc.onblur = () => saveDraft({ description: desc.value }).then(() => refreshEditorLive());
+
+  // Body blocks: wireBlock adds input/blur/paste/Enter handling (shared with the
+  // blocks created by an Enter-split).
+  $$("#edBody .bblock").forEach(wireBlock);
+
+  // Toolbar: preventDefault on mousedown so pressing a button doesn't blur the block
+  // and collapse the selection before the format is applied.
+  $$(".btoolbar [data-fmt]").forEach((b) => {
+    b.addEventListener("mousedown", (e) => e.preventDefault());
+    b.onclick = () => applyFormat(b.dataset.fmt);
+  });
+  $("#edSuggest").onclick = () => suggestMore();
+
+  const chk = $("#edSrcChk");
+  if (chk) chk.onchange = () => saveDraft({ sources_checked: chk.checked }).then(() => renderReadsSurface());
+
+  $("#sugAccept") && ($("#sugAccept").onclick = acceptSuggestion);
+  $("#sugReject") && ($("#sugReject").onclick = rejectSuggestion);
+  $("#sugSkip") && ($("#sugSkip").onclick = () => { STEP = (STEP + 1) % (DRAFT.suggestions.length || 1); renderReadsSurface(); });
+
+  // "What changed" (Update drafts only): lazily diff the queued body against the live
+  // article via read-diff when the reviewer opens the disclosure, once per open.
+  $$("#readsView details.whatchanged").forEach((dt) => {
+    dt.addEventListener("toggle", () => {
+      if (dt.open && !dt.dataset.loaded) { dt.dataset.loaded = "1"; loadReadDiff(dt); }
     });
   });
+}
+/* Re-render just the preview + checks + publish enablement without losing caret in a
+   block being typed. Called after blur-saves. */
+function refreshEditorLive() {
+  if (!EDIT || !DRAFT) return;
+  // Update the preview, the checks panel, and Publish enablement in place — never
+  // rebuild the body blocks, which would drop the caret mid-edit (code-pass §3).
+  const prev = $("#edPrev"); if (prev) prev.innerHTML = previewHtml();
+  const checks = editorChecks();
+  const cp = $("#readsView .pchecks");
+  if (cp) cp.innerHTML = checks.map((c) => `<div class="pchk ${c.ok ? "ok" : ""}"><span class="dot"></span>${esc(c.label)}</div>`).join("");
+  const pub = $("#edPublish"); if (pub) pub.disabled = !checks.every((c) => c.ok);
+}
+let lastBlock = null;
+document.addEventListener("focusin", (e) => { if (e.target.classList && e.target.classList.contains("bblock")) lastBlock = e.target; });
+
+/* ---- block editing helpers (shared by initial blocks and Enter-split blocks) ---- */
+function syncBody() {
+  if (!$("#edBody")) return;
+  DRAFT.body = bodyFromBlocks();
+  const p = $("#edPrev"); if (p) p.innerHTML = previewHtml();
+}
+function insertTextAtCaret(el, text) {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount && el.contains(sel.anchorNode)) {
+    const r = sel.getRangeAt(0); r.deleteContents();
+    const node = document.createTextNode(text);
+    r.insertNode(node); r.setStartAfter(node); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+  } else {
+    el.textContent = (el.textContent || "") + text;
+  }
+}
+/** Enter splits the focused block at the caret into a new paragraph block — newlines
+    inside one block would collapse on serialise, so a new paragraph is a new block. */
+function splitBlock(el) {
+  const sel = window.getSelection();
+  const nb = document.createElement("div");
+  nb.className = "bblock"; nb.contentEditable = "true"; nb.dataset.type = "p";
+  if (el.dataset.raw === "1") nb.dataset.raw = "1";   // keep a split raw block raw
+  // Move everything from the caret to the end of the block into the new block,
+  // preserving inline formatting (extractContents works on the rich html too).
+  if (sel && sel.rangeCount && el.contains(sel.anchorNode) && el.lastChild) {
+    const r = sel.getRangeAt(0).cloneRange();
+    r.setEndAfter(el.lastChild);
+    nb.appendChild(r.extractContents());
+  }
+  el.after(nb);
+  wireBlock(nb);
+  const r2 = document.createRange();
+  r2.setStart(nb, 0); r2.collapse(true);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r2);
+  nb.focus();
+}
+function wireBlock(el) {
+  el.addEventListener("input", syncBody);
+  el.addEventListener("blur", () => { DRAFT.body = bodyFromBlocks(); saveDraft({}).then(refreshEditorLive); });
+  // Force plain-text paste so pasted rich text can't smuggle HTML around the markdown.
+  el.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    insertTextAtCaret(el, text);
+    syncBody();
+  });
+  el.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;   // Enter and Shift+Enter both split into a new block
+    e.preventDefault();
+    splitBlock(el);
+    syncBody();
+  });
+}
+/** Inline link popover, replacing window.prompt (the connect flow's prompt was removed
+    for the same reason). Resolves to a URL string, or null on cancel. */
+function linkPopover() {
+  return new Promise((resolve) => {
+    const host = $("#edBody") && $("#edBody").parentElement;
+    if (!host) return resolve(null);
+    host.querySelector(".linkpop")?.remove();
+    const pop = document.createElement("div");
+    pop.className = "linkpop";
+    pop.innerHTML = `<label>Link URL — root-relative, e.g. /reads/slug/</label>
+      <input type="text" spellcheck="false" value="/reads/">
+      <div class="row"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Insert</button></div>`;
+    host.appendChild(pop);
+    const input = pop.querySelector("input");
+    const done = (v) => { pop.remove(); resolve(v); };
+    pop.querySelector("[data-ok]").onclick = () => done(input.value.trim() || null);
+    pop.querySelector("[data-cancel]").onclick = () => done(null);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); done(input.value.trim() || null); }
+      else if (e.key === "Escape") { e.preventDefault(); done(null); }
+    });
+    input.focus(); input.select();
+  });
+}
+async function applyFormat(kind) {
+  // The focused block is the target. Toolbar buttons preventDefault on mousedown, so
+  // the block keeps focus and document.activeElement is authoritative here; lastBlock
+  // is the fallback (e.g. focus already moved), then the first block.
+  const active = document.activeElement;
+  const el = (active && active.classList && active.classList.contains("bblock")) ? active
+    : (lastBlock && document.body.contains(lastBlock) ? lastBlock : $$("#edBody .bblock")[0]);
+  if (!el) return;
+  if (kind === "h2") {
+    el.dataset.type = el.dataset.type === "h2" ? "p" : "h2";
+    el.classList.toggle("h2", el.dataset.type === "h2");
+  } else if (el.dataset.raw === "1") {
+    // Raw-markdown block (exotic content): insert literal markdown at the caret.
+    const sel = window.getSelection();
+    const inEl = sel && sel.rangeCount && el.contains(sel.anchorNode);
+    const chosen = inEl && !sel.isCollapsed ? sel.toString() : "";
+    const range = inEl ? sel.getRangeAt(0).cloneRange() : null;
+    if (kind === "bold") insertAtRange(el, `**${chosen || "bold"}**`, range);
+    if (kind === "link") {
+      const url = await linkPopover();
+      if (!url) return;
+      insertAtRange(el, `[${chosen || "text"}](${url})`, range);
+    }
+  } else {
+    // Rich block: native formatting, serialized back to markdown on save.
+    if (kind === "bold") {
+      document.execCommand("styleWithCSS", false, false);   // emit <b>, not a styled span
+      document.execCommand("bold");
+    }
+    if (kind === "link") {
+      const sel = window.getSelection();
+      const range = sel && sel.rangeCount && el.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+      const url = await linkPopover();
+      if (!url) return;
+      el.focus();   // the popover took focus; execCommand needs the block focused (Safari)
+      const s = window.getSelection(); s.removeAllRanges(); if (range) s.addRange(range);
+      if (range && range.collapsed) document.execCommand("insertHTML", false, `<a href="${esc(url)}">link</a>`);
+      else document.execCommand("createLink", false, url);
+    }
+  }
+  syncBody();
+  saveDraft({}).then(refreshEditorLive);
+}
+function insertAtRange(el, text, range) {
+  el.focus();
+  if (range && el.contains(range.startContainer)) {
+    range.deleteContents();
+    const node = document.createTextNode(text);
+    range.insertNode(node);
+    range.setStartAfter(node); range.collapse(true);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  } else {
+    el.textContent = (el.textContent || "") + text;
+  }
+}
+async function suggestMore() {
+  const btn = $("#edSuggest"); btn.disabled = true; btn.textContent = "Thinking…";
+  const section = (lastBlock && document.body.contains(lastBlock)) ? (lastBlock.textContent || "").trim() : "";
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/suggest-fixes`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(section ? { id: EDIT, section } : { id: EDIT }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) { toast(body.error ?? `Suggest failed (${res.status})`, 7000); return; }
+    const got = Array.isArray(body.suggestions) ? body.suggestions : [];
+    if (!got.length) { toast("No new suggestions — reads clean.", 4000); return; }
+    DRAFT.suggestions = (DRAFT.suggestions || []).concat(got);
+    await saveDraft({});
+    renderReadsSurface();
+  } catch (e) {
+    toast(`Suggest failed: ${e.message}`, 7000);
+  } finally {
+    const b = $("#edSuggest"); if (b) { b.disabled = false; b.textContent = "✦ Suggest fixes for this paragraph"; }
+  }
+}
+/** Capture the block the user may be typing in without having blurred it yet, so a
+    click straight to Publish / Mark ready doesn't race the blur handler. */
+function flushBody() { if ($("#edBody")) DRAFT.body = bodyFromBlocks(); }
+
+async function publishFromEditor() {
+  flushBody();
+  if (!editorChecks().every((c) => c.ok)) { toast("Resolve the checks before publishing.", 5000); return; }
+  if (DRAFT.status !== "ready") { if (!(await saveDraft({ status: "ready" }))) return; }
+  const id = EDIT;
+  await publishRead(id);
+  // publishRead refreshes DATA.reads; if it went live, drop back to triage.
+  const row = (DATA.reads ?? []).find((r) => r.id === id);
+  if (row && row.status === "published") closeEditor(); else renderReadsSurface();
 }
 async function doSignOut() {
   lastEmail = null;
@@ -1535,12 +2164,6 @@ function briefing() {
 
 const LANE_LABEL = { screen:"Screen", type:"Type", business:"Business" };
 
-/* Cached "What changed" diffs, keyed by queue-row id, so a re-render (e.g. publishing
-   another card) doesn't collapse an open disclosure or re-hit read-diff/GitHub. A row's
-   queued markdown and its live file are both stable within a session — copy is locked
-   upstream and a published row loses its disclosure — so the cache needs no invalidation. */
-const readDiffCache = new Map();
-
 function mdPreview(markdown) {
   const body = markdown.replace(/^---[\s\S]*?---\s*/, "");
   const clean = DOMPurify.sanitize(marked.parse(body));
@@ -1571,96 +2194,7 @@ function preflight(r) {
   return issues;
 }
 
-function readsHtml() {
-  if (DATA.reads === null) {
-    return `<div class="panel"><div class="empty">
-      <h3>The queue could not be read</h3>
-      <div>Reload to try again. If it persists, the reads_queue table or its
-      read policy is the place to look.</div>
-      <div class="connectrow"><button class="btn" data-retry>Reload</button></div></div></div>`;
-  }
-  const queue = DATA.reads.filter((r) => ["ready","publishing","failed"].includes(r.status));
-  const published = DATA.reads.filter((r) => r.status === "published")
-    .sort((a,b) => (b.published_at ?? "").localeCompare(a.published_at ?? ""));
-
-  const card = (r) => {
-    const issues = preflight(r);
-    const ok = issues.length === 0;
-    const update = !!(r.published_at || r.commit_sha);   // published before -> this is a re-publish
-    // A diff fetched earlier this session survives re-renders: restore it open and
-    // already-loaded so wireReads doesn't refetch it.
-    const cachedDiff = update ? readDiffCache.get(r.id) : null;
-    return `
-    <div class="read" data-read="${esc(r.id)}">
-      <div class="toprow">
-        <span class="ttl">${esc(r.title)}</span>
-        <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span>
-        ${update ? `<span class="tagupd">Update</span>` : ""}
-      </div>
-      <div class="meta">${esc(r.target_query ? `for “${r.target_query}”` : "Aubrey North")}${r.word_count ? ` · ${fmt(r.word_count)} words` : ""} · queued ${shortDate(r.created_at)}${update ? ` · last published ${shortDate(r.published_at)}` : ""}</div>
-      ${r.description ? `<div class="readdesc">${esc(r.description)}</div>` : ""}
-      ${(r.tags && r.tags.length) ? `<div class="tags">${r.tags.map((t) => `<span class="tagchip">${esc(t)}</span>`).join("")}</div>` : ""}
-      ${r.status === "failed" ? `<div class="err">Failed: ${esc(r.error ?? "no detail recorded")}</div>` : ""}
-      <details>
-        <summary>Read before publishing</summary>
-        <div class="mdprev">${mdPreview(r.markdown)}</div>
-      </details>
-      ${update ? `<details class="whatchanged" data-diff="${esc(r.id)}"${cachedDiff ? ` open data-loaded="1"` : ``}>
-        <summary>What changed</summary>
-        <div class="diffbody" data-diffbody>${cachedDiff ?? `<span class="diffnote">Loading…</span>`}</div>
-      </details>` : ""}
-      <div class="checks">
-        ${ok
-          ? `<span class="chk ok">✓ Passes publish checks${update ? " · replaces the live version" : ""}</span>`
-          : `<span class="chk warn">Can’t publish yet</span>${issues.map((i) => `<span class="chkitem">${esc(i)}</span>`).join("")}`}
-      </div>
-      <div class="actions">
-        ${r.status === "publishing"
-          ? `<button class="btn primary" disabled>Publishing…</button>
-             <span class="readsig"><span class="led"></span>Committing to aubreynorth — the deploy takes about two minutes.</span>`
-          : ok
-            ? `<button class="btn primary" data-publish="${esc(r.id)}">${r.status === "failed" ? "Retry" : (update ? "Publish update" : "Publish")}</button>
-               <span class="meta">${update ? "Replaces the live article" : "Publishes to aubreynorth.com"} within ~2 minutes.</span>`
-            : `<button class="btn primary" disabled>${update ? "Publish update" : "Publish"}</button>
-               <span class="meta">Copy is fixed upstream — once corrected it can publish.</span>`}
-      </div>
-    </div>`;
-  };
-
-  // Published history grows monotonically — group by month so it keeps a rhythm.
-  const groups = [];
-  for (const r of published) {
-    const key = r.published_at
-      ? new Date(r.published_at).toLocaleDateString(undefined, { month:"long", year:"numeric" })
-      : "Undated";
-    let g = groups.find((x) => x.key === key);
-    if (!g) groups.push(g = { key, rows: [] });
-    g.rows.push(r);
-  }
-  const pubRow = (r) => `
-    <div class="pubrow">
-      <a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a>
-      <span class="when">${shortDate(r.published_at)}</span>
-      <span class="sha">${esc((r.commit_sha ?? "").slice(0,7))}</span>
-    </div>`;
-
-  return `
-  <div class="panel">
-    <h2>Queue</h2>
-    <p class="hint">Approved and waiting. Copy is locked before it reaches this screen —
-      publishing is the only decision made here.</p>
-    ${queue.length ? queue.map(card).join("") : `<div class="empty">
-       <h3>Nothing waiting</h3>
-       <div>Reads are drafted and approved in a Cowork session. Once approved, each one
-       lands here ready to publish — there is nothing to write in the portal.</div></div>`}
-  </div>
-  <div class="panel">
-    <h2>Published</h2>
-    ${published.length
-      ? groups.map((g) => `<div class="monthhead">${esc(g.key)}</div>${g.rows.map(pubRow).join("")}`).join("")
-      : `<div class="empty">Nothing published from the queue yet.</div>`}
-  </div>`;
-}
+/* readsHtml (the pre-editor queue+published view) was replaced by triageHtml()/editorHtml(). */
 
 function confirmPublish(row) {
   if (isMobile()) return confirmPublishSheet(row);
@@ -1790,9 +2324,7 @@ async function loadReadDiff(details) {
       details.dataset.loaded = "";   // a bad response can be retried by reopening
       return;
     }
-    const html = renderReadDiff(body);
-    readDiffCache.set(id, html);      // survive re-renders; reopen is instant, no refetch
-    box.innerHTML = html;
+    box.innerHTML = renderReadDiff(body);
   } catch (e) {
     box.innerHTML = `<span class="diffnote err">Couldn’t load the diff: ${esc(e.message)}</span>`;
     details.dataset.loaded = "";     // let a reopen retry a transient failure
