@@ -877,35 +877,55 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .edcard h3{margin:0 0 var(--space-3);font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary)}
 .edfield{margin-bottom:var(--space-3)}
 .edfield label{display:block;font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary);margin-bottom:4px}
-.edfield input{width:100%;background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);padding:.55rem .7rem;font:inherit}
+.edfield input,.edfield textarea{width:100%;background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);padding:.55rem .7rem;font:inherit}
+.edfield textarea{resize:vertical;line-height:1.5;font-size:var(--text-label)}
+.edfield .lrow{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-3)}
+.edfield .lrow .cc{margin-top:0}
+.edrow2{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+@media(max-width:900px){.edrow2{grid-template-columns:1fr}}
 .edfield input.big{font-family:var(--font-head);font-weight:300;font-size:1.2rem}
 .cc{font-size:var(--text-micro);color:var(--text-tertiary);margin-top:3px}
 .cc.ok{color:var(--brand-gold)} .cc.bad{color:var(--state-negative)}
-.btoolbar{display:flex;gap:var(--space-2);margin-bottom:var(--space-3)}
-.btoolbar button{background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-secondary);padding:.35rem .7rem;font:inherit;font-size:var(--text-label);cursor:pointer}
-.btoolbar button:hover{border-color:var(--border-strong);color:var(--text-primary)}
-.bblock{border:0;border-left:2px solid transparent;background:none;color:var(--text-primary);
-  font:inherit;line-height:1.6;padding:.2rem 0 .2rem var(--space-3);margin:0 0 var(--space-2);outline:none;white-space:pre-wrap;word-break:break-word}
-.bblock:focus{border-left-color:var(--state-progress)}
-.bblock.h2{font-family:var(--font-head);font-weight:400;font-size:1.15rem;color:var(--text-primary)}
+.btoolbar{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)}
+.btoolbar button[data-fmt]{background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-secondary);padding:.35rem .7rem;font:inherit;font-size:var(--text-label);cursor:pointer}
+.btoolbar button[data-fmt]:hover{border-color:var(--border-strong);color:var(--text-primary)}
+/* Each block is a rounded box (design geometry) — faint at rest, full periwinkle box +
+   soft fill when focused, so the selected section is unmistakable. The visible resting
+   border is a deliberate step past the DC (which keeps it transparent). */
+#edBody{display:flex;flex-direction:column;gap:2px}
+.bblock{border:1px solid var(--border-subtle);border-left:2px solid var(--border-subtle);background:none;color:var(--text-primary);
+  font:inherit;line-height:1.7;padding:8px 12px;margin:0;border-radius:var(--radius-md);cursor:text;
+  outline:none;white-space:pre-wrap;word-break:break-word;transition:border-color var(--dur-fast),background var(--dur-fast)}
+.bblock:hover{border-color:var(--border-default)}
+.bblock:focus{border-color:var(--state-progress);border-left-color:var(--state-progress);background:rgba(142,139,216,.06)}
+.bblock.h2{font-family:var(--font-head);font-weight:300;font-size:21px;line-height:1.3;color:var(--text-primary);padding:10px 12px;margin-top:10px}
 /* rich marks inside a block (Route A WYSIWYG) */
 .bblock strong,.bblock b{font-weight:600;color:var(--text-primary)}
 .bblock a{color:var(--brand-gold-soft);text-decoration:underline;text-underline-offset:2px}
 .bblock code{font-family:ui-monospace,monospace;font-size:.9em;background:var(--surface-sunken);padding:1px 4px;border-radius:4px}
-.suggestbtn{margin-top:var(--space-2);background:none;border:1px solid var(--state-progress);color:var(--state-progress);
-  border-radius:var(--radius-pill);padding:.3rem .8rem;font:inherit;font-size:var(--text-micro);cursor:pointer}
-.suggestbtn:disabled{opacity:.4;cursor:default;border-color:var(--border-default);color:var(--text-tertiary)}
+.suggestbtn{margin-left:auto;background:none;border:1px solid var(--state-progress);color:var(--state-progress);
+  border-radius:var(--radius-pill);padding:.4rem .9rem;font:inherit;font-size:var(--text-micro);font-weight:600;cursor:pointer}
+.suggestbtn:disabled{opacity:.55;cursor:default;border-color:var(--border-default);color:var(--brand-dim)}
 
 /* suggestion stepper */
-.stepper{border:1px solid var(--state-progress);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-4);background:var(--surface-raised)}
-.stepper .top{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--state-progress);margin-bottom:var(--space-3)}
-.stepper .top .n{margin-left:auto;color:var(--text-tertiary)}
-.sug-o{color:var(--text-tertiary);text-decoration:line-through;text-decoration-color:var(--brand-terracotta);margin-bottom:var(--space-2);line-height:1.55}
-.sug-s{color:var(--text-primary);line-height:1.55}
-.sug-s .lab,.sug-o .lab{display:block;font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
-.sug-s .lab{color:var(--brand-gold)} .sug-o .lab{color:var(--text-tertiary)}
-.sug-reason{font-size:var(--text-micro);color:var(--text-tertiary);margin:var(--space-2) 0 var(--space-3);font-style:italic}
+/* Design layout: Original and Suggested side by side in sunken boxes (terracotta /
+   gold labels), pulsing LED + section in the header, tally right, reason bottom-left
+   with the actions bottom-right. */
+.stepper{border:1px solid var(--border-strong);border-left:2px solid var(--state-progress);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-4);background:var(--surface-raised)}
+.stepper .top{display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-micro);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--state-progress);margin-bottom:var(--space-3)}
+.stepper .top .led{width:7px;height:7px;border-radius:50%;background:var(--state-progress);animation:pulse 2.2s ease-in-out infinite;flex:none}
+.stepper .top .sec{font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-tertiary)}
+.stepper .top .n{margin-left:auto;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-tertiary)}
+.sugrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-3)}
+.sugbox{background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
+.sugbox .lab{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.sugbox.o .lab{color:var(--brand-terracotta)} .sugbox.s .lab{color:var(--brand-gold)}
+.sugbox.o .tx{font-size:13px;line-height:1.6;color:var(--brand-mute);text-decoration:line-through;text-decoration-color:rgba(192,89,59,.6)}
+.sugbox.s .tx{font-size:13px;line-height:1.6;color:var(--text-primary)}
+.stepfoot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap}
+.sug-reason{font-size:var(--text-label);color:var(--brand-mute)}
 .stepacts{display:flex;gap:var(--space-2)}
+@media(max-width:900px){.sugrid{grid-template-columns:1fr}}
 
 /* before-publish checks + sources */
 .pchecks{display:flex;flex-direction:column;gap:6px}
@@ -921,7 +941,8 @@ td.t a:hover{color:var(--brand-gold-soft)}
 /* preview panel — deliberately the aubreynorth.com look (scoped site values) */
 .anprev{background:#F6F3EC;border-radius:var(--radius-md);padding:var(--space-5);color:#22201C;max-width:100%;overflow:hidden}
 .anprev .eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#B24A2B;margin-bottom:var(--space-2)}
-.anprev h1{font-family:var(--font-head);font-weight:300;font-size:1.7rem;line-height:1.15;color:#22201C;margin:0 0 var(--space-3)}
+.anprev h1{font-family:var(--font-head);font-weight:300;font-size:1.7rem;line-height:1.15;color:#22201C;margin:0 0 6px}
+.anprev .date{font-size:12px;color:#8a8378;margin-bottom:var(--space-5)}
 .anprev h2{font-family:var(--font-head);font-weight:400;font-size:1.2rem;color:#22201C;margin:var(--space-4) 0 var(--space-2)}
 .anprev p{line-height:1.7;margin:0 0 var(--space-3);max-width:68ch}
 .anprev strong{color:#000;font-weight:600}
@@ -1393,6 +1414,7 @@ let EDIT = null;      // reads_queue id being edited, or null (triage)
 let DRAFT = null;     // working copy of the row being edited
 let LANEF = "all";    // triage lane filter
 let STEP = 0;         // suggestion stepper index
+let SUG_DONE = { accepted: 0, rejected: 0 };  // stepper tally, reset per editor open
 
 const bodyMd = (md) => {
   const m = /^---\r?\n[\s\S]*?\r?\n---/.exec(md ?? "");
@@ -1486,8 +1508,9 @@ async function openEditor(id) {
     body: (row.body_markdown && row.body_markdown.trim()) ? row.body_markdown : bodyMd(row.markdown),
     suggestions: (row.suggestions ?? []).slice(), sources: (row.sources ?? []).slice(),
     sources_checked: !!row.sources_checked, lane: row.lane, slug: row.slug, status: row.status,
-    published_at: row.published_at, commit_sha: row.commit_sha,
+    published_at: row.published_at, commit_sha: row.commit_sha, created_at: row.created_at,
   };
+  SUG_DONE = { accepted: 0, rejected: 0 };   // per-editor-session tally for the stepper
   EDIT = id; STEP = 0;
   renderReadsSurface();
   // Opening a draft flips it to in_review (a persisted status change); reflect it on
@@ -1607,11 +1630,13 @@ function editorHtml() {
       <div class="edcard">
         <h3>Frontmatter</h3>
         <div class="edfield"><label>Title</label><input class="big" id="edTitle" value="${esc(d.title)}"></div>
-        <div class="edfield"><label>Description (the SEO line)</label>
-          <input id="edDesc" value="${esc(d.description)}">
-          <div class="cc ${ccCls}" id="edCC">${dlen} / 140–160</div></div>
-        <div class="edfield"><label>Target query</label><input id="edTarget" value="${esc(d.target_query)}"></div>
-        <div class="edfield"><label>Tags (comma separated)</label><input id="edTags" value="${esc((d.tags||[]).join(", "))}"></div>
+        <div class="edfield">
+          <div class="lrow"><label>Description (the SEO line)</label><div class="cc ${ccCls}" id="edCC">${dlen} / 140–160</div></div>
+          <textarea id="edDesc" rows="2">${esc(d.description)}</textarea></div>
+        <div class="edrow2">
+          <div class="edfield"><label>Target query</label><input id="edTarget" value="${esc(d.target_query)}"></div>
+          <div class="edfield"><label>Tags (comma separated)</label><input id="edTags" value="${esc((d.tags||[]).join(", "))}"></div>
+        </div>
       </div>
       <div class="edcard">
         <h3>Body</h3>
@@ -1619,9 +1644,9 @@ function editorHtml() {
           <button data-fmt="bold" title="Bold selection">B</button>
           <button data-fmt="link" title="Link selection">Link</button>
           <button data-fmt="h2" title="Toggle H2 on the focused block">H2</button>
+          <button class="suggestbtn" id="edSuggest" disabled title="Focus a paragraph first">✦ Suggest fixes for this paragraph</button>
         </div>
         <div id="edBody">${blocks}</div>
-        <button class="suggestbtn" id="edSuggest">✦ Suggest fixes for this paragraph</button>
       </div>
     </div>
     <div class="edcol">
@@ -1650,8 +1675,10 @@ function editorHtml() {
 }
 function previewHtml() {
   const d = DRAFT;
-  return `<div class="eyebrow">${esc(LANE_LABEL[d.lane] ?? d.lane)}</div>
-    <h1>${esc(d.title || "Untitled")}</h1>${mdPreview(recombine())}`;
+  return `<div class="eyebrow">${esc(LANE_LABEL[d.lane] ?? d.lane)} Read</div>
+    <h1>${esc(d.title || "Untitled")}</h1>
+    <div class="date">${esc(d.created_at ? new Date(d.created_at).toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" }) : "")}</div>
+    ${mdPreview(recombine())}`;
 }
 function editorChecks() {
   const d = DRAFT;
@@ -1685,15 +1712,22 @@ function stepperHtml() {
   if (!s.length) return "";
   if (STEP >= s.length) STEP = s.length - 1;
   const cur = s[STEP];
+  const tally = `${SUG_DONE.accepted} accepted · ${SUG_DONE.rejected} rejected`;
   return `<div class="stepper">
-    <div class="top">Review fixes<span class="n">${STEP+1} of ${s.length}</span></div>
-    <div class="sug-o"><span class="lab">Original</span>${esc(cur.original)}</div>
-    <div class="sug-s"><span class="lab">Suggested</span>${esc(cur.suggested)}</div>
-    <div class="sug-reason">${esc(cur.reason || "")}</div>
-    <div class="stepacts">
-      <button class="btn" id="sugReject">Reject</button>
-      <button class="btn" id="sugSkip">Skip</button>
-      <button class="btn primary" id="sugAccept">Accept</button>
+    <div class="top"><span class="led"></span>Review fixes · ${STEP+1} of ${s.length}
+      ${cur.section ? `<span class="sec">${esc(cur.section)}</span>` : ""}
+      <span class="n">${esc(tally)}</span></div>
+    <div class="sugrid">
+      <div class="sugbox o"><span class="lab">Original</span><div class="tx">${esc(cur.original)}</div></div>
+      <div class="sugbox s"><span class="lab">Suggested</span><div class="tx">${esc(cur.suggested)}</div></div>
+    </div>
+    <div class="stepfoot">
+      <span class="sug-reason">${esc(cur.reason || "")}</span>
+      <div class="stepacts">
+        <button class="btn" id="sugReject">Reject</button>
+        <button class="btn" id="sugSkip">Skip</button>
+        <button class="btn primary" id="sugAccept">Accept</button>
+      </div>
     </div>
   </div>`;
 }
@@ -1702,11 +1736,13 @@ async function acceptSuggestion() {
   if (s.original && DRAFT.body.includes(s.original)) DRAFT.body = DRAFT.body.replace(s.original, s.suggested);
   else toast("Original text not found — it may have been edited; skipping apply.", 5000);
   DRAFT.suggestions.splice(STEP, 1);
+  SUG_DONE.accepted++;
   await saveDraft({});
   renderReadsSurface();
 }
 async function rejectSuggestion() {
   DRAFT.suggestions.splice(STEP, 1);
+  SUG_DONE.rejected++;
   await saveDraft({});
   renderReadsSurface();
 }
@@ -1768,7 +1804,14 @@ function refreshEditorLive() {
   const pub = $("#edPublish"); if (pub) pub.disabled = !checks.every((c) => c.ok);
 }
 let lastBlock = null;
-document.addEventListener("focusin", (e) => { if (e.target.classList && e.target.classList.contains("bblock")) lastBlock = e.target; });
+document.addEventListener("focusin", (e) => {
+  if (e.target.classList && e.target.classList.contains("bblock")) {
+    lastBlock = e.target;
+    // "Suggest fixes for this paragraph" arms once a paragraph has focus (design:
+    // disabled until then). It stays armed — suggestMore reads lastBlock.
+    const sg = $("#edSuggest"); if (sg) { sg.disabled = false; sg.title = "Suggest fixes for the focused paragraph"; }
+  }
+});
 
 /* ---- block editing helpers (shared by initial blocks and Enter-split blocks) ---- */
 function syncBody() {
