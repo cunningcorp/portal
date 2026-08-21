@@ -31,8 +31,14 @@ verify_jwt = true
 [functions.sync-all]
 verify_jwt = true
 
+# oauth-start is browser-opened to begin a connect (a pasted URL / redirect carries no
+# Authorization header), so verify_jwt is OFF -- like oauth-callback. It only mints a
+# consent URL and stores a random single-use CSRF state; oauth-callback then verifies the
+# state and the consenting identity before any token is stored, so a public start is safe.
+# This matches the deployed function, which documents the same rationale. Do NOT flip to
+# true: a redeploy that did so would reject the browser-opened start and break connect.
 [functions.oauth-start]
-verify_jwt = true
+verify_jwt = false
 
 [functions.oauth-callback]
 verify_jwt = false
