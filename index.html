@@ -1843,6 +1843,7 @@ async function applyFormat(kind) {
       const range = sel && sel.rangeCount && el.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
       const url = await linkPopover();
       if (!url) return;
+      el.focus();   // the popover took focus; execCommand needs the block focused (Safari)
       const s = window.getSelection(); s.removeAllRanges(); if (range) s.addRange(range);
       if (range && range.collapsed) document.execCommand("insertHTML", false, `<a href="${esc(url)}">link</a>`);
       else document.execCommand("createLink", false, url);
@@ -2163,12 +2164,6 @@ function briefing() {
 
 const LANE_LABEL = { screen:"Screen", type:"Type", business:"Business" };
 
-/* Cached "What changed" diffs, keyed by queue-row id, so a re-render (e.g. publishing
-   another card) doesn't collapse an open disclosure or re-hit read-diff/GitHub. A row's
-   queued markdown and its live file are both stable within a session — copy is locked
-   upstream and a published row loses its disclosure — so the cache needs no invalidation. */
-const readDiffCache = new Map();
-
 function mdPreview(markdown) {
   const body = markdown.replace(/^---[\s\S]*?---\s*/, "");
   const clean = DOMPurify.sanitize(marked.parse(body));
@@ -2329,9 +2324,7 @@ async function loadReadDiff(details) {
       details.dataset.loaded = "";   // a bad response can be retried by reopening
       return;
     }
-    const html = renderReadDiff(body);
-    readDiffCache.set(id, html);      // survive re-renders; reopen is instant, no refetch
-    box.innerHTML = html;
+    box.innerHTML = renderReadDiff(body);
   } catch (e) {
     box.innerHTML = `<span class="diffnote err">Couldn’t load the diff: ${esc(e.message)}</span>`;
     details.dataset.loaded = "";     // let a reopen retry a transient failure
