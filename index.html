@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Signal — Cunning Corp</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='9' fill='none' stroke='%238E8BD8' stroke-width='2'/><circle cx='16' cy='7' r='2.6' fill='%23C8A24C'/></svg>">
@@ -505,15 +505,25 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .slab.reads:hover{transform:translateY(-5px);filter:brightness(1.06);box-shadow:0 34px 74px rgba(192,89,59,.26)}
 .slab:focus-visible{outline:2px solid var(--state-progress);outline-offset:3px}
 @media(max-width:720px){
-  #launcher{place-items:stretch;padding:var(--space-4)}
-  .launchwrap{gap:var(--space-5);justify-content:center;flex:1}
-  .slabrow{flex-direction:column;align-items:stretch}
-  .slab{max-width:none;min-height:172px;padding:var(--space-5);justify-content:flex-start}
-  /* On a short, stacked card the bottom-anchored body rises into the absolutely
-     positioned corner mark. Drop the mark into normal flow so it sits above the
-     eyebrow instead of over it. */
+  #launcher{place-items:stretch;padding:var(--space-4);padding-top:calc(var(--space-4) + var(--safe-top,0px));
+    padding-bottom:calc(var(--space-4) + var(--safe-bottom,0px))}
+  /* Top bar sits just below the notch like the other pages; the slabs follow. */
+  .launchwrap{gap:var(--space-5);justify-content:flex-start;flex:1}
+  /* Top row: mark + wordmark on one line, a compact sign-out that never wraps.
+     Email is redundant here (it lives in the Signal profile sheet), so it drops. */
+  .launchtop{gap:var(--space-2)}
+  .launchtop .lem{display:none}
+  .launchtop .wm{font-size:11px;letter-spacing:.16em;line-height:1.3}
+  .launchtop #launcherSignOut{flex:none;white-space:nowrap;padding:.5rem .9rem}
+  .slabrow{flex-direction:column;align-items:stretch;gap:var(--space-4)}
+  /* Card grows to its content and reads top-down. Code shipped its own fix for the
+     corner-mark/eyebrow overlap (portal main @ fbe…): keep the mark but drop it into
+     normal flow so it sits ABOVE the eyebrow. Matched here so the two don't diverge. */
+  .slab{max-width:none;min-height:0;padding:var(--space-5);justify-content:flex-start}
   .slab .cnr{position:static;margin-bottom:var(--space-3)}
-  .slab .nm{font-size:34px}
+  .slab .nm{font-size:32px;margin-bottom:var(--space-2)}
+  .slab .ds{max-width:none;font-size:var(--text-label)}
+  .slab .body{gap:0}
 }
 
 /* ============================ reads surface ============================
@@ -540,7 +550,13 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .readsig{display:inline-flex;align-items:center;gap:var(--space-2);color:var(--state-progress);font-size:var(--text-label)}
 .readsig .led{width:7px;height:7px;border-radius:50%;background:var(--state-progress);animation:pulse 1.4s ease-in-out infinite;flex:none}
 @media(max-width:720px){
-  .readtop{padding:var(--space-3) var(--space-4)}
+  .readtop{padding:calc(var(--space-3) + var(--safe-top)) var(--space-4) var(--space-3);
+    flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
+  .readtop .spacer{display:none}
+  .readtop .hublink{order:1}
+  .readtop .count{order:2;margin-left:auto}
+  .readtop .readid{order:3;flex:1 1 100%}
+  .readtop .readid h1{font-size:1.5rem}
   #readsView{padding:var(--space-4)}
 }
 
@@ -731,13 +747,14 @@ td.t a:hover{color:var(--brand-gold-soft)}
   .mact .btn .ico{width:15px;height:15px;flex:none}
 
   /* ---- content foundation ---- */
+  .pill{font-size:.72rem}
   .kpis{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
   .chartbox{height:210px}
   .toast{position:fixed;left:var(--space-4);right:var(--space-4);
     bottom:calc(80px + var(--safe-bottom));top:auto;transform:none;text-align:center}
 
   /* ---- bottom sheets (scope + profile) ---- */
-  .scrim.sheetscrim{position:fixed;inset:0;z-index:60;background:rgba(12,8,18,.66);
+  .scrim.sheetscrim{position:fixed;inset:0;z-index:60;padding:0;background:rgba(12,8,18,.66);
     backdrop-filter:blur(4px);display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch}
   .sheet{background:var(--surface-raised);border-top-left-radius:20px;border-top-right-radius:20px;
     border-top:1px solid var(--border-strong);box-shadow:0 -12px 40px rgba(0,0,0,.5);
@@ -1317,12 +1334,9 @@ $("#profileBtn").onclick = (e) => {
 
 function setProfile(email) {
   $("#profileEmail").textContent = email ?? "—";
-  // Initials from the local part: first.last -> FL, otherwise the first two letters.
+  // First-name initial only: the local part's first letter (before any . _ -).
   const local = (email ?? "").split("@")[0];
-  const parts = local.split(/[._-]+/).filter(Boolean);
-  const initials = parts.length > 1
-    ? (parts[0][0] + parts[1][0])
-    : local.slice(0, 2);
+  const initials = (local.match(/[a-z0-9]/i) || [""])[0];
   $("#profileInitials").textContent = initials ? initials.toUpperCase() : "—";
   // Mobile shell mirrors the same avatar and stashes the email for the profile sheet.
   $("#mProfileInitials").textContent = initials ? initials.toUpperCase() : "—";
@@ -1818,9 +1832,9 @@ function lineDiff(a, b) {
   }
   while (i<n) { rows.push(["del", A[i]]); i++; }
   while (j<m) { rows.push(["add", B[j]]); j++; }
-  const mark = { eq:" ", add:"+", del:"−" };
+  const mark = { eq:" ", add:"+", del:"−" };
   return `<div class="diff">${rows.map(([op, ln]) =>
-    `<div class="dl ${op}"><span class="dm">${mark[op]}</span><span class="dt">${esc(ln) || " "}</span></div>`
+    `<div class="dl ${op}"><span class="dm">${mark[op]}</span><span class="dt">${esc(ln) || " "}</span></div>`
   ).join("")}</div>`;
 }
 
