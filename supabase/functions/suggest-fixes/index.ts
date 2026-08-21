@@ -27,7 +27,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const REPO = "cunningcorp/aubreynorth";
 const BRANCH = "main";
 const VOICE_RULES_PATH = "VOICE-RULES.md";
-const DEFAULT_MODEL = "claude-3-5-haiku-latest";
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";  // latest Haiku; override with SUGGEST_MODEL
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 
 const CORS = {
