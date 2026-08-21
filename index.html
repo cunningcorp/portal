@@ -1451,8 +1451,12 @@ async function openEditor(id) {
   };
   EDIT = id; STEP = 0;
   renderReadsSurface();
-  // Opening a draft flips it to in_review (a persisted status change).
-  if (row.status === "draft") await saveDraft({ status: "in_review" });
+  // Opening a draft flips it to in_review (a persisted status change); reflect it on
+  // the chip in place so it shows the new state without a rebuild.
+  if (row.status === "draft" && await saveDraft({ status: "in_review" })) {
+    const chip = $("#readsView .edstatus");
+    if (chip) { chip.className = "edstatus in_review"; chip.textContent = "in review"; }
+  }
 }
 function closeEditor() { EDIT = null; DRAFT = null; STEP = 0; renderReadsSurface(); }
 
