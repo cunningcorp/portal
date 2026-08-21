@@ -911,6 +911,7 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .pchk{font-size:var(--text-label);display:flex;align-items:flex-start;gap:8px;color:var(--text-secondary)}
 .pchk .dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:5px;background:var(--state-negative)}
 .pchk.ok .dot{background:var(--state-positive)}
+.pchk.warn .dot{background:var(--brand-gold-soft)}  /* soft-warn: flagged, not blocking */
 .srcrow{display:flex;gap:var(--space-2);align-items:baseline;padding:var(--space-2) 0;border-top:1px solid var(--border-subtle);font-size:var(--text-label)}
 .srcrow a{color:var(--brand-terracotta)}
 .srctoggle{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3);font-size:var(--text-label);color:var(--text-secondary);cursor:pointer}
@@ -1596,7 +1597,7 @@ function editorHtml() {
       </div>
       <div class="edcard">
         <h3>Before publish</h3>
-        <div class="pchecks">${checks.map((c) => `<div class="pchk ${c.ok?"ok":""}"><span class="dot"></span>${esc(c.label)}</div>`).join("")}</div>
+        <div class="pchecks">${checks.map((c) => `<div class="pchk ${c.warn?"warn":(c.ok?"ok":"")}"><span class="dot"></span>${esc(c.label)}</div>`).join("")}</div>
       </div>
       ${update ? `<div class="edcard">
         <h3>What changed</h3>
@@ -1623,18 +1624,23 @@ function editorChecks() {
   const dlen = (d.description || "").length;
   const body = d.body || "";
   const all = `${d.title}\n${d.description}\n${body}`;
-  const HYPE = /\b(revolutionary|game[-\s]changing|game changer|unleash|unlock|supercharge|turbocharge|disrupt|disruptive|cutting[-\s]edge|next[-\s]level|world[-\s]class|seamless|effortless|mind[-\s]blowing|jaw[-\s]dropping|best[-\s]in[-\s]class|paradigm|synergy|leverage|delve|elevate|empower)\b/i;
+  // Hype words, two tiers (VOICE-RULES.md): hard-block words block publish; soft-warn
+  // words (which have honest uses) are flagged but never block. Whole-word, case-insensitive.
+  const HYPE_BLOCK = /\b(revolutionary|game[-\s]changing|game changer|unleash|supercharge|turbocharge|disrupt|disruptive|cutting[-\s]edge|next[-\s]level|world[-\s]class|effortless|mind[-\s]blowing|jaw[-\s]dropping|best[-\s]in[-\s]class|paradigm|synergy)\b/i;
+  const HYPE_WARN = /\b(unlock|elevate|empower|seamless|leverage|delve)\b/gi;
+  const warnHits = [...new Set((all.match(HYPE_WARN) || []).map((w) => w.toLowerCase()))];
   const h2 = (body.match(/^##\s+\S/gm) ?? []).length;
   const links = [...body.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
   const badLink = links.some((u) => /claude\.ai|localhost|anthropic\.com/i.test(u) || /^reads\//i.test(u));
   const out = [
     { ok: dlen >= 140 && dlen <= 160, label: `Description ${dlen} chars (needs 140–160)` },
     { ok: !all.includes("!"), label: "No exclamation marks" },
-    { ok: !HYPE.test(all), label: "No hype words" },
+    { ok: !HYPE_BLOCK.test(all), label: "No hype words (hard block)" },
     { ok: h2 >= 2 && h2 <= 4, label: `${h2} H2 headings (needs 2–4)` },
     { ok: !badLink, label: "Internal links root-relative, no external" },
     { ok: (d.suggestions || []).length === 0, label: "All fix suggestions reviewed" },
   ];
+  if (warnHits.length) out.push({ ok: true, warn: true, label: `Soft-warn words (allowed, review): ${warnHits.join(", ")}` });
   if (d.lane === "business") out.push({ ok: !!d.sources_checked, label: "Sources checked (Business)" });
   return out;
 }
@@ -1724,7 +1730,7 @@ function refreshEditorLive() {
   const prev = $("#edPrev"); if (prev) prev.innerHTML = previewHtml();
   const checks = editorChecks();
   const cp = $("#readsView .pchecks");
-  if (cp) cp.innerHTML = checks.map((c) => `<div class="pchk ${c.ok ? "ok" : ""}"><span class="dot"></span>${esc(c.label)}</div>`).join("");
+  if (cp) cp.innerHTML = checks.map((c) => `<div class="pchk ${c.warn ? "warn" : (c.ok ? "ok" : "")}"><span class="dot"></span>${esc(c.label)}</div>`).join("");
   const pub = $("#edPublish"); if (pub) pub.disabled = !checks.every((c) => c.ok);
 }
 let lastBlock = null;

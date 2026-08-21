@@ -64,14 +64,14 @@ function rewriteFrontmatter(markdown: string): { out: string; error?: string } {
   return { out: markdown.slice(0, m.index) + `---\n${fm}\n---` + markdown.slice(m.index + m[0].length) };
 }
 
-// Hype words banned by VOICE-RULES.md. This is the server-side enforcement copy of
-// that list; keep the two in step. Word-boundary, case-insensitive; "leverage" only
-// as a verb is hard to detect cheaply, so it is flagged wherever it appears.
+// Hype words that HARD-BLOCK publish (VOICE-RULES.md two-tier list). Server-side copy of
+// the hard-block tier; keep in step with VOICE-RULES.md and the client editorChecks.
+// Word-boundary, case-insensitive. The soft-warn tier (unlock, elevate, empower, seamless,
+// leverage, delve) is flagged in the editor UI only and deliberately does NOT block here.
 const HYPE = [
-  "revolutionary", "game-changing", "game changer", "unleash", "unlock", "supercharge",
+  "revolutionary", "game-changing", "game changer", "unleash", "supercharge",
   "turbocharge", "disrupt", "disruptive", "cutting-edge", "next-level", "world-class",
-  "seamless", "effortless", "mind-blowing", "jaw-dropping", "best-in-class", "paradigm",
-  "synergy", "leverage", "delve", "elevate", "empower",
+  "effortless", "mind-blowing", "jaw-dropping", "best-in-class", "paradigm", "synergy",
 ];
 
 function bodyOf(markdown: string): string {

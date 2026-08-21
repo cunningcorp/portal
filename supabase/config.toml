@@ -52,3 +52,18 @@ verify_jwt = true
 # GITHUB_TOKEN secret (Contents read only). Never writes.
 [functions.read-diff]
 verify_jwt = true
+
+# suggest-fixes powers the editor's "Suggest fixes" button (live AI line edits).
+# verify_jwt on (a signed-in portal session), same as publish-read/read-diff. Secrets:
+# ANTHROPIC_API_KEY + GITHUB_TOKEN (reads VOICE-RULES.md from aubreynorth@main).
+[functions.suggest-fixes]
+verify_jwt = true
+
+# insert-draft is how the HEADLESS drafting engine writes drafts to reads_queue without
+# holding the service-role key (the key lives only in this function). It is gated on the
+# DRAFT_INSERT_SECRET shared secret via a constant-time check, so verify_jwt is OFF here
+# (the caller has no user JWT) -- the second deliberate verify_jwt=false after
+# oauth-callback. REVIEW before deploy. Secrets: DRAFT_INSERT_SECRET, GITHUB_TOKEN,
+# SUPABASE_SERVICE_ROLE_KEY.
+[functions.insert-draft]
+verify_jwt = false
