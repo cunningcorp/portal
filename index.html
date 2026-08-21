@@ -887,6 +887,10 @@ td.t a:hover{color:var(--brand-gold-soft)}
   font:inherit;line-height:1.6;padding:.2rem 0 .2rem var(--space-3);margin:0 0 var(--space-2);outline:none;white-space:pre-wrap;word-break:break-word}
 .bblock:focus{border-left-color:var(--state-progress)}
 .bblock.h2{font-family:var(--font-head);font-weight:400;font-size:1.15rem;color:var(--text-primary)}
+/* rich marks inside a block (Route A WYSIWYG) */
+.bblock strong,.bblock b{font-weight:600;color:var(--text-primary)}
+.bblock a{color:var(--brand-gold-soft);text-decoration:underline;text-underline-offset:2px}
+.bblock code{font-family:ui-monospace,monospace;font-size:.9em;background:var(--surface-sunken);padding:1px 4px;border-radius:4px}
 .suggestbtn{margin-top:var(--space-2);background:none;border:1px solid var(--state-progress);color:var(--state-progress);
   border-radius:var(--radius-pill);padding:.3rem .8rem;font:inherit;font-size:var(--text-micro);cursor:pointer}
 .suggestbtn:disabled{opacity:.4;cursor:default;border-color:var(--border-default);color:var(--text-tertiary)}
@@ -1497,11 +1501,44 @@ function blocksFromBody(body) {
   return (body || "").split(/\n{2,}/).map((b) => b.trim()).filter(Boolean).map((b) =>
     /^##\s+/.test(b) ? { type: "h2", text: b.replace(/^##\s+/, "") } : { type: "p", text: b });
 }
+/* ---- Route A WYSIWYG: a block holds RENDERED html (bold looks bold). renderInline
+   turns a block's markdown into a constrained rich fragment; serializeBlock turns the
+   edited html back into markdown for storage/publish. A block only renders rich if it
+   round-trips exactly (canRichify); anything exotic (images, lists, underscore-emphasis,
+   code the set below doesn't cover) stays an editable RAW-markdown block, so no authored
+   copy is ever lost. publish-read still receives full markdown, unchanged. ---- */
+function renderInline(md) {
+  return DOMPurify.sanitize(marked.parseInline(md ?? ""),
+    { ALLOWED_TAGS: ["strong", "em", "b", "i", "a", "code", "del", "s", "br"], ALLOWED_ATTR: ["href"] });
+}
+function escMd(s) { return s.replace(/([\\`*\[\]])/g, "\\$1"); }
+function nodeToMd(node) {
+  if (node.nodeType === 3) return escMd(node.nodeValue);
+  if (node.nodeType !== 1) return "";
+  const tag = node.tagName.toLowerCase();
+  const inner = [...node.childNodes].map(nodeToMd).join("");
+  if (tag === "strong" || tag === "b") return inner.trim() ? `**${inner}**` : inner;
+  if (tag === "em" || tag === "i") return inner.trim() ? `*${inner}*` : inner;
+  if (tag === "code") return `\`${inner}\``;
+  if (tag === "del" || tag === "s") return `~~${inner}~~`;
+  if (tag === "a") return `[${inner}](${node.getAttribute("href") || ""})`;
+  if (tag === "br") return "\n";
+  return inner;   // unwrap spans/divs the browser may inject
+}
+function serializeBlock(el) {
+  if (el.dataset.raw === "1") return (el.textContent || "").trim();
+  return [...el.childNodes].map(nodeToMd).join("").trim();
+}
+/** A block renders as rich WYSIWYG only if md -> html -> md is exact — the no-loss gate. */
+function canRichify(md) {
+  const el = document.createElement("div");
+  el.innerHTML = renderInline(md);
+  return serializeBlock(el) === md;
+}
 function bodyFromBlocks() {
-  return $$("#edBody .bblock").map((el) => {
-    const t = (el.textContent || "").trim();
-    return el.dataset.type === "h2" ? `## ${t}` : t;
-  }).filter(Boolean).join("\n\n");
+  return $$("#edBody .bblock").map((el) =>
+    (el.dataset.type === "h2" ? "## " : "") + serializeBlock(el)
+  ).filter((s) => s.replace(/^##\s*/, "").trim()).join("\n\n");
 }
 
 /* ---- editor view ---- */
@@ -1512,8 +1549,13 @@ function editorHtml() {
   const checks = editorChecks();
   const canPublish = checks.every((c) => c.ok);
   const update = !!(d.published_at || d.commit_sha);
-  const blocks = blocksFromBody(d.body).map((b) =>
-    `<div class="bblock ${b.type === "h2" ? "h2" : ""}" contenteditable="true" data-type="${b.type}">${esc(b.text)}</div>`).join("");
+  const blocks = blocksFromBody(d.body).map((b) => {
+    const cls = `bblock ${b.type === "h2" ? "h2" : ""}`;
+    // Rich WYSIWYG when the block round-trips exactly; otherwise edit raw markdown (no loss).
+    return canRichify(b.text)
+      ? `<div class="${cls}" contenteditable="true" data-type="${b.type}">${renderInline(b.text)}</div>`
+      : `<div class="${cls}" contenteditable="true" data-type="${b.type}" data-raw="1">${esc(b.text)}</div>`;
+  }).join("");
 
   return `
   <div class="edhead">
@@ -1679,16 +1721,6 @@ function syncBody() {
   DRAFT.body = bodyFromBlocks();
   const p = $("#edPrev"); if (p) p.innerHTML = previewHtml();
 }
-/** Caret offset within a block's text, or the text length if the caret is elsewhere. */
-function caretOffset(el) {
-  const sel = window.getSelection();
-  if (!sel || !sel.rangeCount || !el.contains(sel.anchorNode)) return (el.textContent || "").length;
-  const r = sel.getRangeAt(0);
-  const pre = document.createRange();
-  pre.selectNodeContents(el);
-  pre.setEnd(r.endContainer, r.endOffset);
-  return pre.toString().length;
-}
 function insertTextAtCaret(el, text) {
   const sel = window.getSelection();
   if (sel && sel.rangeCount && el.contains(sel.anchorNode)) {
@@ -1703,17 +1735,22 @@ function insertTextAtCaret(el, text) {
 /** Enter splits the focused block at the caret into a new paragraph block — newlines
     inside one block would collapse on serialise, so a new paragraph is a new block. */
 function splitBlock(el) {
-  const full = el.textContent || "";
-  const off = caretOffset(el);
-  el.textContent = full.slice(0, off);
+  const sel = window.getSelection();
   const nb = document.createElement("div");
   nb.className = "bblock"; nb.contentEditable = "true"; nb.dataset.type = "p";
-  nb.textContent = full.slice(off);
+  if (el.dataset.raw === "1") nb.dataset.raw = "1";   // keep a split raw block raw
+  // Move everything from the caret to the end of the block into the new block,
+  // preserving inline formatting (extractContents works on the rich html too).
+  if (sel && sel.rangeCount && el.contains(sel.anchorNode) && el.lastChild) {
+    const r = sel.getRangeAt(0).cloneRange();
+    r.setEndAfter(el.lastChild);
+    nb.appendChild(r.extractContents());
+  }
   el.after(nb);
   wireBlock(nb);
-  const r = document.createRange();
-  r.setStart(nb.firstChild || nb, 0); r.collapse(true);
-  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  const r2 = document.createRange();
+  r2.setStart(nb, 0); r2.collapse(true);
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r2);
   nb.focus();
 }
 function wireBlock(el) {
@@ -1768,17 +1805,32 @@ async function applyFormat(kind) {
   if (kind === "h2") {
     el.dataset.type = el.dataset.type === "h2" ? "p" : "h2";
     el.classList.toggle("h2", el.dataset.type === "h2");
-  } else {
+  } else if (el.dataset.raw === "1") {
+    // Raw-markdown block (exotic content): insert literal markdown at the caret.
     const sel = window.getSelection();
     const inEl = sel && sel.rangeCount && el.contains(sel.anchorNode);
     const chosen = inEl && !sel.isCollapsed ? sel.toString() : "";
-    // Capture the range now — the link popover steals focus and would collapse it.
     const range = inEl ? sel.getRangeAt(0).cloneRange() : null;
     if (kind === "bold") insertAtRange(el, `**${chosen || "bold"}**`, range);
     if (kind === "link") {
       const url = await linkPopover();
       if (!url) return;
       insertAtRange(el, `[${chosen || "text"}](${url})`, range);
+    }
+  } else {
+    // Rich block: native formatting, serialized back to markdown on save.
+    if (kind === "bold") {
+      document.execCommand("styleWithCSS", false, false);   // emit <b>, not a styled span
+      document.execCommand("bold");
+    }
+    if (kind === "link") {
+      const sel = window.getSelection();
+      const range = sel && sel.rangeCount && el.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+      const url = await linkPopover();
+      if (!url) return;
+      const s = window.getSelection(); s.removeAllRanges(); if (range) s.addRange(range);
+      if (range && range.collapsed) document.execCommand("insertHTML", false, `<a href="${esc(url)}">link</a>`);
+      else document.execCommand("createLink", false, url);
     }
   }
   syncBody();
