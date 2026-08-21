@@ -836,7 +836,11 @@ td.t a:hover{color:var(--brand-gold-soft)}
    Triage columns + the editor surface. Reuses the portal tokens throughout; the
    only site-specific colours (paper/ink/rust) are scoped to .anprev, the preview
    panel, because that panel deliberately mimics aubreynorth.com. */
-.lanechips{display:flex;gap:var(--space-2);margin:0 0 var(--space-4);flex-wrap:wrap}
+/* queue heading row: title + subhead left, lane pills right (design layout) */
+.qhead{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-5)}
+.qtitle{margin:0 0 6px;font-family:var(--font-head);font-weight:300;font-size:28px;letter-spacing:-.02em;color:var(--text-primary)}
+.qsub{margin:0;font-size:var(--text-label);color:var(--text-tertiary)}
+.lanechips{display:flex;gap:var(--space-2);flex-wrap:wrap}
 .lanechip{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
   color:var(--brand-mute);border:1px solid var(--border-default);background:none;
   border-radius:999px;padding:.42rem .85rem;cursor:pointer;transition:var(--dur-fast)}
@@ -844,16 +848,20 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .lanechip[aria-pressed="true"]{color:var(--brand-plum-deep);border-color:var(--state-progress);background:var(--state-progress)}
 .triage{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4);align-items:start}
 .tcol{background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--space-4);min-width:0}
-.tcol>h3{margin:0 0 var(--space-3);font-family:var(--font-head);font-weight:400;font-size:var(--text-body);
-  display:flex;align-items:center;gap:var(--space-2)}
-.tcol>h3 .n{margin-left:auto;font-size:var(--text-micro);color:var(--text-tertiary);font-family:inherit}
+/* Column headers in the design's vivid treatment: uppercase, semibold, tracked, in
+   the status hue — DRAFT / IN REVIEW / READY / PUBLISHED read at a glance. */
+.tcol>h3{margin:0 0 var(--space-3);font:inherit;font-size:11px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:var(--space-2)}
+.tcol>h3 .n{margin-left:auto;font-weight:400;letter-spacing:0;font-size:var(--text-micro);color:var(--text-tertiary);font-variant-numeric:tabular-nums}
 .tcol.draft>h3{color:var(--text-tertiary)} .tcol.in_review>h3{color:var(--state-progress)}
 .tcol.ready>h3{color:var(--state-positive)} .tcol.published>h3{color:var(--brand-gold-soft)}
 .tcard{width:100%;text-align:left;background:var(--surface-overlay);border:1px solid var(--border-default);
   border-radius:var(--radius-md);padding:var(--space-3);margin-bottom:var(--space-2);cursor:pointer;
   display:block;transition:border-color var(--dur-fast)}
 .tcard:hover{border-color:var(--border-strong)}
-.tcard .lane{font-size:var(--text-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--brand-terracotta)}
+.tcard .trow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:2px}
+.tcard .date{font-size:var(--text-micro);color:var(--text-tertiary);white-space:nowrap}
+.tcard .lane{font-size:var(--text-micro);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-terracotta)}
 .tcard .ttl{display:block;font-family:var(--font-head);font-weight:300;font-size:1.05rem;color:var(--text-primary);margin:2px 0}
 .tcard .meta{font-size:var(--text-micro);color:var(--text-tertiary)}
 .tcard .flags{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
@@ -1473,24 +1481,30 @@ function triageHtml() {
       : `<div class="empty">—</div>`;
     return `<div class="tcol ${st}"><h3>${label}<span class="n">${rows.length}</span></h3>${body}</div>`;
   };
-  return `<div class="lanechips">${chips}</div><div class="triage">${cols.map(col).join("")}</div>`;
+  return `<div class="qhead">
+    <div>
+      <h1 class="qtitle">The queue, as an editor</h1>
+      <p class="qsub">Drafts arrive one per lane per day. Nothing goes live without your click.</p>
+    </div>
+    <div class="lanechips">${chips}</div>
+  </div><div class="triage">${cols.map(col).join("")}</div>`;
 }
 function triageCard(r) {
   const nSug = Array.isArray(r.suggestions) ? r.suggestions.length : 0;
   const needSrc = r.lane === "business" && !r.sources_checked;
   const failed = r.status === "failed";
   return `<button class="tcard" data-open="${esc(r.id)}">
-    <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}${failed ? " · failed" : ""}</span>
+    <span class="trow"><span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}${failed ? " · failed" : ""}</span><span class="date">${shortDate(r.created_at)}</span></span>
     <span class="ttl">${esc(r.title || "Untitled")}</span>
-    <span class="meta">${esc(r.target_query ? `“${r.target_query}”` : "Aubrey North")}${r.word_count ? ` · ${fmt(r.word_count)} words` : ""} · ${shortDate(r.created_at)}</span>
+    <span class="meta">${esc(r.target_query ? `“${r.target_query}”` : "Aubrey North")}${r.word_count ? ` · ${fmt(r.word_count)} words` : ""}</span>
     ${(nSug || needSrc) ? `<span class="flags">${nSug ? `<span class="tflag fix">${nSug} fix ${nSug===1?"suggestion":"suggestions"}</span>` : ""}${needSrc ? `<span class="tflag src">Sources unchecked</span>` : ""}</span>` : ""}
   </button>`;
 }
 function pubCard(r) {
   return `<div class="tcard pub">
-    <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span>
+    <span class="trow"><span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span><span class="date">${shortDate(r.published_at)}</span></span>
     <span class="ttl"><a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a></span>
-    <span class="meta">${shortDate(r.published_at)} · ${esc((r.commit_sha ?? "").slice(0,7))}</span>
+    <span class="meta">${esc((r.commit_sha ?? "").slice(0,7))}</span>
   </div>`;
 }
 function wireTriage() {
