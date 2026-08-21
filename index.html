@@ -508,7 +508,11 @@ td.t a:hover{color:var(--brand-gold-soft)}
   #launcher{place-items:stretch;padding:var(--space-4)}
   .launchwrap{gap:var(--space-5);justify-content:center;flex:1}
   .slabrow{flex-direction:column;align-items:stretch}
-  .slab{max-width:none;min-height:172px;padding:var(--space-5)}
+  .slab{max-width:none;min-height:172px;padding:var(--space-5);justify-content:flex-start}
+  /* On a short, stacked card the bottom-anchored body rises into the absolutely
+     positioned corner mark. Drop the mark into normal flow so it sits above the
+     eyebrow instead of over it. */
+  .slab .cnr{position:static;margin-bottom:var(--space-3)}
   .slab .nm{font-size:34px}
 }
 
