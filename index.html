@@ -1598,6 +1598,13 @@ function editorHtml() {
         <h3>Before publish</h3>
         <div class="pchecks">${checks.map((c) => `<div class="pchk ${c.ok?"ok":""}"><span class="dot"></span>${esc(c.label)}</div>`).join("")}</div>
       </div>
+      ${update ? `<div class="edcard">
+        <h3>What changed</h3>
+        <details class="whatchanged" data-diff="${esc(EDIT)}">
+          <summary>Compare with the live version</summary>
+          <div class="diffbody" data-diffbody><span class="diffnote">Loading…</span></div>
+        </details>
+      </div>` : ""}
       ${d.lane === "business" ? `<div class="edcard srcpanel">
         <h3>Sources</h3>
         ${(d.sources||[]).length ? (d.sources||[]).map((s) => `<div class="srcrow"><span>${esc(s.claim ?? "")}</span><a href="${esc(s.url ?? "#")}" target="_blank" rel="noopener">${esc(s.publisher ?? "source")}</a></div>`).join("") : `<div class="empty">No sources attached.</div>`}
@@ -1699,6 +1706,14 @@ function wireEditor() {
   $("#sugAccept") && ($("#sugAccept").onclick = acceptSuggestion);
   $("#sugReject") && ($("#sugReject").onclick = rejectSuggestion);
   $("#sugSkip") && ($("#sugSkip").onclick = () => { STEP = (STEP + 1) % (DRAFT.suggestions.length || 1); renderReadsSurface(); });
+
+  // "What changed" (Update drafts only): lazily diff the queued body against the live
+  // article via read-diff when the reviewer opens the disclosure, once per open.
+  $$("#readsView details.whatchanged").forEach((dt) => {
+    dt.addEventListener("toggle", () => {
+      if (dt.open && !dt.dataset.loaded) { dt.dataset.loaded = "1"; loadReadDiff(dt); }
+    });
+  });
 }
 /* Re-render just the preview + checks + publish enablement without losing caret in a
    block being typed. Called after blur-saves. */
