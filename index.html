@@ -536,12 +536,13 @@ td.t a:hover{color:var(--brand-gold-soft)}
 /* Reads bar mirrors Signal's: mark + page name as the home link (left), context
    (middle), profile menu (right). Page name doubles as the launcher-home link. */
 .brandhome{display:inline-flex;align-items:center;gap:var(--space-3);background:none;border:0;cursor:pointer;font:inherit;padding:0}
-.brandhome .mark{width:22px;height:22px;flex:none}
+.brandhome .mark{width:17px;height:17px;flex:none}
 .readid{display:flex;flex-direction:column;gap:1px;text-align:left}
 .readid .an{font-family:'Scenario',Georgia,serif;font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand-terracotta)}
-.readid .pg{font-family:var(--font-head);font-weight:300;font-size:var(--figure-md);letter-spacing:-.01em;color:var(--text-primary);line-height:1}
+.readid .pg{font-family:var(--font-display);font-weight:400;font-size:15px;letter-spacing:var(--track-display);text-transform:uppercase;color:var(--text-primary);line-height:1}
 .brandhome:hover .pg{color:var(--brand-gold-soft)}
 .rcontext{font-size:var(--text-label);color:var(--text-tertiary);letter-spacing:.02em}
+.rcontext b{color:var(--brand-mute);font-weight:600}
 .readtop .spacer{flex:1}
 #readsView{flex:1;width:100%;max-width:1560px;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)}
 .monthhead{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary);
@@ -556,7 +557,6 @@ td.t a:hover{color:var(--brand-gold-soft)}
   .readtop .brandhome{order:1}
   .readtop .acctmenu{order:2;margin-left:auto}
   .readtop .rcontext{order:3;flex:1 1 100%}
-  .readid .pg{font-size:1.4rem}
   #readsView{padding:var(--space-4)}
 }
 
@@ -1400,8 +1400,24 @@ const bodyMd = (md) => {
 };
 
 function renderReadsSurface() {
-  const ready = (DATA.reads ?? []).filter((r) => ["ready","failed","publishing"].includes(r.status)).length;
-  $("#readsCount").textContent = DATA.reads === null ? "queue unavailable" : (ready ? `${ready} ready` : "queue clear");
+  // Digest line, wired to the real queue: did today's drafting batch land, and when?
+  // "Today" is the Europe/London editorial day, matching the drafting cadence and
+  // publish-read's timezone. Refreshed on every load/navigation (drafts land ~06:30).
+  const reads = DATA.reads ?? [];
+  const londonDay = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(d);
+  const londonTime = (d) => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hour12: false }).format(d);
+  const today = londonDay(new Date());
+  const todays = reads.filter((r) => r.created_at && londonDay(new Date(r.created_at)) === today);
+  const base = "Digest: emailed when the day's drafts land";
+  let digest;
+  if (DATA.reads === null) digest = "queue unavailable";
+  else if (todays.length) {
+    const latest = todays.reduce((a, b) => (a.created_at > b.created_at ? a : b));
+    digest = `${base} · <b>${todays.length} arrived ${esc(londonTime(new Date(latest.created_at)))}</b>`;
+  } else {
+    digest = `${base} · <b>none yet today</b>`;
+  }
+  $("#readsCount").innerHTML = digest;
   const v = $("#readsView");
   if (LOADING) { v.innerHTML = readsSkeleton(); return; }
   if (DATA.reads === null) {
