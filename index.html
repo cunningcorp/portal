@@ -836,7 +836,11 @@ td.t a:hover{color:var(--brand-gold-soft)}
    Triage columns + the editor surface. Reuses the portal tokens throughout; the
    only site-specific colours (paper/ink/rust) are scoped to .anprev, the preview
    panel, because that panel deliberately mimics aubreynorth.com. */
-.lanechips{display:flex;gap:var(--space-2);margin:0 0 var(--space-4);flex-wrap:wrap}
+/* queue heading row: title + subhead left, lane pills right (design layout) */
+.qhead{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-5)}
+.qtitle{margin:0 0 6px;font-family:var(--font-head);font-weight:300;font-size:28px;letter-spacing:-.02em;color:var(--text-primary)}
+.qsub{margin:0;font-size:var(--text-label);color:var(--text-tertiary)}
+.lanechips{display:flex;gap:var(--space-2);flex-wrap:wrap}
 .lanechip{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
   color:var(--brand-mute);border:1px solid var(--border-default);background:none;
   border-radius:999px;padding:.42rem .85rem;cursor:pointer;transition:var(--dur-fast)}
@@ -844,16 +848,20 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .lanechip[aria-pressed="true"]{color:var(--brand-plum-deep);border-color:var(--state-progress);background:var(--state-progress)}
 .triage{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4);align-items:start}
 .tcol{background:var(--surface-raised);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:var(--space-4);min-width:0}
-.tcol>h3{margin:0 0 var(--space-3);font-family:var(--font-head);font-weight:400;font-size:var(--text-body);
-  display:flex;align-items:center;gap:var(--space-2)}
-.tcol>h3 .n{margin-left:auto;font-size:var(--text-micro);color:var(--text-tertiary);font-family:inherit}
+/* Column headers in the design's vivid treatment: uppercase, semibold, tracked, in
+   the status hue — DRAFT / IN REVIEW / READY / PUBLISHED read at a glance. */
+.tcol>h3{margin:0 0 var(--space-3);font:inherit;font-size:11px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:var(--space-2)}
+.tcol>h3 .n{margin-left:auto;font-weight:400;letter-spacing:0;font-size:var(--text-micro);color:var(--text-tertiary);font-variant-numeric:tabular-nums}
 .tcol.draft>h3{color:var(--text-tertiary)} .tcol.in_review>h3{color:var(--state-progress)}
 .tcol.ready>h3{color:var(--state-positive)} .tcol.published>h3{color:var(--brand-gold-soft)}
 .tcard{width:100%;text-align:left;background:var(--surface-overlay);border:1px solid var(--border-default);
   border-radius:var(--radius-md);padding:var(--space-3);margin-bottom:var(--space-2);cursor:pointer;
   display:block;transition:border-color var(--dur-fast)}
 .tcard:hover{border-color:var(--border-strong)}
-.tcard .lane{font-size:var(--text-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--brand-terracotta)}
+.tcard .trow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:2px}
+.tcard .date{font-size:var(--text-micro);color:var(--text-tertiary);white-space:nowrap}
+.tcard .lane{font-size:var(--text-micro);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-terracotta)}
 .tcard .ttl{display:block;font-family:var(--font-head);font-weight:300;font-size:1.05rem;color:var(--text-primary);margin:2px 0}
 .tcard .meta{font-size:var(--text-micro);color:var(--text-tertiary)}
 .tcard .flags{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
@@ -937,6 +945,36 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .srcrow a{color:var(--brand-terracotta)}
 .srctoggle{display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3);font-size:var(--text-label);color:var(--text-secondary);cursor:pointer}
 .srcpanel{border-color:var(--brand-terracotta)}
+
+/* Social panel (W3–W5) — gold-keyed, distinct from stepper periwinkle + sources terracotta */
+.grow{flex:1}
+.socialpanel{border-left:2px solid var(--brand-gold)}
+.socialhead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
+.socialhead .eyebrow{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;font-weight:600;color:var(--brand-gold);margin-bottom:4px}
+.socialnote{margin:0;font-size:var(--text-label);color:var(--text-tertiary);max-width:60ch}
+.socialempty{border:1px dashed var(--border-default);border-radius:var(--radius-md);padding:var(--space-5);text-align:center;color:var(--text-tertiary);font-size:var(--text-label)}
+.socialempty b{color:var(--text-secondary);font-weight:600}
+.socialgen{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-5);color:var(--text-secondary);font-size:var(--text-label)}
+.socialgen .led{width:7px;height:7px;border-radius:50%;background:var(--brand-gold);animation:pulse 2.2s ease-in-out infinite;flex:none}
+.ssec{background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:var(--space-4);margin-top:var(--space-3)}
+.ssechead{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-3)}
+.ssechead .sname{font-size:var(--text-label);font-weight:600;color:var(--text-primary)}
+.ssechead .scomp{font-size:var(--text-micro);color:var(--brand-peri);white-space:nowrap}
+.spill{font:inherit;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--border-default);background:none;color:var(--text-tertiary);border-radius:999px;padding:.2rem .6rem;cursor:pointer}
+.spill.copied{color:var(--state-progress);border-color:var(--state-progress)}
+.spill.posted{color:var(--brand-gold);border-color:var(--brand-gold)}
+.mhint{font-size:var(--text-micro);color:var(--text-tertiary)}
+.sfield,.microrow{margin-top:var(--space-3)}
+.sfield:first-of-type,.microrow:first-of-type{margin-top:0}
+.sfrow{display:flex;align-items:center;gap:var(--space-2);margin-bottom:6px}
+.sfrow label{font-size:var(--text-micro);letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary)}
+.scopy{font:inherit;font-size:var(--text-micro);font-weight:600;color:var(--text-secondary);background:none;border:1px solid var(--border-default);border-radius:var(--radius-md);padding:.25rem .7rem;cursor:pointer}
+.scopy:hover{border-color:var(--border-strong);color:var(--text-primary)}
+.sinput,.starea{width:100%;background:var(--surface-overlay);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);padding:.5rem .7rem;font:inherit;font-size:var(--text-label);line-height:1.6}
+.starea{resize:vertical}
+.schecks{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-4);margin-top:6px}
+.schecks .pchk{font-size:var(--text-micro)}
+.schecks .pchk .dot{margin-top:4px}
 
 /* preview panel — deliberately the aubreynorth.com look (scoped site values) */
 .anprev{background:#F6F3EC;border-radius:var(--radius-md);padding:var(--space-5);color:#22201C;max-width:100%;overflow:hidden}
@@ -1415,6 +1453,33 @@ let DRAFT = null;     // working copy of the row being edited
 let LANEF = "all";    // triage lane filter
 let STEP = 0;         // suggestion stepper index
 let SUG_DONE = { accepted: 0, rejected: 0 };  // stepper tally, reset per editor open
+let SOCIAL_BUSY = false;  // transient "generating…" state for the Social panel
+
+// Voice rules, shared between the editor's publish checks and the Social panel's per-section
+// checks (W4: one rule set, not two). Two tiers per VOICE-RULES.md: hard-block words block;
+// soft-warn words (honest uses exist) are flagged, never blocked. Authoritative list lives in
+// VOICE-RULES.md on the server side; these mirror the mechanical ones for instant UI feedback.
+const HYPE_BLOCK = /\b(revolutionary|game[-\s]changing|game changer|unleash|supercharge|turbocharge|disrupt|disruptive|cutting[-\s]edge|next[-\s]level|world[-\s]class|effortless|mind[-\s]blowing|jaw[-\s]dropping|best[-\s]in[-\s]class|paradigm|synergy)\b/i;
+const HYPE_WARN = /\b(unlock|elevate|empower|seamless|leverage|delve)\b/gi;
+
+// Platform limits — one definition (mirrors generate-social's server-side constants).
+const SOCIAL_LIMITS = { xHook: 280, liPost: 3000 };
+// Open-composer targets — config-level constants, one place to swap if a reliable per-platform
+// deep-link appears (PORTAL-SOCIAL-SPEC §5.2). Plain composer links today, not deep-links.
+const COMPOSER = {
+  x_article:     "https://x.com/compose/articles",
+  x_post:        "https://x.com/compose/post",
+  li_newsletter: "https://www.linkedin.com/",
+  li_post:       "https://www.linkedin.com/feed/?shareActive=true",
+};
+
+/** Heuristic italics detector for the Social checks (site voice: no italics). Flags *italic*
+ *  and _italic_ (not **bold**) and <em>/<i>. A flag, not a parser. */
+function hasItalics(t) {
+  return /<\/?(?:em|i)\b/i.test(t)
+    || /(?:^|[^*\w])\*[^*\s][^*\n]*\*(?![*\w])/.test(t)
+    || /(?:^|[^_\w])_[^_\s][^_\n]*_(?![_\w])/.test(t);
+}
 
 const bodyMd = (md) => {
   const m = /^---\r?\n[\s\S]*?\r?\n---/.exec(md ?? "");
@@ -1468,29 +1533,37 @@ function triageHtml() {
     rows = st === "published"
       ? rows.sort((a,b) => (b.published_at ?? "").localeCompare(a.published_at ?? ""))
       : rows.sort((a,b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+    // Quiet, on-voice empty states per column (R3) — no exclamation, no filler.
+    const EMPTY = { draft: "Nothing in the queue.", in_review: "Nothing in review.", ready: "Nothing ready to publish.", published: "Nothing published yet." };
     const body = rows.length
       ? rows.map((r) => st === "published" ? pubCard(r) : triageCard(r)).join("")
-      : `<div class="empty">—</div>`;
+      : `<div class="empty">${EMPTY[st] ?? "Nothing here."}</div>`;
     return `<div class="tcol ${st}"><h3>${label}<span class="n">${rows.length}</span></h3>${body}</div>`;
   };
-  return `<div class="lanechips">${chips}</div><div class="triage">${cols.map(col).join("")}</div>`;
+  return `<div class="qhead">
+    <div>
+      <h1 class="qtitle">The queue, as an editor</h1>
+      <p class="qsub">Drafts arrive one per lane per day. Nothing goes live without your click.</p>
+    </div>
+    <div class="lanechips">${chips}</div>
+  </div><div class="triage">${cols.map(col).join("")}</div>`;
 }
 function triageCard(r) {
   const nSug = Array.isArray(r.suggestions) ? r.suggestions.length : 0;
   const needSrc = r.lane === "business" && !r.sources_checked;
   const failed = r.status === "failed";
   return `<button class="tcard" data-open="${esc(r.id)}">
-    <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}${failed ? " · failed" : ""}</span>
+    <span class="trow"><span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}${failed ? " · failed" : ""}</span><span class="date">${shortDate(r.created_at)}</span></span>
     <span class="ttl">${esc(r.title || "Untitled")}</span>
-    <span class="meta">${esc(r.target_query ? `“${r.target_query}”` : "Aubrey North")}${r.word_count ? ` · ${fmt(r.word_count)} words` : ""} · ${shortDate(r.created_at)}</span>
+    <span class="meta">${esc(r.target_query ? `“${r.target_query}”` : "Aubrey North")}${r.word_count ? ` · ${fmt(r.word_count)} words` : ""}</span>
     ${(nSug || needSrc) ? `<span class="flags">${nSug ? `<span class="tflag fix">${nSug} fix ${nSug===1?"suggestion":"suggestions"}</span>` : ""}${needSrc ? `<span class="tflag src">Sources unchecked</span>` : ""}</span>` : ""}
   </button>`;
 }
 function pubCard(r) {
   return `<div class="tcard pub">
-    <span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span>
+    <span class="trow"><span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span><span class="date">${shortDate(r.published_at)}</span></span>
     <span class="ttl"><a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a></span>
-    <span class="meta">${shortDate(r.published_at)} · ${esc((r.commit_sha ?? "").slice(0,7))}</span>
+    <span class="meta">${esc((r.commit_sha ?? "").slice(0,7))}</span>
   </div>`;
 }
 function wireTriage() {
@@ -1509,8 +1582,10 @@ async function openEditor(id) {
     suggestions: (row.suggestions ?? []).slice(), sources: (row.sources ?? []).slice(),
     sources_checked: !!row.sources_checked, lane: row.lane, slug: row.slug, status: row.status,
     published_at: row.published_at, commit_sha: row.commit_sha, created_at: row.created_at,
+    id: row.id, social: (row.social && typeof row.social === "object") ? row.social : {},
   };
   SUG_DONE = { accepted: 0, rejected: 0 };   // per-editor-session tally for the stepper
+  SOCIAL_BUSY = false;
   EDIT = id; STEP = 0;
   renderReadsSurface();
   // Opening a draft flips it to in_review (a persisted status change); reflect it on
@@ -1671,7 +1746,8 @@ function editorHtml() {
         <label class="srctoggle"><input type="checkbox" id="edSrcChk"${d.sources_checked?" checked":""}> Sources checked</label>
       </div>` : ""}
     </div>
-  </div>`;
+  </div>
+  ${socialPanelHtml()}`;
 }
 function previewHtml() {
   const d = DRAFT;
@@ -1680,15 +1756,221 @@ function previewHtml() {
     <div class="date">${esc(d.created_at ? new Date(d.created_at).toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" }) : "")}</div>
     ${mdPreview(recombine())}`;
 }
+
+/* ============================ Social panel (W3–W5) ============================
+   Shown only when a Read is `ready` or beyond. Reads/writes DRAFT.social (the pack
+   generate-social produces). Never posts: it renders copy with per-section Copy,
+   Open-composer, and a manual generated→copied→posted state Demetri sets by hand. */
+const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+
+function ruleOpts(rule, canonical) {
+  switch (rule) {
+    case "body": case "link": return { needLink: true, canonical };
+    case "feed280": return { isFeed: true, limit: SOCIAL_LIMITS.xHook, canonical };
+    case "feed3000": return { isFeed: true, limit: SOCIAL_LIMITS.liPost, canonical };
+    case "micro": return { isFeed: true, canonical };
+    default: return {};   // title — voice checks only
+  }
+}
+function socialChecks(text, o = {}) {
+  const out = [
+    { ok: !text.includes("!"), label: "No exclamation marks" },
+    { ok: !HYPE_BLOCK.test(text), label: "No hype (hard block)" },
+    { ok: !hasItalics(text), label: "No italics" },
+  ];
+  const warn = [...new Set((text.match(HYPE_WARN) || []).map((w) => w.toLowerCase()))];
+  if (warn.length) out.push({ ok: true, warn: true, label: `Soft-warn: ${warn.join(", ")}` });
+  if (o.limit) out.push({ ok: text.length <= o.limit, label: `${text.length} / ${o.limit} chars` });
+  if (o.isFeed && o.canonical) out.push({ ok: !text.includes(o.canonical), label: "No link in feed post" });
+  if (o.needLink && o.canonical) out.push({ ok: text.includes(o.canonical), label: "Canonical link present" });
+  return out;
+}
+function checksRowHtml(text, rule, canonical) {
+  return socialChecks(text, ruleOpts(rule, canonical))
+    .map((c) => `<span class="pchk ${c.warn ? "warn" : (c.ok ? "ok" : "")}"><span class="dot"></span>${esc(c.label)}</span>`).join("");
+}
+function sfieldHtml(sec, field, label, value, { area = false, rule = "title", canonical = "" } = {}) {
+  value = value || "";
+  const rows = field === "body_markdown" ? 8 : 3;
+  const editor = area
+    ? `<textarea class="starea" data-sec="${sec}" data-field="${field}" data-rule="${rule}" rows="${rows}">${esc(value)}</textarea>`
+    : `<input class="sinput" data-sec="${sec}" data-field="${field}" data-rule="${rule}" value="${esc(value)}">`;
+  return `<div class="sfield">
+    <div class="sfrow"><label>${esc(label)}</label><span class="grow"></span><button class="scopy" data-sec="${sec}" data-field="${field}">Copy</button></div>
+    ${editor}
+    <div class="schecks">${checksRowHtml(value, rule, canonical)}</div>
+  </div>`;
+}
+function socialSectionHtml(sec, name, data, fields, composer) {
+  const state = (data && data.state) || "generated";
+  return `<div class="ssec">
+    <div class="ssechead">
+      <span class="sname">${esc(name)}</span>
+      <button class="spill ${state}" data-sec="${sec}" data-pill="1" title="Click to cycle: generated → copied → posted">${esc(cap(state))}</button>
+      <span class="grow"></span>
+      <a class="scomp" href="${esc(composer)}" target="_blank" rel="noopener">Open composer ↗</a>
+    </div>
+    ${fields}
+  </div>`;
+}
+function microSectionHtml(list, canonical) {
+  const items = (Array.isArray(list) ? list : []).map((m, i) => {
+    const state = (m && m.state) || "generated";
+    const plats = (Array.isArray(m && m.platforms) ? m.platforms : []).join(" · ");
+    return `<div class="microrow">
+      <div class="sfrow">
+        <button class="spill ${state}" data-sec="micro" data-idx="${i}" data-pill="1" title="Click to cycle state">${esc(cap(state))}</button>
+        <span class="mhint">${esc(plats)}${typeof (m && m.offset_days) === "number" ? ` · +${m.offset_days}d` : ""}</span>
+        <span class="grow"></span>
+        <button class="scopy" data-sec="micro" data-idx="${i}">Copy</button>
+      </div>
+      <textarea class="starea" data-sec="micro" data-idx="${i}" data-rule="micro" rows="2">${esc((m && m.text) || "")}</textarea>
+      <div class="schecks">${checksRowHtml((m && m.text) || "", "micro", canonical)}</div>
+    </div>`;
+  }).join("");
+  return `<div class="ssec">
+    <div class="ssechead"><span class="sname">Micro-posts</span><span class="grow"></span><a class="scomp" href="${esc(COMPOSER.x_post)}" target="_blank" rel="noopener">Open composer ↗</a></div>
+    ${items || `<div class="empty">None generated.</div>`}
+  </div>`;
+}
+function socialPanelHtml() {
+  const d = DRAFT;
+  // Ready or beyond only (matches generate-social's guard) — never on draft/in_review.
+  if (!["ready", "publishing", "published"].includes(d.status)) return "";
+  const pack = (d.social && typeof d.social === "object") ? d.social : {};
+  const has = pack.status === "generated" || pack.status === "posted";
+  const canonical = pack.canonical || `https://aubreynorth.com/reads/${d.slug || d.id || ""}/`;
+  const header = `<div class="socialhead">
+    <div>
+      <div class="eyebrow">Social · generate & paste</div>
+      <p class="socialnote">Generated from the final copy. Nothing posts itself — Copy each version and paste it into the platform.</p>
+    </div>
+    <button class="btn ${has ? "" : "primary"}" id="socialGen"${SOCIAL_BUSY ? " disabled" : ""}>${SOCIAL_BUSY ? "Generating…" : (has ? "Regenerate" : "Generate social")}</button>
+  </div>`;
+  let inner;
+  if (SOCIAL_BUSY) {
+    inner = `<div class="socialgen"><span class="led"></span>Writing the platform versions in voice…</div>`;
+  } else if (!has) {
+    inner = `<div class="socialempty">Not generated yet. Generate builds five versions from this Read — <b>X Article</b>, <b>X post</b>, <b>LinkedIn Newsletter</b>, <b>LinkedIn post</b>, and <b>micro-posts</b>.</div>`;
+  } else {
+    const xa = pack.x_article || {}, xp = pack.x_post || {}, lin = pack.li_newsletter || {}, lip = pack.li_post || {};
+    inner = [
+      socialSectionHtml("x_article", "X Article", xa,
+        sfieldHtml("x_article", "title", "Title", xa.title, { rule: "title", canonical }) +
+        sfieldHtml("x_article", "body_markdown", "Body (markdown · link in body)", xa.body_markdown, { area: true, rule: "body", canonical }),
+        COMPOSER.x_article),
+      socialSectionHtml("x_post", "X post", xp,
+        sfieldHtml("x_post", "text", "Feed hook (first line = Mirror · ≤280)", xp.text, { area: true, rule: "feed280", canonical }),
+        COMPOSER.x_post),
+      socialSectionHtml("li_newsletter", "LinkedIn Newsletter", lin,
+        sfieldHtml("li_newsletter", "title", "Title", lin.title, { rule: "title", canonical }) +
+        sfieldHtml("li_newsletter", "body_markdown", "Body (link in body)", lin.body_markdown, { area: true, rule: "body", canonical }),
+        COMPOSER.li_newsletter),
+      socialSectionHtml("li_post", "LinkedIn post", lip,
+        sfieldHtml("li_post", "text", "Feed post (≤3,000 · no link)", lip.text, { area: true, rule: "feed3000", canonical }) +
+        sfieldHtml("li_post", "first_comment", "First comment (the link)", lip.first_comment, { area: true, rule: "link", canonical }),
+        COMPOSER.li_post),
+      microSectionHtml(pack.micro_posts, canonical),
+    ].join("");
+  }
+  return `<div class="edcard socialpanel">${header}${inner}</div>`;
+}
+
+/* ---- Social state helpers + wiring ---- */
+function socialGet(sec, field, idx) {
+  const p = DRAFT.social || {};
+  if (sec === "micro") return (Array.isArray(p.micro_posts) && p.micro_posts[idx]) ? (p.micro_posts[idx].text || "") : "";
+  return (p[sec] && p[sec][field] != null) ? p[sec][field] : "";
+}
+function socialSet(sec, field, idx, v) {
+  if (!DRAFT.social || typeof DRAFT.social !== "object") DRAFT.social = {};
+  const p = DRAFT.social;
+  if (sec === "micro") {
+    if (!Array.isArray(p.micro_posts)) p.micro_posts = [];
+    if (!p.micro_posts[idx]) p.micro_posts[idx] = { state: "generated" };
+    p.micro_posts[idx].text = v;
+  } else {
+    if (!p[sec]) p[sec] = { state: "generated" };
+    p[sec][field] = v;
+  }
+}
+function socialSetState(sec, idx, state) {
+  const p = DRAFT.social; if (!p) return;
+  if (sec === "micro") { if (Array.isArray(p.micro_posts) && p.micro_posts[idx]) p.micro_posts[idx].state = state; }
+  else if (p[sec]) p[sec].state = state;
+}
+async function saveSocial() {
+  const { error } = await sb.from("reads_queue").update({ social: DRAFT.social }).eq("id", EDIT);
+  if (error) { toast(`Save failed: ${error.message}`, 6000); return false; }
+  const row = (DATA.reads ?? []).find((r) => r.id === EDIT);
+  if (row) row.social = DRAFT.social;
+  return true;
+}
+async function generateSocial() {
+  const pack = DRAFT.social || {};
+  if (pack.status === "generated" || pack.status === "posted") {
+    const anyPosted = ["x_article", "x_post", "li_newsletter", "li_post"].some((k) => pack[k] && pack[k].state === "posted")
+      || (Array.isArray(pack.micro_posts) && pack.micro_posts.some((m) => m && m.state === "posted"));
+    const msg = anyPosted
+      ? "Some sections are marked posted. Regenerate and replace the copy anyway?"
+      : "Regenerate replaces the current social copy. Continue?";
+    if (!confirm(msg)) return;
+  }
+  SOCIAL_BUSY = true; renderReadsSurface();
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/generate-social`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: EDIT }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) { toast(body.error ?? `Generate failed (${res.status})`, 8000); return; }
+    DRAFT.social = body.social || {};
+    const row = (DATA.reads ?? []).find((r) => r.id === EDIT); if (row) row.social = DRAFT.social;
+    toast("Social generated.", 3000);
+  } catch (e) {
+    toast(`Generate failed: ${e.message}`, 8000);
+  } finally {
+    SOCIAL_BUSY = false; renderReadsSurface();
+  }
+}
+function wireSocial() {
+  const gen = $("#socialGen"); if (gen) gen.onclick = generateSocial;
+  if (!$(".socialpanel")) return;
+  const canonical = (DRAFT.social && DRAFT.social.canonical) || `https://aubreynorth.com/reads/${DRAFT.slug || DRAFT.id || ""}/`;
+  $$(".socialpanel .starea, .socialpanel .sinput").forEach((el) => {
+    el.oninput = () => {
+      socialSet(el.dataset.sec, el.dataset.field, el.dataset.idx, el.value);
+      const row = el.parentElement.querySelector(".schecks");
+      if (row) row.innerHTML = checksRowHtml(el.value, el.dataset.rule, canonical);
+    };
+    el.onblur = () => saveSocial();
+  });
+  $$(".socialpanel .scopy").forEach((b) => {
+    b.onclick = async () => {
+      const v = socialGet(b.dataset.sec, b.dataset.field, b.dataset.idx);
+      try { await navigator.clipboard.writeText(v); toast("Copied.", 2000); }
+      catch { toast("Copy failed — select the field and copy manually.", 4000); }
+      socialSetState(b.dataset.sec, b.dataset.idx, "copied");
+      if (await saveSocial()) renderReadsSurface();
+    };
+  });
+  $$(".socialpanel .spill[data-pill]").forEach((p) => {
+    p.onclick = async () => {
+      const order = ["generated", "copied", "posted"];
+      const cur = order.indexOf((p.textContent || "").trim().toLowerCase());
+      socialSetState(p.dataset.sec, p.dataset.idx, order[(cur + 1) % order.length]);
+      if (await saveSocial()) renderReadsSurface();
+    };
+  });
+}
 function editorChecks() {
   const d = DRAFT;
   const dlen = (d.description || "").length;
   const body = d.body || "";
   const all = `${d.title}\n${d.description}\n${body}`;
-  // Hype words, two tiers (VOICE-RULES.md): hard-block words block publish; soft-warn
-  // words (which have honest uses) are flagged but never block. Whole-word, case-insensitive.
-  const HYPE_BLOCK = /\b(revolutionary|game[-\s]changing|game changer|unleash|supercharge|turbocharge|disrupt|disruptive|cutting[-\s]edge|next[-\s]level|world[-\s]class|effortless|mind[-\s]blowing|jaw[-\s]dropping|best[-\s]in[-\s]class|paradigm|synergy)\b/i;
-  const HYPE_WARN = /\b(unlock|elevate|empower|seamless|leverage|delve)\b/gi;
+  // Hype words, two tiers (VOICE-RULES.md) — shared HYPE_BLOCK / HYPE_WARN (module scope).
   const warnHits = [...new Set((all.match(HYPE_WARN) || []).map((w) => w.toLowerCase()))];
   const h2 = (body.match(/^##\s+\S/gm) ?? []).length;
   const links = [...body.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
@@ -1782,6 +2064,8 @@ function wireEditor() {
   $("#sugAccept") && ($("#sugAccept").onclick = acceptSuggestion);
   $("#sugReject") && ($("#sugReject").onclick = rejectSuggestion);
   $("#sugSkip") && ($("#sugSkip").onclick = () => { STEP = (STEP + 1) % (DRAFT.suggestions.length || 1); renderReadsSurface(); });
+
+  wireSocial();   // Social panel (shown only when the Read is ready+)
 
   // "What changed" (Update drafts only): lazily diff the queued body against the live
   // article via read-diff when the reviewer opens the disclosure, once per open.

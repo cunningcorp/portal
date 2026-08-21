@@ -65,6 +65,15 @@ verify_jwt = true
 [functions.suggest-fixes]
 verify_jwt = true
 
+# generate-social generates the platform versions (X Article, X post, LinkedIn Newsletter,
+# LinkedIn post, micro-posts) of a READY Read into reads_queue.social. verify_jwt on (a
+# signed-in portal session), same as suggest-fixes/publish-read. It never posts anything --
+# it writes copy for Demetri to Copy/paste by hand. Secrets: ANTHROPIC_API_KEY (shared with
+# suggest-fixes) + GITHUB_TOKEN (reads VOICE-RULES.md + DISTRIBUTION-STRATEGY.md from
+# aubreynorth@main). Model overridable via SOCIAL_MODEL.
+[functions.generate-social]
+verify_jwt = true
+
 # insert-draft is how the HEADLESS drafting engine writes drafts to reads_queue without
 # holding the service-role key (the key lives only in this function). It is gated on the
 # DRAFT_INSERT_SECRET shared secret via a constant-time check, so verify_jwt is OFF here
