@@ -2017,9 +2017,10 @@ $("#addPasskey").onclick = async () => {
 };
 
 /* ============================ data ============================ */
-async function load() {
-  LOADING = true;
-  renderSurface();
+async function load({ silent = false } = {}) {
+  // silent = a background refresh (the Signal auto-refresh): skip the skeleton flash,
+  // and on a transient query error keep the last-good view instead of the error screen.
+  if (!silent) { LOADING = true; renderSurface(); }
   const since = daysAgoISO(RANGE);
   const [ov, ser, day, post, syn, reads] = await Promise.all([
     sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
@@ -2031,7 +2032,10 @@ async function load() {
   ]);
   const err = [ov, ser, day, post, syn].find((r) => r.error);
   LOADING = false;
-  if (err) { toast(`Query failed: ${err.error.message}`); renderError(err.error.message); return; }
+  if (err) {
+    if (silent) return;   // background refresh: leave the current view up, retry next tick
+    toast(`Query failed: ${err.error.message}`); renderError(err.error.message); return;
+  }
 
   DATA = {
     overview: ov.data ?? [], series: ser.data ?? [], daily: day.data ?? [],
@@ -3643,6 +3647,18 @@ function applySession(session) {
 }
 sb.auth.onAuthStateChange((_e, session) => applySession(session));
 applySession((await sb.auth.getSession()).data.session);
+
+/* ============================ Signal auto-refresh ============================
+   Keep a long-open Signal dashboard current: while signed in AND on the Signal surface,
+   silently re-pull the data on an interval. Signal only -- the launcher and Reads
+   surfaces are left alone. Deliberately NOT wired to the activity listeners, so a
+   background refresh does NOT count as presence: the 66-minute idle logout still fires
+   on a genuinely idle tab. Skipped while the idle warning is up. Queries hit the cheap
+   Supabase social_* views (not the platform APIs), so the cadence is inexpensive. */
+const SIGNAL_REFRESH_MS = 60 * 60 * 1000;   // 60 min, matching the collectors' cadence
+setInterval(() => {
+  if (booted && SURFACE === "signal" && !warnOpen) load({ silent: true });
+}, SIGNAL_REFRESH_MS);
 </script>
 </body>
 </html>
