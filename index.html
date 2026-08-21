@@ -923,6 +923,14 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .anprev blockquote{border-left:2px solid #B24A2B;margin:0 0 var(--space-3);padding-left:var(--space-3);color:#4a463f}
 .anprev ul{margin:0 0 var(--space-3) var(--space-4);line-height:1.7}
 
+/* inline link popover (replaces window.prompt on the Link toolbar button) */
+.linkpop{margin-top:var(--space-2);background:var(--surface-sunken);border:1px solid var(--border-default);
+  border-radius:var(--radius-md);padding:var(--space-3);display:flex;flex-direction:column;gap:var(--space-2)}
+.linkpop label{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary)}
+.linkpop input{background:var(--surface-base);border:1px solid var(--border-default);border-radius:var(--radius-md);
+  color:var(--text-primary);padding:.5rem .6rem;font:inherit}
+.linkpop .row{display:flex;gap:var(--space-2);justify-content:flex-end}
+
 @media(max-width:900px){
   .triage{grid-template-columns:repeat(2,minmax(0,1fr))}
   .editor{grid-template-columns:minmax(0,1fr)}
@@ -1613,7 +1621,7 @@ async function rejectSuggestion() {
 /* ---- wiring ---- */
 function wireEditor() {
   $("#edBack").onclick = () => closeEditor();
-  $("#edReady") && ($("#edReady").onclick = async () => { if (await saveDraft({ status: "ready" })) renderReadsSurface(); });
+  $("#edReady") && ($("#edReady").onclick = async () => { flushBody(); if (await saveDraft({ status: "ready" })) renderReadsSurface(); });
   $("#edPublish").onclick = () => publishFromEditor();
 
   $("#edTitle").onblur = () => saveDraft({ title: $("#edTitle").value });
@@ -1627,14 +1635,16 @@ function wireEditor() {
   };
   desc.onblur = () => saveDraft({ description: desc.value }).then(() => refreshEditorLive());
 
-  // Body blocks: refresh the preview live on input; persist + revalidate on blur.
-  const syncBody = () => { DRAFT.body = bodyFromBlocks(); $("#edPrev").innerHTML = previewHtml(); };
-  $$("#edBody .bblock").forEach((el) => {
-    el.addEventListener("input", syncBody);
-    el.addEventListener("blur", () => { DRAFT.body = bodyFromBlocks(); saveDraft({}).then(() => refreshEditorLive()); });
-  });
+  // Body blocks: wireBlock adds input/blur/paste/Enter handling (shared with the
+  // blocks created by an Enter-split).
+  $$("#edBody .bblock").forEach(wireBlock);
 
-  $$(".btoolbar [data-fmt]").forEach((b) => b.onclick = () => applyFormat(b.dataset.fmt));
+  // Toolbar: preventDefault on mousedown so pressing a button doesn't blur the block
+  // and collapse the selection before the format is applied.
+  $$(".btoolbar [data-fmt]").forEach((b) => {
+    b.addEventListener("mousedown", (e) => e.preventDefault());
+    b.onclick = () => applyFormat(b.dataset.fmt);
+  });
   $("#edSuggest").onclick = () => suggestMore();
 
   const chk = $("#edSrcChk");
@@ -1648,32 +1658,139 @@ function wireEditor() {
    block being typed. Called after blur-saves. */
 function refreshEditorLive() {
   if (!EDIT || !DRAFT) return;
+  // Update the preview, the checks panel, and Publish enablement in place — never
+  // rebuild the body blocks, which would drop the caret mid-edit (code-pass §3).
   const prev = $("#edPrev"); if (prev) prev.innerHTML = previewHtml();
-  renderReadsSurface();
+  const checks = editorChecks();
+  const cp = $("#readsView .pchecks");
+  if (cp) cp.innerHTML = checks.map((c) => `<div class="pchk ${c.ok ? "ok" : ""}"><span class="dot"></span>${esc(c.label)}</div>`).join("");
+  const pub = $("#edPublish"); if (pub) pub.disabled = !checks.every((c) => c.ok);
 }
 let lastBlock = null;
 document.addEventListener("focusin", (e) => { if (e.target.classList && e.target.classList.contains("bblock")) lastBlock = e.target; });
 
-function applyFormat(kind) {
-  const el = lastBlock && document.body.contains(lastBlock) ? lastBlock : $$("#edBody .bblock")[0];
+/* ---- block editing helpers (shared by initial blocks and Enter-split blocks) ---- */
+function syncBody() {
+  if (!$("#edBody")) return;
+  DRAFT.body = bodyFromBlocks();
+  const p = $("#edPrev"); if (p) p.innerHTML = previewHtml();
+}
+/** Caret offset within a block's text, or the text length if the caret is elsewhere. */
+function caretOffset(el) {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || !el.contains(sel.anchorNode)) return (el.textContent || "").length;
+  const r = sel.getRangeAt(0);
+  const pre = document.createRange();
+  pre.selectNodeContents(el);
+  pre.setEnd(r.endContainer, r.endOffset);
+  return pre.toString().length;
+}
+function insertTextAtCaret(el, text) {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount && el.contains(sel.anchorNode)) {
+    const r = sel.getRangeAt(0); r.deleteContents();
+    const node = document.createTextNode(text);
+    r.insertNode(node); r.setStartAfter(node); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+  } else {
+    el.textContent = (el.textContent || "") + text;
+  }
+}
+/** Enter splits the focused block at the caret into a new paragraph block — newlines
+    inside one block would collapse on serialise, so a new paragraph is a new block. */
+function splitBlock(el) {
+  const full = el.textContent || "";
+  const off = caretOffset(el);
+  el.textContent = full.slice(0, off);
+  const nb = document.createElement("div");
+  nb.className = "bblock"; nb.contentEditable = "true"; nb.dataset.type = "p";
+  nb.textContent = full.slice(off);
+  el.after(nb);
+  wireBlock(nb);
+  const r = document.createRange();
+  r.setStart(nb.firstChild || nb, 0); r.collapse(true);
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  nb.focus();
+}
+function wireBlock(el) {
+  el.addEventListener("input", syncBody);
+  el.addEventListener("blur", () => { DRAFT.body = bodyFromBlocks(); saveDraft({}).then(refreshEditorLive); });
+  // Force plain-text paste so pasted rich text can't smuggle HTML around the markdown.
+  el.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    insertTextAtCaret(el, text);
+    syncBody();
+  });
+  el.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;   // Enter and Shift+Enter both split into a new block
+    e.preventDefault();
+    splitBlock(el);
+    syncBody();
+  });
+}
+/** Inline link popover, replacing window.prompt (the connect flow's prompt was removed
+    for the same reason). Resolves to a URL string, or null on cancel. */
+function linkPopover() {
+  return new Promise((resolve) => {
+    const host = $("#edBody") && $("#edBody").parentElement;
+    if (!host) return resolve(null);
+    host.querySelector(".linkpop")?.remove();
+    const pop = document.createElement("div");
+    pop.className = "linkpop";
+    pop.innerHTML = `<label>Link URL — root-relative, e.g. /reads/slug/</label>
+      <input type="text" spellcheck="false" value="/reads/">
+      <div class="row"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Insert</button></div>`;
+    host.appendChild(pop);
+    const input = pop.querySelector("input");
+    const done = (v) => { pop.remove(); resolve(v); };
+    pop.querySelector("[data-ok]").onclick = () => done(input.value.trim() || null);
+    pop.querySelector("[data-cancel]").onclick = () => done(null);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); done(input.value.trim() || null); }
+      else if (e.key === "Escape") { e.preventDefault(); done(null); }
+    });
+    input.focus(); input.select();
+  });
+}
+async function applyFormat(kind) {
+  // The focused block is the target. Toolbar buttons preventDefault on mousedown, so
+  // the block keeps focus and document.activeElement is authoritative here; lastBlock
+  // is the fallback (e.g. focus already moved), then the first block.
+  const active = document.activeElement;
+  const el = (active && active.classList && active.classList.contains("bblock")) ? active
+    : (lastBlock && document.body.contains(lastBlock) ? lastBlock : $$("#edBody .bblock")[0]);
   if (!el) return;
   if (kind === "h2") {
     el.dataset.type = el.dataset.type === "h2" ? "p" : "h2";
     el.classList.toggle("h2", el.dataset.type === "h2");
   } else {
     const sel = window.getSelection();
-    const chosen = sel && sel.toString() ? sel.toString() : "text";
-    if (kind === "bold") document.execCommand && insertAtSelection(el, `**${chosen}**`, sel);
-    if (kind === "link") { const url = prompt("Link URL (root-relative, e.g. /reads/slug/)", "/reads/"); if (url) insertAtSelection(el, `[${chosen}](${url})`, sel); }
+    const inEl = sel && sel.rangeCount && el.contains(sel.anchorNode);
+    const chosen = inEl && !sel.isCollapsed ? sel.toString() : "";
+    // Capture the range now — the link popover steals focus and would collapse it.
+    const range = inEl ? sel.getRangeAt(0).cloneRange() : null;
+    if (kind === "bold") insertAtRange(el, `**${chosen || "bold"}**`, range);
+    if (kind === "link") {
+      const url = await linkPopover();
+      if (!url) return;
+      insertAtRange(el, `[${chosen || "text"}](${url})`, range);
+    }
   }
-  DRAFT.body = bodyFromBlocks();
-  $("#edPrev").innerHTML = previewHtml();
-  saveDraft({});
+  syncBody();
+  saveDraft({}).then(refreshEditorLive);
 }
-function insertAtSelection(el, text, sel) {
-  if (sel && sel.rangeCount && el.contains(sel.anchorNode)) {
-    const r = sel.getRangeAt(0); r.deleteContents(); r.insertNode(document.createTextNode(text));
-  } else { el.textContent = (el.textContent || "") + text; }
+function insertAtRange(el, text, range) {
+  el.focus();
+  if (range && el.contains(range.startContainer)) {
+    range.deleteContents();
+    const node = document.createTextNode(text);
+    range.insertNode(node);
+    range.setStartAfter(node); range.collapse(true);
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  } else {
+    el.textContent = (el.textContent || "") + text;
+  }
 }
 async function suggestMore() {
   const btn = $("#edSuggest"); btn.disabled = true; btn.textContent = "Thinking…";
@@ -1698,7 +1815,12 @@ async function suggestMore() {
     const b = $("#edSuggest"); if (b) { b.disabled = false; b.textContent = "✦ Suggest fixes for this paragraph"; }
   }
 }
+/** Capture the block the user may be typing in without having blurred it yet, so a
+    click straight to Publish / Mark ready doesn't race the blur handler. */
+function flushBody() { if ($("#edBody")) DRAFT.body = bodyFromBlocks(); }
+
 async function publishFromEditor() {
+  flushBody();
   if (!editorChecks().every((c) => c.ok)) { toast("Resolve the checks before publishing.", 5000); return; }
   if (DRAFT.status !== "ready") { if (!(await saveDraft({ status: "ready" }))) return; }
   const id = EDIT;
