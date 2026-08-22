@@ -869,9 +869,13 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .tflag.fix{color:var(--state-progress);border-color:var(--state-progress)}
 .tflag.src{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
 .tcol .empty{font-size:var(--text-micro);color:var(--text-tertiary);padding:var(--space-2) 0}
-.tcard.pub{cursor:pointer} .tcard.pub a{color:var(--text-primary);text-decoration:none} .tcard.pub a:hover{color:var(--brand-gold-soft);text-decoration:underline}
+.tcard.pub{cursor:pointer}
 .tcard.pub:focus-visible{outline:2px solid var(--state-progress);outline-offset:2px}
-.pubnudge{display:block;margin-top:6px;font-size:var(--text-micro);color:var(--brand-gold-soft)}
+.pubfoot{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-top:8px}
+.pubnudge{font-size:var(--text-micro);color:var(--brand-gold-soft)}
+.pubnudge.quiet{color:var(--text-tertiary)}
+.tcard.pub .publink{font-size:var(--text-micro);color:var(--brand-peri);text-decoration:none;white-space:nowrap;flex:none}
+.tcard.pub .publink:hover{text-decoration:underline}
 
 /* editor */
 .edhead{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap}
@@ -1570,16 +1574,20 @@ function triageCard(r) {
   </button>`;
 }
 function pubCard(r) {
-  // A published card opens into the editor for an urgent tweak (B1), while the TITLE keeps
-  // clicking through to the live article (wireTriage stops that click from also opening the
-  // editor). B3: a quiet nudge when the Read has no social pack yet.
+  // The WHOLE card opens the editor (B1) — same as every other queue column, so clicking a
+  // published Read (title included) reliably enters the editor to tweak it or generate social.
+  // The live article gets its own explicit "View live ↗" link (wireTriage stops that click
+  // from also opening the editor). B3: a quiet nudge when the Read has no social pack yet.
   const pack = (r.social && typeof r.social === "object") ? r.social : {};
   const noSocial = !(pack.status === "generated" || pack.status === "posted");
   return `<div class="tcard pub" data-open="${esc(r.id)}" role="button" tabindex="0">
     <span class="trow"><span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span><span class="date">${shortDate(r.published_at)}</span></span>
-    <span class="ttl"><a class="publink" href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a></span>
+    <span class="ttl">${esc(r.title || "Untitled")}</span>
     <span class="meta">${esc((r.commit_sha ?? "").slice(0,7))}</span>
-    ${noSocial ? `<span class="pubnudge">Social not generated · open to add</span>` : ""}
+    <span class="pubfoot">
+      ${noSocial ? `<span class="pubnudge">Social not generated · open to add</span>` : `<span class="pubnudge quiet">Social ready</span>`}
+      <a class="publink" href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">View live ↗</a>
+    </span>
   </div>`;
 }
 function wireTriage() {
@@ -2595,7 +2603,10 @@ function briefing() {
    not an editor: copy is locked upstream (copylock), so the preview is
    read-only and the only verbs here are Publish and Retry. */
 
-const LANE_LABEL = { screen:"Screen", type:"Type", business:"Business" };
+// The `type` lane is shown publicly as "Archetype" (LANE-RENAME-HANDOFF, aubreynorth).
+// Only the DISPLAY label changes — the lane VALUE stays `type` everywhere (data-lane,
+// the reads_queue CHECK, insert-draft/publish-read validation), so nothing data-side moves.
+const LANE_LABEL = { screen:"Screen", type:"Archetype", business:"Business" };
 
 function mdPreview(markdown) {
   const body = markdown.replace(/^---[\s\S]*?---\s*/, "");
