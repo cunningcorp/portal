@@ -869,7 +869,9 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .tflag.fix{color:var(--state-progress);border-color:var(--state-progress)}
 .tflag.src{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
 .tcol .empty{font-size:var(--text-micro);color:var(--text-tertiary);padding:var(--space-2) 0}
-.tcard.pub{cursor:default} .tcard.pub a{color:var(--text-primary);text-decoration:none} .tcard.pub a:hover{color:var(--brand-gold-soft)}
+.tcard.pub{cursor:pointer} .tcard.pub a{color:var(--text-primary);text-decoration:none} .tcard.pub a:hover{color:var(--brand-gold-soft);text-decoration:underline}
+.tcard.pub:focus-visible{outline:2px solid var(--state-progress);outline-offset:2px}
+.pubnudge{display:block;margin-top:6px;font-size:var(--text-micro);color:var(--brand-gold-soft)}
 
 /* editor */
 .edhead{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap}
@@ -878,6 +880,10 @@ td.t a:hover{color:var(--brand-gold-soft)}
   padding:3px 10px;border:1px solid var(--border-default);color:var(--text-tertiary)}
 .edstatus.in_review{color:var(--state-progress);border-color:var(--state-progress)}
 .edstatus.ready{color:var(--state-positive);border-color:rgba(200,162,76,.5)}
+.edstatus.published{color:var(--brand-gold-soft);border-color:rgba(227,197,126,.5)}
+/* "Live · edits update the article" marker on a published Read (doc 03 §2) */
+.edlive{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-micro);letter-spacing:.06em;color:var(--brand-gold-soft)}
+.edlive .dot{width:7px;height:7px;border-radius:50%;background:var(--brand-gold);flex:none;animation:pulse 2.2s ease-in-out infinite}
 .edsaved{font-size:var(--text-micro);color:var(--text-tertiary)}
 .edhead .grow{flex:1}
 .editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--space-4);align-items:start}
@@ -949,6 +955,10 @@ td.t a:hover{color:var(--brand-gold-soft)}
 /* Social panel (W3–W5) — gold-keyed, distinct from stepper periwinkle + sources terracotta */
 .grow{flex:1}
 .socialpanel{border-left:2px solid var(--brand-gold)}
+/* v3: sections grouped Long-form / Promotional / Micro under gold eyebrow headings */
+.sgroup{margin-top:var(--space-4)}
+.sgrouphd{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;font-weight:600;color:var(--brand-gold);margin-bottom:var(--space-2)}
+.mhash{margin-top:6px}
 .socialhead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);margin-bottom:var(--space-3)}
 .socialhead .eyebrow{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;font-weight:600;color:var(--brand-gold);margin-bottom:4px}
 .socialnote{margin:0;font-size:var(--text-label);color:var(--text-tertiary);max-width:60ch}
@@ -1560,15 +1570,30 @@ function triageCard(r) {
   </button>`;
 }
 function pubCard(r) {
-  return `<div class="tcard pub">
+  // A published card opens into the editor for an urgent tweak (B1), while the TITLE keeps
+  // clicking through to the live article (wireTriage stops that click from also opening the
+  // editor). B3: a quiet nudge when the Read has no social pack yet.
+  const pack = (r.social && typeof r.social === "object") ? r.social : {};
+  const noSocial = !(pack.status === "generated" || pack.status === "posted");
+  return `<div class="tcard pub" data-open="${esc(r.id)}" role="button" tabindex="0">
     <span class="trow"><span class="lane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</span><span class="date">${shortDate(r.published_at)}</span></span>
-    <span class="ttl"><a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a></span>
+    <span class="ttl"><a class="publink" href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.title)}</a></span>
     <span class="meta">${esc((r.commit_sha ?? "").slice(0,7))}</span>
+    ${noSocial ? `<span class="pubnudge">Social not generated · open to add</span>` : ""}
   </div>`;
 }
 function wireTriage() {
   $$("#readsView .lanechip").forEach((b) => b.onclick = () => { LANEF = b.dataset.lane; renderReadsSurface(); });
-  $$("#readsView .tcard[data-open]").forEach((b) => b.onclick = () => openEditor(b.dataset.open));
+  $$("#readsView .tcard[data-open]").forEach((b) => {
+    b.onclick = () => openEditor(b.dataset.open);
+    // Published cards are <div role="button"> (they contain the title <a>), so they need
+    // explicit keyboard activation; triage cards are real <button>s and already have it.
+    if (b.tagName !== "BUTTON") b.onkeydown = (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEditor(b.dataset.open); }
+    };
+  });
+  // The published title links to the live article — keep that click from also opening the editor.
+  $$("#readsView .tcard.pub .publink").forEach((a) => a.onclick = (e) => e.stopPropagation());
 }
 
 /* ---- open / save ---- */
@@ -1682,6 +1707,7 @@ function editorHtml() {
   const checks = editorChecks();
   const canPublish = checks.every((c) => c.ok);
   const update = !!(d.published_at || d.commit_sha);
+  const isPublished = d.status === "published";   // editing a live article (doc 03)
   const blocks = blocksFromBody(d.body).map((b) => {
     const cls = `bblock ${b.type === "h2" ? "h2" : ""}`;
     // Rich WYSIWYG when the block round-trips exactly; otherwise edit raw markdown (no loss).
@@ -1694,10 +1720,11 @@ function editorHtml() {
   <div class="edhead">
     <button class="back" id="edBack">← Queue</button>
     <span class="edstatus ${esc(d.status)}">${esc((d.status || "").replace("_"," "))}</span>
+    ${isPublished ? `<span class="edlive"><span class="dot"></span>Live · edits update the article</span>` : ""}
     <span class="edsaved" id="edSaved">Saved</span>
     <span class="grow"></span>
-    ${d.status !== "ready" ? `<button class="btn" id="edReady">Mark ready</button>` : ""}
-    <button class="btn primary" id="edPublish"${canPublish ? "" : " disabled"}>${update ? "Publish update" : "Publish"}</button>
+    ${["draft","in_review"].includes(d.status) ? `<button class="btn" id="edReady">Mark ready</button>` : ""}
+    <button class="btn primary" id="edPublish"${canPublish ? "" : " disabled"}>${isPublished ? "Update live" : (update ? "Publish update" : "Publish")}</button>
   </div>
   ${stepperHtml()}
   <div class="editor">
@@ -1730,7 +1757,7 @@ function editorHtml() {
         <div class="anprev" id="edPrev">${previewHtml()}</div>
       </div>
       <div class="edcard">
-        <h3>Before publish</h3>
+        <h3>${isPublished ? "Before update" : "Before publish"}</h3>
         <div class="pchecks">${checks.map((c) => `<div class="pchk ${c.warn?"warn":(c.ok?"ok":"")}"><span class="dot"></span>${esc(c.label)}</div>`).join("")}</div>
       </div>
       ${update ? `<div class="edcard">
@@ -1766,10 +1793,10 @@ const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 function ruleOpts(rule, canonical) {
   switch (rule) {
     case "body": case "link": return { needLink: true, canonical };
-    case "feed280": return { isFeed: true, limit: SOCIAL_LIMITS.xHook, canonical };
-    case "feed3000": return { isFeed: true, limit: SOCIAL_LIMITS.liPost, canonical };
-    case "micro": return { isFeed: true, canonical };
-    default: return {};   // title — voice checks only
+    case "feed280": return { isFeed: true, limit: SOCIAL_LIMITS.xHook, noHash: true, canonical };
+    case "feed3000": return { isFeed: true, limit: SOCIAL_LIMITS.liPost, noHash: true, canonical };
+    case "micro": return { isFeed: true, noHash: true, canonical };
+    default: return {};   // title / hashtags — voice checks only
   }
 }
 function socialChecks(text, o = {}) {
@@ -1781,7 +1808,8 @@ function socialChecks(text, o = {}) {
   const warn = [...new Set((text.match(HYPE_WARN) || []).map((w) => w.toLowerCase()))];
   if (warn.length) out.push({ ok: true, warn: true, label: `Soft-warn: ${warn.join(", ")}` });
   if (o.limit) out.push({ ok: text.length <= o.limit, label: `${text.length} / ${o.limit} chars` });
-  if (o.isFeed && o.canonical) out.push({ ok: !text.includes(o.canonical), label: "No link in feed post" });
+  if (o.noHash) out.push({ ok: !text.includes("#"), label: "Hashtags kept out of the post text" });
+  if (o.isFeed && o.canonical) out.push({ ok: !text.includes(o.canonical), label: "No link in post (goes in comment)" });
   if (o.needLink && o.canonical) out.push({ ok: text.includes(o.canonical), label: "Canonical link present" });
   return out;
 }
@@ -1789,16 +1817,20 @@ function checksRowHtml(text, rule, canonical) {
   return socialChecks(text, ruleOpts(rule, canonical))
     .map((c) => `<span class="pchk ${c.warn ? "warn" : (c.ok ? "ok" : "")}"><span class="dot"></span>${esc(c.label)}</span>`).join("");
 }
-function sfieldHtml(sec, field, label, value, { area = false, rule = "title", canonical = "" } = {}) {
+function sfieldHtml(sec, field, label, value, { area = false, rule = "title", canonical = "", copyLabel = "Copy" } = {}) {
   value = value || "";
-  const rows = field === "body_markdown" ? 8 : 3;
+  const rows = field === "body_markdown" ? 8 : (field === "hashtags" ? 1 : 3);
   const editor = area
     ? `<textarea class="starea" data-sec="${sec}" data-field="${field}" data-rule="${rule}" rows="${rows}">${esc(value)}</textarea>`
     : `<input class="sinput" data-sec="${sec}" data-field="${field}" data-rule="${rule}" value="${esc(value)}">`;
+  // Hashtags legitimately contain '#' and no prose, so they carry no checks row (it would
+  // only ever show three green voice dots) — the "no # in the post text" check lives on the
+  // post field instead.
+  const checks = rule === "hashtags" ? "" : `<div class="schecks">${checksRowHtml(value, rule, canonical)}</div>`;
   return `<div class="sfield">
-    <div class="sfrow"><label>${esc(label)}</label><span class="grow"></span><button class="scopy" data-sec="${sec}" data-field="${field}">Copy</button></div>
+    <div class="sfrow"><label>${esc(label)}</label><span class="grow"></span><button class="scopy" data-sec="${sec}" data-field="${field}">${esc(copyLabel)}</button></div>
     ${editor}
-    <div class="schecks">${checksRowHtml(value, rule, canonical)}</div>
+    ${checks}
   </div>`;
 }
 function socialSectionHtml(sec, name, data, fields, composer) {
@@ -1822,10 +1854,12 @@ function microSectionHtml(list, canonical) {
         <button class="spill ${state}" data-sec="micro" data-idx="${i}" data-pill="1" title="Click to cycle state">${esc(cap(state))}</button>
         <span class="mhint">${esc(plats)}${typeof (m && m.offset_days) === "number" ? ` · +${m.offset_days}d` : ""}</span>
         <span class="grow"></span>
-        <button class="scopy" data-sec="micro" data-idx="${i}">Copy</button>
+        <button class="scopy" data-sec="micro" data-idx="${i}" data-field="text">Copy text</button>
+        <button class="scopy" data-sec="micro" data-idx="${i}" data-field="hashtags">Copy hashtags</button>
       </div>
-      <textarea class="starea" data-sec="micro" data-idx="${i}" data-rule="micro" rows="2">${esc((m && m.text) || "")}</textarea>
+      <textarea class="starea" data-sec="micro" data-idx="${i}" data-field="text" data-rule="micro" rows="2">${esc((m && m.text) || "")}</textarea>
       <div class="schecks">${checksRowHtml((m && m.text) || "", "micro", canonical)}</div>
+      <input class="sinput mhash" data-sec="micro" data-idx="${i}" data-field="hashtags" data-rule="hashtags" value="${esc((m && m.hashtags) || "")}" placeholder="Hashtags · own line">
     </div>`;
   }).join("");
   return `<div class="ssec">
@@ -1851,27 +1885,32 @@ function socialPanelHtml() {
   if (SOCIAL_BUSY) {
     inner = `<div class="socialgen"><span class="led"></span>Writing the platform versions in voice…</div>`;
   } else if (!has) {
-    inner = `<div class="socialempty">Not generated yet. Generate builds five versions from this Read — <b>X Article</b>, <b>X post</b>, <b>LinkedIn Newsletter</b>, <b>LinkedIn post</b>, and <b>micro-posts</b>.</div>`;
+    inner = `<div class="socialempty">Not generated yet. Generate builds the platform versions from this Read — <b>X Article</b> and <b>LinkedIn long-form</b>, the <b>X</b> and <b>LinkedIn</b> promotional posts, and the <b>micro-posts</b>.</div>`;
   } else {
-    const xa = pack.x_article || {}, xp = pack.x_post || {}, lin = pack.li_newsletter || {}, lip = pack.li_post || {};
-    inner = [
+    // Tolerant read: v3 renamed li_newsletter → li_longform; old packs still render.
+    const xa = pack.x_article || {}, xp = pack.x_post || {},
+          lin = pack.li_longform || pack.li_newsletter || {}, lip = pack.li_post || {};
+    const longform = `<div class="sgroup"><div class="sgrouphd">Long-form · the piece itself</div>` +
       socialSectionHtml("x_article", "X Article", xa,
-        sfieldHtml("x_article", "title", "Title", xa.title, { rule: "title", canonical }) +
-        sfieldHtml("x_article", "body_markdown", "Body (markdown · link in body)", xa.body_markdown, { area: true, rule: "body", canonical }),
-        COMPOSER.x_article),
-      socialSectionHtml("x_post", "X post", xp,
-        sfieldHtml("x_post", "text", "Feed hook (first line = Mirror · ≤280)", xp.text, { area: true, rule: "feed280", canonical }),
-        COMPOSER.x_post),
-      socialSectionHtml("li_newsletter", "LinkedIn Newsletter", lin,
-        sfieldHtml("li_newsletter", "title", "Title", lin.title, { rule: "title", canonical }) +
-        sfieldHtml("li_newsletter", "body_markdown", "Body (link in body)", lin.body_markdown, { area: true, rule: "body", canonical }),
-        COMPOSER.li_newsletter),
-      socialSectionHtml("li_post", "LinkedIn post", lip,
-        sfieldHtml("li_post", "text", "Feed post (≤3,000 · no link)", lip.text, { area: true, rule: "feed3000", canonical }) +
-        sfieldHtml("li_post", "first_comment", "First comment (the link)", lip.first_comment, { area: true, rule: "link", canonical }),
-        COMPOSER.li_post),
-      microSectionHtml(pack.micro_posts, canonical),
-    ].join("");
+        sfieldHtml("x_article", "title", "Title", xa.title, { rule: "title", canonical, copyLabel: "Copy title" }) +
+        sfieldHtml("x_article", "body_markdown", "Body (markdown · link in body)", xa.body_markdown, { area: true, rule: "body", canonical, copyLabel: "Copy body" }),
+        COMPOSER.x_article) +
+      socialSectionHtml("li_longform", "LinkedIn long-form · Article now, Newsletter once eligible", lin,
+        sfieldHtml("li_longform", "title", "Title", lin.title, { rule: "title", canonical, copyLabel: "Copy title" }) +
+        sfieldHtml("li_longform", "body_markdown", "Body (link in body)", lin.body_markdown, { area: true, rule: "body", canonical, copyLabel: "Copy body" }),
+        COMPOSER.li_newsletter) + `</div>`;
+    const promo = `<div class="sgroup"><div class="sgrouphd">Promotional posts · shared alongside the long-form</div>` +
+      socialSectionHtml("x_post", "X post · promotional", xp,
+        sfieldHtml("x_post", "text", "Post (first line = Mirror · ≤280)", xp.text, { area: true, rule: "feed280", canonical, copyLabel: "Copy post" }) +
+        sfieldHtml("x_post", "hashtags", "Hashtags · own line", xp.hashtags, { rule: "hashtags", canonical, copyLabel: "Copy hashtags" }),
+        COMPOSER.x_post) +
+      socialSectionHtml("li_post", "LinkedIn post · promotional", lip,
+        sfieldHtml("li_post", "text", "Post (≤3,000 · no link)", lip.text, { area: true, rule: "feed3000", canonical, copyLabel: "Copy post" }) +
+        sfieldHtml("li_post", "first_comment", "First comment (the link)", lip.first_comment, { area: true, rule: "link", canonical, copyLabel: "Copy first comment" }) +
+        sfieldHtml("li_post", "hashtags", "Hashtags · own line", lip.hashtags, { rule: "hashtags", canonical, copyLabel: "Copy hashtags" }),
+        COMPOSER.li_post) + `</div>`;
+    const micro = `<div class="sgroup"><div class="sgrouphd">Micro-posts · follow-up pull-quotes</div>${microSectionHtml(pack.micro_posts, canonical)}</div>`;
+    inner = longform + promo + micro;
   }
   return `<div class="edcard socialpanel">${header}${inner}</div>`;
 }
@@ -1879,7 +1918,7 @@ function socialPanelHtml() {
 /* ---- Social state helpers + wiring ---- */
 function socialGet(sec, field, idx) {
   const p = DRAFT.social || {};
-  if (sec === "micro") return (Array.isArray(p.micro_posts) && p.micro_posts[idx]) ? (p.micro_posts[idx].text || "") : "";
+  if (sec === "micro") { const m = Array.isArray(p.micro_posts) ? p.micro_posts[idx] : null; return m ? (m[field || "text"] || "") : ""; }
   return (p[sec] && p[sec][field] != null) ? p[sec][field] : "";
 }
 function socialSet(sec, field, idx, v) {
@@ -1888,7 +1927,7 @@ function socialSet(sec, field, idx, v) {
   if (sec === "micro") {
     if (!Array.isArray(p.micro_posts)) p.micro_posts = [];
     if (!p.micro_posts[idx]) p.micro_posts[idx] = { state: "generated" };
-    p.micro_posts[idx].text = v;
+    p.micro_posts[idx][field || "text"] = v;
   } else {
     if (!p[sec]) p[sec] = { state: "generated" };
     p[sec][field] = v;
@@ -1942,7 +1981,13 @@ function wireSocial() {
   $$(".socialpanel .starea, .socialpanel .sinput").forEach((el) => {
     el.oninput = () => {
       socialSet(el.dataset.sec, el.dataset.field, el.dataset.idx, el.value);
-      const row = el.parentElement.querySelector(".schecks");
+      // Refresh only THIS field's checks row (no full render → caret kept). A field owns the
+      // .schecks inside its own .sfield; the micro text field owns the .microrow's row. The
+      // hashtags fields have no checks row (skipped), so they must not clobber a sibling's.
+      const sfield = el.closest(".sfield");
+      let row = null;
+      if (sfield) row = sfield.querySelector(".schecks");
+      else if (el.dataset.sec === "micro" && (el.dataset.field === "text" || !el.dataset.field)) row = el.closest(".microrow")?.querySelector(".schecks");
       if (row) row.innerHTML = checksRowHtml(el.value, el.dataset.rule, canonical);
     };
     el.onblur = () => saveSocial();
@@ -2261,7 +2306,9 @@ function flushBody() { if ($("#edBody")) DRAFT.body = bodyFromBlocks(); }
 async function publishFromEditor() {
   flushBody();
   if (!editorChecks().every((c) => c.ok)) { toast("Resolve the checks before publishing.", 5000); return; }
-  if (DRAFT.status !== "ready") { if (!(await saveDraft({ status: "ready" }))) return; }
+  // A published Read re-publishes straight through publish-read ("Update live") — it must NOT
+  // be flipped back to ready. Only draft/in_review need the ready flip first.
+  if (!["ready", "published"].includes(DRAFT.status)) { if (!(await saveDraft({ status: "ready" }))) return; }
   const id = EDIT;
   await publishRead(id);
   // publishRead refreshes DATA.reads; if it went live, drop back to triage.
@@ -2594,7 +2641,7 @@ function confirmPublish(row) {
         ${update ? "It replaces the version currently live. " : ""}Taking it down again is a git operation, not a button.</p>
       <div class="foot">
         <button class="btn" data-cancel>Cancel</button>
-        <button class="btn primary" data-confirm>Publish</button>
+        <button class="btn primary" data-confirm>${update ? "Update live" : "Publish"}</button>
       </div>
     </div></div>`;
   const untrap = trapFocus(root.querySelector(".modal"));
@@ -2631,7 +2678,7 @@ function confirmPublishSheet(row) {
           aubreynorth.com/reads/${esc(row.slug)}/ within about two minutes. ${update ? "It replaces the version currently live. " : ""}Taking it down
           again is a git operation, not a button.</p>
         <div style="display:flex;flex-direction:column;gap:var(--space-2);padding:0 var(--space-3)">
-          <button class="btn primary wide tall" data-confirm>Publish</button>
+          <button class="btn primary wide tall" data-confirm>${update ? "Update live" : "Publish"}</button>
           <button class="btn wide tall" data-cancel>Cancel</button>
         </div>
       </div>`, { labelledby: "pubTitle" });
