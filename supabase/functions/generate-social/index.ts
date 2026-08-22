@@ -93,16 +93,20 @@ const SYSTEM_PREAMBLE =
   " - DISTRIBUTION-STRATEGY.md defines the per-channel format roles and the link discipline. " +
   "Follow its post anatomies for X and LinkedIn.\n\n" +
   "LINK DISCIPLINE (hard): the canonical link is provided as {{CANONICAL}}. Put it in the BODY " +
-  "of x_article and li_newsletter, and in li_post.first_comment. NEVER put a link in a feed-post " +
-  "body (x_post.text, li_post.text). The x_post first line must be the Read's Mirror (opening) " +
+  "of x_article and li_longform, and in li_post.first_comment. NEVER put a link in a promotional-" +
+  "post body (x_post.text, li_post.text). The x_post first line must be the Read's Mirror (opening) " +
   "line and must fit within " + X_HOOK_LIMIT + " characters as the hook. li_post.text must stay " +
   "under " + LI_POST_LIMIT + " characters.\n\n" +
+  "HASHTAGS: populate each hashtags field from the hashtag policy in DISTRIBUTION-STRATEGY.md " +
+  "(the X and LinkedIn post policies there). Put hashtags ONLY in the hashtags field, NEVER inside " +
+  "a post body (x_post.text, li_post.text, micro text). li_longform is the long-form LinkedIn " +
+  "asset (an Article now, a Newsletter issue once eligible).\n\n" +
   "OUTPUT: respond with ONLY one JSON object, no prose, no code fences, matching exactly:\n" +
   '{ "x_article": { "title": string, "body_markdown": string },' +
-  ' "x_post": { "text": string },' +
-  ' "li_newsletter": { "title": string, "body_markdown": string },' +
-  ' "li_post": { "text": string, "first_comment": string },' +
-  ' "micro_posts": [ { "text": string, "platforms": string[], "offset_days": number } ] }\n' +
+  ' "li_longform": { "title": string, "body_markdown": string },' +
+  ' "x_post": { "text": string, "hashtags": string },' +
+  ' "li_post": { "text": string, "first_comment": string, "hashtags": string },' +
+  ' "micro_posts": [ { "text": string, "hashtags": string, "platforms": string[], "offset_days": number } ] }\n' +
   "Produce 4-6 micro_posts, one idea each, resolution withheld.\n\n";
 
 /** Pull the first balanced JSON object out of the model's text, tolerating fences/prose. */
@@ -120,12 +124,18 @@ function parsePack(text: string): Record<string, unknown> | null {
 }
 
 const str = (v: unknown) => (typeof v === "string" ? v : "");
-/** Strip any markdown/plain link to the canonical Read out of a feed-post body. */
+/** Strip any markdown/plain link to the canonical Read out of a promotional-post body. */
 function stripLink(text: string, canonical: string): string {
   return text
     .replace(new RegExp(`\\[([^\\]]*)\\]\\(\\s*${canonical.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\)`, "gi"), "$1")
     .replace(new RegExp(canonical.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "")
     .replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+/** Strip #hashtag tokens out of a promotional-post body — they belong in the hashtags field. */
+function stripHashtags(text: string): string {
+  return text
+    .replace(/(^|[\s(])#[\p{L}0-9_]+/gu, "$1")
+    .replace(/[ \t]+\n/g, "\n").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 Deno.serve(async (req: Request) => {
@@ -197,18 +207,22 @@ Deno.serve(async (req: Request) => {
   const parsed = parsePack(outText);
   if (!parsed) return json({ error: "model did not return valid JSON", raw: outText.slice(0, 400) }, 502);
 
-  // Normalise to the pack shape + enforce the link discipline server-side (belt and braces
-  // over the model's own placement), then stamp per-channel state='generated'.
+  // Normalise to the v3 pack shape + enforce link + hashtag discipline server-side (belt and
+  // braces over the model): links stay in the long-form bodies + li_post.first_comment;
+  // '#' is scrubbed out of every promotional-post body. Then stamp per-channel state.
   const xa = (parsed.x_article ?? {}) as Record<string, unknown>;
-  const lin = (parsed.li_newsletter ?? {}) as Record<string, unknown>;
+  // Tolerant read of the model's key: prefer li_longform, accept li_newsletter.
+  const lin = (parsed.li_longform ?? parsed.li_newsletter ?? {}) as Record<string, unknown>;
   const lip = (parsed.li_post ?? {}) as Record<string, unknown>;
   const xp = (parsed.x_post ?? {}) as Record<string, unknown>;
   const ensureLink = (text: string) => text.includes(canonical) ? text : `${text.trim()}\n\n${canonical}`;
+  const promo = (text: string) => stripHashtags(stripLink(text, canonical));   // no link, no '#'
   const micro = (Array.isArray(parsed.micro_posts) ? parsed.micro_posts : []).slice(0, 6)
     .map((m) => {
       const mm = (m ?? {}) as Record<string, unknown>;
       return {
-        text: stripLink(str(mm.text), canonical),
+        text: promo(str(mm.text)),
+        hashtags: str(mm.hashtags),
         platforms: Array.isArray(mm.platforms) ? mm.platforms.map(String) : ["x", "linkedin"],
         offset_days: typeof mm.offset_days === "number" ? mm.offset_days : 2,
         state: "generated",
@@ -221,9 +235,9 @@ Deno.serve(async (req: Request) => {
     canonical,
     model,
     x_article: { title: str(xa.title), body_markdown: ensureLink(str(xa.body_markdown)), state: "generated" },
-    x_post: { text: stripLink(str(xp.text), canonical), state: "generated" },
-    li_newsletter: { title: str(lin.title), body_markdown: ensureLink(str(lin.body_markdown)), state: "generated" },
-    li_post: { text: stripLink(str(lip.text), canonical), first_comment: ensureLink(str(lip.first_comment)), state: "generated" },
+    li_longform: { title: str(lin.title), body_markdown: ensureLink(str(lin.body_markdown)), state: "generated" },
+    x_post: { text: promo(str(xp.text)), hashtags: str(xp.hashtags), state: "generated" },
+    li_post: { text: promo(str(lip.text)), first_comment: ensureLink(str(lip.first_comment)), hashtags: str(lip.hashtags), state: "generated" },
     micro_posts: micro,
   };
 

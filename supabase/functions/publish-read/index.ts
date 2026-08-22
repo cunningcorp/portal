@@ -49,7 +49,7 @@ function todayLondon(): string {
  * pubDate -> the publish date. Everything else in the file is the approved copy
  * and is not touched -- the portal is not an editor (copylock rule).
  */
-function rewriteFrontmatter(markdown: string): { out: string; error?: string } {
+function rewriteFrontmatter(markdown: string, keepPubDate = false): { out: string; error?: string } {
   const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(markdown);
   if (!m) return { out: markdown, error: "no frontmatter block found" };
   let fm = m[1];
@@ -57,9 +57,14 @@ function rewriteFrontmatter(markdown: string): { out: string; error?: string } {
   if (/^draft:/m.test(fm)) fm = fm.replace(/^draft:.*$/m, "draft: false");
   else fm += "\ndraft: false";
 
-  const date = todayLondon();
-  if (/^pubDate:/m.test(fm)) fm = fm.replace(/^pubDate:.*$/m, `pubDate: ${date}`);
-  else fm += `\npubDate: ${date}`;
+  // On an update ("Update live"), keep the original pubDate if one is present -- an update
+  // is not a re-dating (design package doc 03 §2). Only stamp a date on first publish.
+  const hasPub = /^pubDate:/m.test(fm);
+  if (!(keepPubDate && hasPub)) {
+    const date = todayLondon();
+    if (hasPub) fm = fm.replace(/^pubDate:.*$/m, `pubDate: ${date}`);
+    else fm += `\npubDate: ${date}`;
+  }
 
   return { out: markdown.slice(0, m.index) + `---\n${fm}\n---` + markdown.slice(m.index + m[0].length) };
 }
@@ -134,11 +139,12 @@ Deno.serve(async (req: Request) => {
   if (loadErr) return json({ error: `load: ${loadErr.message}` }, 500);
   if (!row) return json({ error: "no such queue item" }, 404);
 
-  // ready -> publish, failed -> retry. Anything else is a no.
-  if (!(["ready", "failed"].includes(row.status))) {
+  // ready -> publish, failed -> retry, published -> re-publish ("Update live", doc 03 §2).
+  // draft/in_review/publishing are not publishable.
+  if (!(["ready", "failed", "published"].includes(row.status))) {
     return json({
       error: `item is '${row.status}', not publishable`,
-      hint: row.status === "published" ? `already live: ${SITE}/reads/${row.slug}/` : "try again shortly",
+      hint: row.status === "publishing" ? "a publish is already in flight" : "mark it ready first",
     }, 409);
   }
 
@@ -172,7 +178,8 @@ Deno.serve(async (req: Request) => {
   const probs = contentFailures(row);
   if (probs.length) return fail(`cannot publish: ${probs.join("; ")}`);
 
-  const { out: finalMarkdown, error: fmErr } = rewriteFrontmatter(row.markdown);
+  // A row that already carries published_at is an update -- keep its original pubDate.
+  const { out: finalMarkdown, error: fmErr } = rewriteFrontmatter(row.markdown, !!row.published_at);
   if (fmErr) return fail(fmErr);
 
   // --- Commit to GitHub ------------------------------------------------------
@@ -198,7 +205,7 @@ Deno.serve(async (req: Request) => {
     method: "PUT",
     headers: gh,
     body: JSON.stringify({
-      message: `Publish Read: ${row.title}`,
+      message: `${row.published_at ? "Update" : "Publish"} Read: ${row.title}`,
       branch: BRANCH,
       content: encodeBase64(new TextEncoder().encode(finalMarkdown)),
       ...(existingSha ? { sha: existingSha } : {}),
