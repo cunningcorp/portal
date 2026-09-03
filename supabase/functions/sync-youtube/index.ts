@@ -193,6 +193,97 @@ async function collectAnalytics(sb: any, account: Account, token: string) {
   return rows;
 }
 
+// ---------------------------------------------------- ANALYTICS (per video)
+// Per-video watch retention: averageViewDuration -> post_metrics.watch_seconds,
+// so completion % = watch_seconds / duration_secs becomes computable (and
+// averageViewPercentage is kept in raw as the direct figure). Queried over the
+// whole lifetime and snapshotted as today's row, matching the lifetime viewCount
+// collectPublic already writes -- so the two numbers are on the same basis.
+//
+// Read-only. Degrades independently of channel-level analytics: a failure here
+// never fails the run. Impressions/CTR are deliberately NOT requested -- they are
+// a separate metric group that cannot ride in this query, and this channel's
+// impressions are thin; add them as a second reports.query later if wanted.
+async function collectVideoAnalytics(sb: any, account: Account, token: string) {
+  const qs = new URLSearchParams({
+    ids: `channel==${account.external_id}`,
+    startDate: "2005-02-01",   // before YouTube existed -> the video's whole life
+    endDate: today(),
+    dimensions: "video",
+    metrics: "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+    sort: "-views",
+    maxResults: "200",         // the API cap for dimensions=video; no paging exists
+  });
+  const rep = await fetchJson(`${ANALYTICS_API}?${qs}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const cols: string[] = (rep.columnHeaders ?? []).map((c: any) => c.name);
+  const ix = (n: string) => cols.indexOf(n);
+  const iVid = ix("video"), iDur = ix("averageViewDuration"),
+    iPct = ix("averageViewPercentage"), iMin = ix("estimatedMinutesWatched"),
+    iViews = ix("views");
+  if (iVid < 0) return 0;
+
+  const byVideo = new Map<string, any>();
+  for (const row of rep.rows ?? []) {
+    byVideo.set(String(row[iVid]), {
+      watch_seconds: iDur >= 0 ? Math.round(Number(row[iDur] ?? 0)) : null,
+      averageViewPercentage: iPct >= 0 ? Number(row[iPct] ?? 0) : null,
+      estimatedMinutesWatched: iMin >= 0 ? Number(row[iMin] ?? 0) : null,
+      analyticsViews: iViews >= 0 ? Number(row[iViews] ?? 0) : null,
+    });
+  }
+  if (!byVideo.size) return 0;
+
+  // Match analytics rows to posts by YouTube video id.
+  const { data: posts } = await sb.from("posts").select("id, external_id").eq("account_id", account.id);
+  const idByVideo = new Map<string, string>();
+  for (const p of posts ?? []) if (byVideo.has(p.external_id)) idByVideo.set(p.external_id, p.id);
+  if (!idByVideo.size) return 0;
+
+  // Read today's rows so the Data API counts collectPublic wrote are preserved,
+  // and analytics is merged in rather than overwriting them.
+  const postIds = [...idByVideo.values()];
+  const { data: existing } = await sb.from("post_metrics")
+    .select("post_id, views, likes, comments, shares, saves, raw")
+    .eq("captured_on", today()).in("post_id", postIds);
+  const prev = new Map<string, any>();
+  for (const r of existing ?? []) prev.set(r.post_id, r);
+
+  const upserts: any[] = [];
+  for (const [videoId, postId] of idByVideo) {
+    const a = byVideo.get(videoId);
+    const e = prev.get(postId) ?? {};
+    upserts.push({
+      post_id: postId,
+      captured_on: today(),
+      views: e.views ?? a.analyticsViews,
+      likes: e.likes ?? null,
+      comments: e.comments ?? null,
+      shares: e.shares ?? null,
+      saves: e.saves ?? null,
+      watch_seconds: a.watch_seconds,
+      raw: {
+        ...(e.raw ?? {}),
+        analytics: {
+          averageViewDuration: a.watch_seconds,
+          averageViewPercentage: a.averageViewPercentage,
+          estimatedMinutesWatched: a.estimatedMinutesWatched,
+          views: a.analyticsViews,
+        },
+      },
+    });
+  }
+
+  let rows = 0;
+  for (const batch of chunk(upserts, 500)) {
+    await sb.from("post_metrics").upsert(batch, { onConflict: "post_id,captured_on" });
+    rows += batch.length;
+  }
+  return rows;
+}
+
 // --------------------------------------------------------------------------
 async function syncChannel(sb: any, account: Account, apiKey: string | undefined) {
   const runId = await startRun(sb, "youtube", account.id);
@@ -220,6 +311,13 @@ async function syncChannel(sb: any, account: Account, apiKey: string | undefined
       try {
         rows += await collectAnalytics(sb, account, token);
         modes.push("analytics");
+        // Per-video watch time. Its own try so a per-video failure leaves the
+        // channel-level analytics (and its mode) intact.
+        try {
+          rows += await collectVideoAnalytics(sb, account, token);
+        } catch (e) {
+          console.warn(`per-video analytics skipped for ${account.external_id}: ${e}`);
+        }
       } catch (e) {
         // Needs yt-analytics.readonly and channel ownership. Public data is already
         // saved, so degrade rather than fail the run.
