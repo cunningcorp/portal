@@ -1963,6 +1963,8 @@ async function generateSocial() {
       : "Regenerate replaces the current social copy. Continue?";
     if (!confirm(msg)) return;
   }
+  // Step-up: a fresh passkey before generating (the copy is destined for the public platforms).
+  if (!(await stepUp("generate social"))) return;
   SOCIAL_BUSY = true; renderReadsSurface();
   try {
     const { data: { session } } = await sb.auth.getSession();
@@ -2710,6 +2712,8 @@ async function publishRead(id) {
   const row = (DATA.reads ?? []).find((r) => r.id === id);
   if (!row) return;
   if (!(await confirmPublish(row))) return;
+  // Step-up: a fresh passkey before anything reaches the live site (Publish + Update live).
+  if (!(await stepUp(row.published_at ? "update the live article" : "publish"))) return;
 
   // Optimistic: the guard in publish-read is the real lock; this is just honest UI.
   row.status = "publishing"; renderSurface();
@@ -3642,6 +3646,29 @@ $("#syncBtn").onclick = async () => {
   }
 };
 
+/* ============================ step-up auth ============================
+   Sensitive actions — Publish, Update live, Generate social — require a FRESH
+   passkey/biometric, so a device carrying a persisted session in the wrong hands can
+   browse but cannot change the live site. A sign-in within STEP_UP_FRESH_MS counts as
+   fresh (no double prompt straight after logging in). It never locks anyone out: with
+   no passkey on the device the route is to sign in again, which makes the session
+   fresh. Browsing stays as convenient as before; only the publish/generate verbs gate. */
+const STEP_UP_FRESH_MS = 10 * 60 * 1000;
+async function stepUp(actionLabel) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { toast("Sign in to continue.", 4000); return false; }
+  const last = Date.parse(session.user?.last_sign_in_at ?? "");
+  if (last && Date.now() - last < STEP_UP_FRESH_MS) return true;   // just signed in — fresh enough
+  if (window.PublicKeyCredential) {
+    const { error } = await sb.auth.signInWithPasskey();          // fresh biometric → new session
+    if (!error) return true;
+    toast(`Confirm with your passkey to ${actionLabel}. No passkey on this device? Add one from your profile, or sign in again.`, 7000);
+    return false;
+  }
+  toast(`Sign in again to ${actionLabel} — this device has no passkey support.`, 6000);
+  return false;
+}
+
 /* ============================ idle logout ============================
    Signs out after IDLE_MINUTES without interaction, with a warning in the last
    WARN_SECONDS so the sign-out is never a surprise. Client-side by design: a cap on
@@ -3742,7 +3769,9 @@ function staySignedIn() {
 }
 
 function openIdleWarning(secs) {
-  if (warnOpen || !$("#app") || $("#app").classList.contains("hide")) return;
+  // Warn on ANY signed-in surface (Signal, Reads, launcher) — previously this only fired on
+  // Signal, so Reads/launcher got a silent hard sign-out at 66 min with no warning.
+  if (warnOpen || !$("#gate") || !$("#gate").classList.contains("hide")) return;
   warnOpen = true;
   const total = secs ?? WARN_SECONDS;
   const until = Date.now() + total * 1000;
