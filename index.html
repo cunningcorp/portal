@@ -472,7 +472,7 @@ td.t a:hover{color:var(--brand-gold-soft)}
 #launcher{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:var(--space-6);
   background:radial-gradient(760px 460px at 50% -12%,rgba(142,139,216,.13),transparent 62%),
              radial-gradient(620px 420px at 50% 118%,rgba(200,162,76,.07),transparent 60%),var(--surface-base)}
-.launchwrap{width:100%;max-width:840px;display:flex;flex-direction:column;gap:var(--space-7)}
+.launchwrap{width:100%;max-width:1180px;display:flex;flex-direction:column;gap:var(--space-7)}
 .launchtop{display:flex;align-items:center;gap:var(--space-3)}
 .launchtop .mark{width:26px;height:26px;flex:none}
 .launchtop .wm{font-family:var(--font-display);font-size:12px;letter-spacing:.24em;color:var(--text-tertiary)}
@@ -868,6 +868,85 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .tflag{font-size:var(--text-micro);border-radius:var(--radius-pill);padding:2px 8px;border:1px solid var(--border-default)}
 .tflag.fix{color:var(--state-progress);border-color:var(--state-progress)}
 .tflag.src{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+/* Outreach triage flags + column headers (reuse the Reads triage system) */
+.tflag.need{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.tflag.warn{color:var(--brand-gold-soft);border-color:rgba(227,197,126,.45)}
+.tflag.thin{color:var(--text-tertiary);border-color:var(--border-strong)}
+.tflag.seq{color:var(--brand-peri);border-color:rgba(142,139,216,.45)}
+.tcol.approved>h3{color:var(--state-progress)}
+.tcol.in_sequence>h3{color:var(--state-positive)}
+.tcol.closed>h3{color:var(--text-tertiary)}
+.showrej{margin-top:var(--space-3);background:none;border:0;color:var(--text-tertiary);font-size:var(--text-micro);text-decoration:underline;cursor:pointer;padding:0}
+/* Outreach review card (in-place detail, reuses .edcard / .btn / tokens) */
+.odetail{max-width:780px;margin:0 auto}
+.oback{background:none;border:0;color:var(--text-secondary);font-size:var(--text-label);cursor:pointer;padding:0;margin-bottom:var(--space-3)}
+.ohrow{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap}
+.ostatus{font-size:var(--text-micro);letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid var(--border-strong);color:var(--text-secondary)}
+.ostatus.in_review,.ostatus.snoozed{color:var(--brand-gold-soft);border-color:rgba(227,197,126,.4)}
+.ostatus.approved,.ostatus.enrolling{color:var(--state-progress);border-color:rgba(142,139,216,.45)}
+.ostatus.enrolled,.ostatus.replied{color:var(--state-positive);border-color:rgba(200,162,76,.4)}
+.ostatus.rejected,.ostatus.bounced,.ostatus.failed,.ostatus.declined{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.osaved{margin-left:auto;color:var(--text-tertiary);font-size:var(--text-micro)}
+.owho{margin-bottom:var(--space-4)}
+.owho .onm{font-family:var(--font-head);font-weight:300;font-size:28px;line-height:1.05;margin:0;color:var(--text-primary)}
+.owho .osub{color:var(--text-secondary);margin-top:4px}
+.owho .olinks{display:flex;gap:var(--space-4);align-items:center;flex-wrap:wrap;margin-top:var(--space-3)}
+.oemailchip{font-size:var(--text-micro);padding:3px 10px;border-radius:var(--radius-pill);border:1px solid var(--border-strong);color:var(--text-secondary)}
+.oemailchip.needed{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.oemailchip.public{color:var(--brand-gold);border-color:rgba(200,162,76,.4)}
+.oaddmail{background:none;border:0;color:var(--brand-terracotta);text-decoration:underline;cursor:pointer;font-size:var(--text-micro);padding:0}
+.oh4{font-size:var(--text-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);margin:0 0 var(--space-3);font-weight:600;display:flex;align-items:center;gap:var(--space-2)}
+.ocase{font-size:var(--text-micro);letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);color:var(--text-primary)}
+.okv{margin:0 0 var(--space-3)}.okv:last-child{margin-bottom:0}
+.okv .k{display:block;font-size:var(--text-micro);letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:2px}
+.okv .v{color:var(--text-primary)}
+.oquote{border-left:2px solid var(--brand-terracotta);padding:6px 0 6px var(--space-4);font-style:italic;color:var(--text-primary);margin:var(--space-2) 0}
+.osmap{display:grid;gap:var(--space-1)}
+.osmrow{display:grid;grid-template-columns:120px 1fr;gap:var(--space-3);padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle)}
+.osmrow:last-of-type{border-bottom:0}
+.osmrow .s{font-size:var(--text-micro);letter-spacing:.05em;text-transform:uppercase;color:var(--text-tertiary);padding-top:2px}
+.osmrow .t{color:var(--text-secondary);font-size:var(--text-label)}
+.overdict{display:grid;grid-template-columns:120px 1fr;gap:var(--space-3);margin-top:var(--space-2)}
+.overdict .tag{font-size:var(--text-micro);letter-spacing:.05em;text-transform:uppercase;padding-top:2px}
+.overdict.agree .tag{color:var(--state-positive)} .overdict.fracture .tag{color:var(--brand-terracotta)}
+.overdict .t{color:var(--text-primary);font-size:var(--text-label)}
+.odisc{background:none;border:0;color:var(--text-secondary);font-size:var(--text-label);cursor:pointer;display:flex;align-items:center;gap:var(--space-2);margin-top:var(--space-3);padding:0}
+.oreadgrp{margin-bottom:var(--space-4)}.oreadgrp:last-child{margin-bottom:0}
+.oreadgrp .gh{font-size:var(--text-micro);letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary);margin:var(--space-3) 0 var(--space-2);font-weight:600}
+.oev{display:flex;gap:var(--space-2);padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle);font-size:var(--text-label);color:var(--text-secondary)}
+.oev:last-child{border-bottom:0}
+.oprov{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px}
+.oprov.verified{background:var(--brand-gold)}
+.oprov.reported{background:var(--brand-gold-soft)}
+.oprov.inferred{background:transparent;border:1px dashed var(--text-tertiary)}
+.oprovtag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary);border:1px solid var(--border-default);border-radius:var(--radius-sm);padding:0 5px;white-space:nowrap}
+.oprovkey{display:flex;gap:var(--space-4);flex-wrap:wrap;margin-top:var(--space-3);font-size:var(--text-micro);color:var(--text-tertiary)}
+.oprovkey span{display:inline-flex;align-items:center;gap:6px}
+.othin{background:rgba(227,197,126,.07);border:1px solid rgba(227,197,126,.3);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);color:var(--brand-gold-soft);font-size:var(--text-label)}
+.oemail{background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden}
+.oemail .eh{padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-subtle);font-size:var(--text-micro);color:var(--text-tertiary)}
+.oemail .eh b{color:var(--text-secondary)}
+.oemail .esubj{padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border-subtle);font-family:var(--font-head);font-weight:300;font-size:var(--text-lead);color:var(--text-primary)}
+.oemail .ebd{padding:var(--space-4);white-space:pre-wrap;color:var(--text-secondary);line-height:1.6}
+.oemail .esig{color:var(--text-tertiary)}
+.oedit{display:flex;gap:var(--space-3);align-items:center;margin-top:var(--space-3);flex-wrap:wrap}
+.oedit .variant{margin-left:auto;font-size:var(--text-micro);color:var(--text-tertiary);letter-spacing:.03em}
+.oefield{width:100%;background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);padding:.55rem .7rem;font:inherit}
+textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
+.olink{background:none;border:0;color:var(--brand-peri);text-decoration:underline;cursor:pointer;font-size:var(--text-label);padding:0}
+.ochk{display:flex;flex-direction:column;gap:var(--space-2)}
+.ochk .row{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-label)}
+.ochk .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.ochk .ok{color:var(--text-secondary)} .ochk .ok .dot{background:var(--brand-gold)}
+.ochk .warn{color:var(--brand-gold-soft)} .ochk .warn .dot{background:var(--brand-gold-soft)}
+.ochk .bad{color:var(--brand-terracotta)} .ochk .bad .dot{background:var(--brand-terracotta)}
+.ofoot{position:sticky;bottom:0;display:flex;gap:var(--space-3);align-items:center;padding:var(--space-4) 0;margin-top:var(--space-4);border-top:1px solid var(--border-subtle);background:linear-gradient(to top,var(--surface-base) 72%,transparent)}
+.ofoot .owhy{margin-right:auto;color:var(--text-tertiary);font-size:var(--text-micro);max-width:40ch}
+/* Aubrey North shell switch — Reads ⇄ Outreach, in both surface headers */
+.answ{display:inline-flex;background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-pill);overflow:hidden;margin-left:var(--space-3)}
+.answ-b{padding:5px 14px;border:0;background:transparent;color:var(--text-tertiary);font-size:var(--text-micro);letter-spacing:.06em;cursor:pointer;transition:color var(--dur-fast),background var(--dur-fast)}
+.answ-b:hover{color:var(--text-secondary)}
+.answ-b[aria-current="page"]{background:var(--surface-overlay);color:var(--brand-terracotta);font-weight:600}
 .tcol .empty{font-size:var(--text-micro);color:var(--text-tertiary);padding:var(--space-2) 0}
 .tcard.pub{cursor:pointer}
 .tcard.pub:focus-visible{outline:2px solid var(--state-progress);outline-offset:2px}
@@ -1098,6 +1177,16 @@ td.t a:hover{color:var(--brand-gold-soft)}
           <span class="stat" id="tileReadsStatus">Loading…</span>
         </span>
       </button>
+      <button class="slab reads" id="tileOutreach" aria-label="Open Outreach">
+        <span class="sheen"></span><span class="edge"></span>
+        <span class="an cnr">AN</span>
+        <span class="body">
+          <span class="eyebrow">Aubrey North</span>
+          <span class="nm">Outreach</span>
+          <span class="ds">The one email worth sending, researched. Approve, edit or decline — nothing sends without you.</span>
+          <span class="stat" id="tileOutreachStatus">Loading…</span>
+        </span>
+      </button>
     </div>
   </div>
 </div>
@@ -1228,6 +1317,10 @@ td.t a:hover{color:var(--brand-gold-soft)}
       <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
       <span class="readid"><span class="an">Aubrey North</span><span class="pg">Reads</span></span>
     </button>
+    <nav class="answ" aria-label="Aubrey North surface">
+      <button class="answ-b" data-go="reads" aria-current="page">Reads</button>
+      <button class="answ-b" data-go="outreach">Outreach</button>
+    </nav>
     <span class="spacer"></span>
     <span class="rcontext" id="readsCount">—</span>
     <div class="acctmenu">
@@ -1253,6 +1346,49 @@ td.t a:hover{color:var(--brand-gold-soft)}
     </div>
   </header>
   <main id="readsView"></main>
+</div>
+
+<!-- ================= OUTREACH SURFACE =================
+     Aubrey North prospecting queue. Shares the AN shell with Reads: the same header
+     shape, the same profile-menu / idle / passkey logic (wireProfile, setProfile,
+     addPasskeyFlow, doSignOut are all generic), and a Reads ⇄ Outreach switch. The
+     markup is per-surface (one id set each) so a single element is never in two places;
+     the behaviour is one implementation. Triage + card render live in the module script. -->
+<div id="outreach" class="hide">
+  <header class="readtop">
+    <button class="brandhome" id="outreachHub" aria-label="Aubrey North Outreach — home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      <span class="readid"><span class="an">Aubrey North</span><span class="pg">Outreach</span></span>
+    </button>
+    <nav class="answ" aria-label="Aubrey North surface">
+      <button class="answ-b" data-go="reads">Reads</button>
+      <button class="answ-b" data-go="outreach" aria-current="page">Outreach</button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="rcontext" id="outreachCount">—</span>
+    <div class="acctmenu">
+      <button class="avatar" id="outreachProfileBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Account and preferences"><span id="outreachProfileInitials">—</span></button>
+      <div class="menu hide" id="outreachProfileMenu" role="menu" aria-labelledby="outreachProfileBtn">
+        <div class="who"><span class="em" id="outreachProfileEmail">—</span><span class="rl">Signed in · invited access</span></div>
+        <button class="mi hide" id="outreachAddPasskey" role="menuitem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="8" cy="8" r="3.3"></circle><path d="M2.8 19c.5-3.2 2.6-5 5.2-5 .8 0 1.6.2 2.2.5"></path>
+            <circle cx="17.4" cy="12.2" r="2.4"></circle><path d="M15.5 13.7 12 17.2"></path><path d="M13.4 15.8l1.5 1.5M12 17.2l1.5 1.5"></path>
+          </svg>
+          <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span>
+        </button>
+        <div class="note">Signs out after 66 minutes without activity.</div>
+        <div class="rule"></div>
+        <button class="mi danger" id="outreachSignOut" role="menuitem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M14 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H14"></path><path d="M17 8.5 20.5 12 17 15.5M20.5 12H10"></path>
+          </svg>
+          <span>Sign out</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="outreachView"></main>
 </div>
 
 <div id="modalRoot"></div>
@@ -1328,7 +1464,9 @@ const GLYPH_TITLE = {
 /* ============================ state ============================ */
 let RANGE = 30;
 let SCOPE = { kind:"all" };            // {kind:'all'} | {kind:'platform',p} | {kind:'account',id}
-let SURFACE = null;                    // null = launcher (home) | 'signal' | 'reads'
+let SURFACE = null;                    // null = launcher (home) | 'signal' | 'reads' | 'outreach'
+let OUTREACH_LANE = "all";             // all | business | creator  (Outreach triage lane filter)
+let OUTREACH_ID = null;                // open Outreach card id, or null (triage)
 let POSTTYPE = "all";
 let LOADING = true;
 let charts = {};
@@ -1386,8 +1524,11 @@ function readUrl() {
   if ([7,30,90].includes(r)) RANGE = r;
   const surf = q.get("surface");
   if (surf === "reads" || q.get("view") === "reads") SURFACE = "reads";   // legacy ?view=reads still works
+  else if (surf === "outreach") SURFACE = "outreach";
   else if (surf === "signal" || q.get("platform") || q.get("account") || q.get("type")) SURFACE = "signal";
   else SURFACE = null;                                                    // bare URL -> launcher
+  OUTREACH_LANE = ["business","creator"].includes(q.get("lane")) ? q.get("lane") : "all";
+  OUTREACH_ID = q.get("id") || null;
   if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
   else if (PLATFORMS.includes(q.get("platform"))) SCOPE = { kind:"platform", p:q.get("platform") };
   else SCOPE = { kind:"all" };
@@ -1396,6 +1537,11 @@ function readUrl() {
 function writeUrl(push = true) {
   const q = new URLSearchParams();
   if (SURFACE === "reads") q.set("surface", "reads");
+  else if (SURFACE === "outreach") {
+    q.set("surface", "outreach");
+    if (OUTREACH_LANE !== "all") q.set("lane", OUTREACH_LANE);
+    if (OUTREACH_ID) q.set("id", OUTREACH_ID);
+  }
   else if (SURFACE === "signal") {
     q.set("surface", "signal");
     if (SCOPE.kind === "platform") q.set("platform", SCOPE.p);
@@ -1424,9 +1570,11 @@ function applySurfaceVisibility() {
   $("#launcher").classList.toggle("hide", SURFACE !== null);
   $("#app").classList.toggle("hide", SURFACE !== "signal");
   $("#reads").classList.toggle("hide", SURFACE !== "reads");
+  $("#outreach").classList.toggle("hide", SURFACE !== "outreach");
 }
 function renderSurface() {
   if (SURFACE === "reads") renderReadsSurface();
+  else if (SURFACE === "outreach") renderOutreachSurface();
   else if (SURFACE === "signal") render();
   else renderLauncher();
 }
@@ -1451,7 +1599,369 @@ function renderLauncher() {
     const w = (DATA.reads || []).filter((r) => ["ready","failed","publishing"].includes(r.status)).length;
     $("#tileReadsStatus").textContent = LOADING ? "Loading…" : (w ? `${w} waiting` : "Queue clear");
   }
+  if (DATA.outreach === null) $("#tileOutreachStatus").textContent = "Queue unavailable";
+  else {
+    const n = (DATA.outreach || []).filter((r) => r.status === "in_review").length;
+    $("#tileOutreachStatus").textContent = LOADING ? "Loading…" : (n ? `${n} to review` : "Queue clear");
+  }
 }
+
+/* ============================ outreach surface ============================
+   Aubrey North prospecting queue. Mirrors the Reads triage; four status columns
+   per the design handoff (Prospecting Engine/portal/design-handoff/01-INTERACTIONS.md):
+   In review · Approved · In sequence · Closed. Lane chips filter. The card drawer +
+   approve ceremony (dossier, surface map, email, step-up) are the next increment; a
+   card open toasts for now. Writes will go through the authenticated, column-scoped
+   UPDATE on outreach_queue (subject/body/status/reject_reason/snooze_until/notes/
+   email/email_status). Nothing here sends. */
+const OUT_COLS = [
+  ["in_review",   "In review",   ["in_review","snoozed"]],
+  ["approved",    "Approved",    ["approved","enrolling"]],
+  ["in_sequence", "In sequence", ["enrolled","replied"]],
+  ["closed",      "Closed",      ["bounced","failed","declined","rejected"]],
+];
+const OUT_LANE_LABEL = { business:"Business", creator:"Creator" };
+
+let OUT_EDIT = false;        // the review card's Edit toggle (subject + body)
+let OUT_SHOWREJ = false;     // Closed column's "show rejected" toggle
+
+function renderOutreachSurface() {
+  const v = $("#outreachView");
+  const all = DATA.outreach;
+  const toRev = (all || []).filter((r) => r.status === "in_review").length;
+  const appr  = (all || []).filter((r) => r.status === "approved").length;
+  const seq   = (all || []).filter((r) => ["enrolled","replied"].includes(r.status)).length;
+  $("#outreachCount").innerHTML = all === null ? "queue unavailable"
+    : `<b>${toRev} to review</b> · ${appr} approved · ${seq} in sequence · next batch 06:30`;
+  if (LOADING) { v.innerHTML = readsSkeleton(); return; }
+  if (all === null) {
+    v.innerHTML = `<div class="panel"><div class="empty"><h3>The queue could not be read</h3>
+      <div>Reload to try again. If it persists, the outreach_queue table or its read policy is the place to look.</div>
+      <div class="connectrow"><button class="btn" data-retry>Reload</button></div></div></div>`;
+    v.querySelector("[data-retry]")?.addEventListener("click", load);
+    return;
+  }
+  // A card open? Render the review detail in place (matches the Reads editor swap). A
+  // stale id (row gone) falls back to triage.
+  const row = OUTREACH_ID ? all.find((r) => r.id === OUTREACH_ID) : null;
+  if (OUTREACH_ID && !row) { OUTREACH_ID = null; OUT_EDIT = false; writeUrl(false); }
+  if (row) { v.innerHTML = outreachDetailHtml(row); wireOutreachDetail(row); }
+  else { v.innerHTML = outreachTriageHtml(all); wireOutreachTriage(); }
+}
+
+/* ---- triage ---- */
+function outreachTriageHtml(all) {
+  const laneOk = (r) => OUTREACH_LANE === "all" || r.lane === OUTREACH_LANE;
+  const chips = ["all","business","creator"]
+    .map((l) => `<button class="lanechip" data-lane="${l}" aria-pressed="${OUTREACH_LANE===l}">${l==="all"?"All":OUT_LANE_LABEL[l]}</button>`).join("");
+  const EMPTY = { in_review:"Nothing to review. Next batch 06:30.", approved:"Nothing approved yet.",
+    in_sequence:"Nothing in sequence yet.", closed:"Nothing closed." };
+  const col = ([key,label,states]) => {
+    let rows = all.filter((r) => states.includes(r.status) && laneOk(r));
+    if (key === "closed" && !OUT_SHOWREJ) rows = rows.filter((r) => r.status !== "rejected");
+    rows.sort((a,b) => (b.sent_at || b.created_at || "").localeCompare(a.sent_at || a.created_at || ""));
+    const body = rows.length ? rows.map(outCard).join("") : `<div class="empty">${EMPTY[key]}</div>`;
+    let extra = "";
+    if (key === "closed") {
+      const nrej = all.filter((r) => r.status === "rejected" && laneOk(r)).length;
+      if (nrej) extra = `<button class="showrej" data-showrej>${OUT_SHOWREJ ? "Hide" : "Show"} rejected (${nrej})</button>`;
+    }
+    return `<div class="tcol ${key}"><h3>${label}<span class="n">${rows.length}</span></h3>${body}${extra}</div>`;
+  };
+  return `<div class="qhead">
+    <div><h1 class="qtitle">The queue, as a morning read</h1>
+      <p class="qsub">Researched overnight. Approve, edit or decline — nothing sends without you.</p></div>
+    <div class="lanechips">${chips}</div>
+  </div><div class="triage">${OUT_COLS.map(col).join("")}</div>`;
+}
+function wireOutreachTriage() {
+  $$("#outreachView .lanechip").forEach((b) => b.onclick = () => { OUTREACH_LANE = b.dataset.lane; writeUrl(); renderOutreachSurface(); });
+  $$("#outreachView .tcard[data-open]").forEach((b) => b.onclick = () => openOutreach(b.dataset.open));
+  const sr = $("#outreachView [data-showrej]"); if (sr) sr.onclick = () => { OUT_SHOWREJ = !OUT_SHOWREJ; renderOutreachSurface(); };
+}
+
+/* ---- the review card (in-place detail) ---- */
+const outHref = (w) => w ? (/^https?:\/\//.test(w) ? w : "https://" + w) : "#";
+const okv = (k, v) => v ? `<div class="okv"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>` : "";
+const outActionable = (r) => ["in_review","snoozed"].includes(r.status);
+function approveReason(r) {
+  if (!outActionable(r)) return "Only a row in review can be approved.";
+  if (r.lane === "creator" && (!r.email || ["unrevealed","unavailable"].includes(r.email_status)))
+    return "Add an email before approving — the enrol step has no address to send to.";
+  const hb = r.voice_check && Array.isArray(r.voice_check.hard_block) ? r.voice_check.hard_block : [];
+  if (hb.length) return "A hard-block hype word is present — fix the copy before approving.";
+  return "";
+}
+
+function outEmailChip(r) {
+  if (r.email) {
+    const good = ["public","verified","manual"].includes(r.email_status);
+    return `<span class="oemailchip ${good ? "public" : ""}">Email: ${esc(r.email)} · ${esc(r.email_status)}</span>`;
+  }
+  if (r.lane === "creator") return `<span class="oemailchip needed">Email needed</span> <button class="oaddmail" data-addmail>Add email</button>`;
+  return `<span class="oemailchip">Email: revealed at enrol · 1 credit</span>`;
+}
+function outAuditBlock(r) {
+  const a = r.audit || {};
+  if (r.lane === "business") {
+    return `<div class="edcard"><div class="oh4"><span class="ocase">${esc(r.audit_case || "—")}</span> The read</div>
+      ${okv("Leads with", a.leads_with)}${okv("The one true thing", a.one_true_thing)}${okv("The move", a.move)}</div>`;
+  }
+  return `<div class="edcard"><div class="oh4"><span class="ocase">${esc(r.audit_case || "—")}</span> Narrative Teardown</div>
+    ${okv("The five-second read", a.five_second_read)}
+    <div class="okv"><span class="k">The real story</span><span class="v">${esc(a.real_story || "")}</span>${a.real_story_quote ? `<div class="oquote">“${esc(a.real_story_quote)}”</div>` : ""}</div>
+    ${okv("The gap", a.gap)}${okv("The one shift", a.one_shift)}</div>`;
+}
+function outEv(item) {
+  let claim, source, conf, date;
+  if (Array.isArray(item)) { [claim, source, conf] = item; }
+  else if (item && typeof item === "object") { claim = item.claim; source = item.source; conf = item.confidence; date = item.date; }
+  else { claim = item; }
+  const c = ["verified","reported","inferred"].includes(conf) ? conf : "inferred";
+  const tail = source
+    ? ` <span class="oprovtag">${esc(c)}</span> <span style="color:var(--text-tertiary)">${esc(source)}${date ? ` · ${esc(date)}` : ""}</span>`
+    : ` <span class="oprovtag">${esc(c)}</span>`;
+  return `<div class="oev"><span class="oprov ${c}"></span><span>${esc(claim || "")}${tail}</span></div>`;
+}
+function dossierReads(d) {
+  const grp = (label, arr) => (Array.isArray(arr) && arr.length)
+    ? `<div class="oreadgrp"><p class="gh">${esc(label)}</p>${arr.map(outEv).join("")}</div>` : "";
+  const rf = (Array.isArray(d.red_flags) && d.red_flags.length)
+    ? `<div class="oreadgrp"><p class="gh">Red flags / handle with care</p>${d.red_flags.map((x) => `<div class="oev" style="color:var(--brand-gold-soft)">△ ${esc(typeof x === "string" ? x : (x.claim || ""))}</div>`).join("")}</div>` : "";
+  const body = grp("Company", d.company) + grp("Owner", d.owner) + grp("Signals", d.signals) + grp("Social", d.social) + rf;
+  if (!body) return "";
+  return `<button class="odisc" data-disc><span class="ocaret">▸</span> The five reads, sourced</button>
+    <div class="oreads hide">${body}
+      <div class="oprovkey"><span><span class="oprov verified"></span> verified</span><span><span class="oprov reported"></span> reported</span><span><span class="oprov inferred"></span> inferred</span></div>
+    </div>`;
+}
+function outDossierBlock(r) {
+  if (r.lane !== "business") {
+    const tr = r.dossier && r.dossier.thin_reason;
+    return tr ? `<div class="edcard"><div class="oh4">Dossier</div><div class="othin" style="background:none;border-color:var(--border-subtle);color:var(--text-tertiary)">${esc(tr)}</div></div>` : "";
+  }
+  const d = r.dossier || {};
+  if (r.dd_complete === false) {
+    return `<div class="edcard"><div class="oh4">Dossier</div><div class="othin">Thin footprint — website audit only. ${esc(d.thin_reason || "")} You decide: approach on the audit alone, or drop.</div></div>`;
+  }
+  const sm = d.surface_map || {};
+  const smrow = (label, key) => sm[key] ? `<div class="osmrow"><span class="s">${esc(label)}</span><span class="t">${esc(sm[key])}</span></div>` : "";
+  const conf = r.confidence ? `<span style="margin-left:auto;font-size:var(--text-micro);color:var(--text-tertiary)">${esc(r.confidence)} confidence</span>` : "";
+  return `<div class="edcard"><div class="oh4">Dossier${conf}</div>
+    ${okv("Why approach", d.why_approach)}${okv("Why now", d.why_now)}
+    <div class="osmap">
+      ${smrow("Homepage","homepage")}${smrow("About","about")}${smrow("LinkedIn","linkedin_co")}${smrow("Founder","founder_words")}${smrow("Press","press")}
+      ${sm.agree ? `<div class="overdict agree"><span class="tag">Agree</span><span class="t">${esc(sm.agree)}</span></div>` : ""}
+      ${sm.fracture ? `<div class="overdict fracture"><span class="tag">Fracture</span><span class="t">${esc(sm.fracture)} — the hook.</span></div>` : ""}
+    </div>
+    ${dossierReads(d)}</div>`;
+}
+function outEmailBlock(r, sent) {
+  const to = r.email || (r.lane === "creator" ? "no address yet — add before approve" : "revealed at enrol · 1 credit");
+  const body = String(r.body || "").replace(/\{\{\s*first_name\s*\}\}/g, r.first_name || "");
+  if (OUT_EDIT && !sent) {
+    return `<div class="edcard"><div class="oh4">The email</div>
+      <div class="okv"><span class="k">Subject</span></div>
+      <input class="oefield" id="oeSubject" value="${esc(r.subject || "")}">
+      <div class="okv" style="margin-top:var(--space-3)"><span class="k">Body</span></div>
+      <textarea class="oefield" id="oeBody">${esc(body)}</textarea>
+      <div class="oedit"><button class="btn primary" data-saveedit>Save</button><button class="olink" data-canceledit>Cancel</button></div></div>`;
+  }
+  return `<div class="edcard"><div class="oh4">The email, as it will land</div>
+    <div class="oemail">
+      <div class="eh"><div><b>From</b> demetri@aubreynorth.com</div><div><b>To</b> ${esc(to)}</div></div>
+      <div class="esubj">${esc(r.subject || "")}</div>
+      <div class="ebd">${esc(body)}<span class="esig">
+
+Demetri Robotham
+Aubrey North</span></div>
+    </div>
+    <div class="oedit">${sent ? "" : '<button class="olink" data-edit>Edit subject &amp; body</button>'}<span class="variant">Variant: ${esc(r.variant || "direct")} · fixed upstream</span></div></div>`;
+}
+function outChecksBlock(r) {
+  const vc = r.voice_check || {};
+  const sw = Array.isArray(vc.soft_warn) ? vc.soft_warn : [];
+  const hb = Array.isArray(vc.hard_block) ? vc.hard_block : [];
+  const first = (r.first_name || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const chk = (cls, label) => `<div class="row ${cls}"><span class="dot"></span>${label}</div>`;
+  const pass = (b) => b ? "ok" : "bad";
+  const rows = [
+    chk(pass(/^Aubrey North\s+—/.test(r.subject || "")), "Subject opens “Aubrey North —”"),
+    chk(pass(new RegExp(`Hi\\s+${first}\\s+—`).test(r.body || "") || /Hi \{\{first_name\}\} —/.test(r.body || "")), `Body opens “Hi ${esc(r.first_name || "")} —”`),
+    chk(pass(/(?:so|it) and I(?:'|’)ll leave it there/.test(r.body || "")), "Opt-out line present"),
+    hb.length ? chk("bad", `Hard-block word: ${esc(hb.join(", "))}`) : chk("ok", "No hard-block hype words"),
+  ];
+  if (sw.length) rows.push(chk("warn", `Soft-warn: ${esc(sw.join(", "))} (allowed, review)`));
+  return `<div class="edcard"><div class="oh4">Voice check</div><div class="ochk">${rows.join("")}</div></div>`;
+}
+const addDays = (iso, n) => { const d = new Date(iso); d.setDate(d.getDate() + n); return d.toISOString(); };
+function outSentBlock(r) {
+  const seq = r.lane === "creator" ? "AN — Narrative Teardown" : "AN — Coffee + Chat (audit-led)";
+  const reply = r.reply_at ? `Replied ${esc(shortDate(r.reply_at))}` : (r.status === "bounced" ? "Delivery failed" : "none yet");
+  return `<div class="edcard"><div class="oh4">Send record</div>
+    ${okv("Sequence", seq)}
+    ${okv("Sent", r.sent_at ? `${shortDate(r.sent_at)} · from demetri@aubreynorth.com` : "—")}
+    ${okv("Follow-ups", r.sent_at ? `Day 5 · ${shortDate(addDays(r.sent_at,5))}  ·  Day 12 · ${shortDate(addDays(r.sent_at,12))}` : "—")}
+    ${okv("Reply", reply)}</div>`;
+}
+function outFootBlock(r) {
+  const reason = approveReason(r);
+  return `<div class="ofoot">
+    <span class="owhy">${esc(reason)}</span>
+    <button class="btn" data-snooze>Snooze</button>
+    <button class="btn" data-reject>Reject</button>
+    <button class="btn primary" data-approve ${reason ? "disabled" : ""} title="${esc(reason)}">Approve</button>
+  </div>`;
+}
+function outreachDetailHtml(r) {
+  const sent = ["enrolled","replied","bounced","declined"].includes(r.status);
+  const sub = r.title ? `${esc(r.title)} · ${esc(r.company)}` : esc(r.company);
+  const awaiting = (r.status === "approved" || r.status === "enrolling");
+  return `<div class="odetail">
+    <button class="oback" data-back>← Queue</button>
+    <div class="ohrow"><span class="ostatus ${r.status}">${esc(r.status.replace("_"," "))}</span>
+      <span class="osaved" id="oeSaved">${sent ? "read-only · sent" : (awaiting ? "awaiting enrol" : "")}</span></div>
+    <div class="owho">
+      <h1 class="onm">${esc(r.full_name || "—")}</h1>
+      <div class="osub">${sub}</div>
+      <div class="olinks"><a href="${esc(outHref(r.website))}" target="_blank" rel="noopener">${esc(r.website || "")} ↗</a>${outEmailChip(r)}</div>
+    </div>
+    ${outAuditBlock(r)}
+    ${outDossierBlock(r)}
+    ${outEmailBlock(r, sent)}
+    ${outChecksBlock(r)}
+    ${sent ? outSentBlock(r) : (awaiting ? `<div class="edcard"><div class="oh4">Status</div><div style="color:var(--text-secondary);font-size:var(--text-label)">Approved — awaiting enrol. Claude in Chrome enrols this row in Apollo from the alias; the send is recorded here. Nothing has been sent yet.</div></div>` : "")}
+    ${outActionable(r) ? outFootBlock(r) : ""}
+  </div>`;
+}
+function wireOutreachDetail(r) {
+  const V = $("#outreachView");
+  V.querySelector("[data-back]").onclick = closeOutreach;
+  const disc = V.querySelector("[data-disc]");
+  if (disc) disc.onclick = () => { const rd = V.querySelector(".oreads"); rd.classList.toggle("hide"); disc.querySelector(".ocaret").textContent = rd.classList.contains("hide") ? "▸" : "▾"; };
+  const am = V.querySelector("[data-addmail]"); if (am) am.onclick = () => addOutreachEmail(r);
+  const ed = V.querySelector("[data-edit]"); if (ed) ed.onclick = () => { OUT_EDIT = true; renderOutreachSurface(); };
+  const ce = V.querySelector("[data-canceledit]"); if (ce) ce.onclick = () => { OUT_EDIT = false; renderOutreachSurface(); };
+  const se = V.querySelector("[data-saveedit]"); if (se) se.onclick = () => saveOutreachEmail(r);
+  const ap = V.querySelector("[data-approve]"); if (ap) ap.onclick = () => approveOutreach(r);
+  const rj = V.querySelector("[data-reject]"); if (rj) rj.onclick = () => rejectOutreach(r);
+  const sn = V.querySelector("[data-snooze]"); if (sn) sn.onclick = () => snoozeOutreach(r);
+}
+
+/* ---- open / close / write ---- */
+function openOutreach(id) {
+  const r = (DATA.outreach || []).find((x) => x.id === id);
+  if (!r) return;
+  OUTREACH_ID = id; OUT_EDIT = false; writeUrl();
+  renderOutreachSurface(); scrollTo(0, 0);
+}
+function closeOutreach() {
+  OUTREACH_ID = null; OUT_EDIT = false; writeUrl();
+  renderOutreachSurface(); scrollTo(0, 0);
+}
+async function refreshOutreach() {
+  const { data, error } = await sb.from("outreach_queue").select("*").order("created_at", { ascending:false });
+  if (!error) { DATA.outreach = data ?? []; renderSurface(); }
+}
+
+/* The whole point of the surface: the queue proposes, Demetri disposes. Approve is the
+   only human act that lets an email go out — behind a confirm + a fresh passkey, and it
+   still does not SEND (the enrol task, run by Claude in Chrome, does, from `approved`). */
+function outreachConfirm({ title, body, confirmLabel = "Confirm" }) {
+  const root = $("#modalRoot");
+  root.innerHTML = `<div class="scrim" role="dialog" aria-modal="true" aria-labelledby="oCfTitle">
+    <div class="modal">
+      <h2 id="oCfTitle">${title}</h2>
+      <p class="k">${body}</p>
+      <p class="k" style="color:var(--text-tertiary)">You’ll confirm with your passkey.</p>
+      <div class="foot"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-confirm>${esc(confirmLabel)}</button></div>
+    </div></div>`;
+  const untrap = trapFocus(root.querySelector(".modal"));
+  const close = () => { untrap(); root.innerHTML = ""; };
+  return new Promise((resolve) => {
+    root.querySelector("[data-cancel]").onclick = () => { close(); resolve(false); };
+    root.querySelector("[data-confirm]").onclick = () => { close(); resolve(true); };
+    root.querySelector(".scrim").addEventListener("keydown", (e) => { if (e.key === "Escape") { close(); resolve(false); } });
+    root.querySelector("[data-confirm]").focus();
+  });
+}
+async function approveOutreach(r) {
+  const reason = approveReason(r);
+  if (reason) { toast(reason, 5000); return; }
+  const seq = r.lane === "creator" ? "AN — Narrative Teardown" : "AN — Coffee + Chat";
+  const ok = await outreachConfirm({
+    title: `Approve the email to ${esc(r.first_name || r.full_name)}?`,
+    body: `<b>Nothing will be sent.</b> Approving marks ${esc(r.first_name || "them")} ready. Claude in Chrome will enrol them in <b>${esc(seq)}</b> from demetri@aubreynorth.com when you say enrol — then the send is recorded here.`,
+    confirmLabel: "Approve",
+  });
+  if (!ok) return;
+  if (!(await stepUp("approve this email"))) return;
+  const { error } = await sb.from("outreach_queue").update({ status: "approved" }).eq("id", r.id);
+  if (error) { toast(`Approve failed: ${error.message}`, 6000); return; }
+  toast(`Approved. Nothing sent yet — enrol ${esc(r.first_name || "them")} when ready.`, 5000);
+  OUTREACH_ID = null; OUT_EDIT = false; writeUrl(); await refreshOutreach();
+}
+async function rejectOutreach(r) {
+  const why = prompt("Reject — one line, for the record:");
+  if (why === null) return;
+  const { error } = await sb.from("outreach_queue").update({ status: "rejected", reject_reason: why || null }).eq("id", r.id);
+  if (error) { toast(`Reject failed: ${error.message}`, 6000); return; }
+  OUTREACH_ID = null; writeUrl(); await refreshOutreach();
+}
+async function snoozeOutreach(r) {
+  const d = prompt("Snooze until (YYYY-MM-DD):");
+  if (d === null) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) { toast("Use YYYY-MM-DD.", 4000); return; }
+  const iso = new Date(d + "T09:00:00Z").toISOString();
+  const { error } = await sb.from("outreach_queue").update({ status: "snoozed", snooze_until: iso }).eq("id", r.id);
+  if (error) { toast(`Snooze failed: ${error.message}`, 6000); return; }
+  OUTREACH_ID = null; writeUrl(); await refreshOutreach();
+}
+async function addOutreachEmail(r) {
+  const e = prompt(`Email address for ${r.full_name}:`, r.email || "");
+  if (e === null) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { toast("That doesn't look like an email.", 4000); return; }
+  const { error } = await sb.from("outreach_queue").update({ email: e.trim().toLowerCase(), email_status: "manual" }).eq("id", r.id);
+  if (error) { toast(`Save failed: ${error.message}`, 6000); return; }
+  toast("Email saved.", 3000); await refreshOutreach();
+}
+async function saveOutreachEmail(r) {
+  const subject = $("#oeSubject").value.trim();
+  const body = $("#oeBody").value;
+  const { error } = await sb.from("outreach_queue").update({ subject, body }).eq("id", r.id);
+  if (error) { toast(`Save failed: ${error.message}`, 6000); return; }
+  OUT_EDIT = false; await refreshOutreach();
+}
+
+function outCard(r) {
+  const laneLabel = OUT_LANE_LABEL[r.lane] || r.lane;
+  const sub = r.title ? `${esc(r.title)} · ${esc(r.company)}` : esc(r.company);
+  let detail;
+  if (r.lane === "creator" && r.prospect) {
+    const p = r.prospect;
+    detail = [p.subscribers, p.active, p.fit ? `fit ${p.fit}` : ""].filter(Boolean).map(esc).join(" · ");
+  } else {
+    detail = [r.sector, r.confidence ? `${r.confidence} confidence` : ""].filter(Boolean).map(esc).join(" · ");
+  }
+  const sw = r.voice_check && Array.isArray(r.voice_check.soft_warn) ? r.voice_check.soft_warn : [];
+  const flags = [];
+  if (r.lane === "creator" && (!r.email || ["unrevealed","unavailable"].includes(r.email_status)))
+    flags.push(`<span class="tflag need">email needed</span>`);
+  if (r.lane === "business" && r.dd_complete === false) flags.push(`<span class="tflag thin">thin footprint</span>`);
+  if (sw.length) flags.push(`<span class="tflag warn">soft-warn: ${esc(sw.join(", "))}</span>`);
+  if (r.status === "snoozed" && r.snooze_until) flags.push(`<span class="tflag">due ${esc(shortDate(r.snooze_until))}</span>`);
+  if (r.status === "enrolled" && r.sent_at) flags.push(`<span class="tflag seq">Sent ${esc(shortDate(r.sent_at))}</span>`);
+  if (r.status === "bounced" || r.status === "failed") flags.push(`<span class="tflag need">${esc(r.status)}</span>`);
+  const flagsHtml = flags.length ? `<span class="flags">${flags.join("")}</span>` : "";
+  const dateVal = (r.status === "enrolled" && r.sent_at) ? r.sent_at : r.created_at;
+  return `<button class="tcard" data-open="${esc(r.id)}">
+    <span class="trow"><span class="lane">${esc(laneLabel)}</span><span class="date">${esc(shortDate(dateVal))}</span></span>
+    <span class="ttl">${esc(r.full_name || "—")}</span>
+    <span class="meta">${sub}${detail ? ` · ${detail}` : ""}</span>
+    ${flagsHtml}
+  </button>`;
+}
+
 function readsSkeleton() {
   return `<div class="panel"><div class="sk line" style="width:22%;height:16px"></div>
     <div class="sk line" style="width:55%"></div>
@@ -2394,6 +2904,9 @@ function wireProfile(btnId, menuId) {
 }
 wireProfile("profileBtn", "profileMenu");
 wireProfile("readsProfileBtn", "readsProfileMenu");
+wireProfile("outreachProfileBtn", "outreachProfileMenu");
+// Aubrey North shell switch: Reads ⇄ Outreach (present in both surface headers).
+$$(".answ-b[data-go]").forEach((b) => b.onclick = () => showSurface(b.dataset.go));
 
 function setProfile(email) {
   // First-name initial only (local part's first letter), mirrored across the Signal bar,
@@ -2406,15 +2919,20 @@ function setProfile(email) {
   $("#mProfileBtn").dataset.email = email ?? "";
   const rIni = $("#readsProfileInitials"); if (rIni) rIni.textContent = ini;
   const rEm = $("#readsProfileEmail"); if (rEm) rEm.textContent = email ?? "—";
+  const oIni = $("#outreachProfileInitials"); if (oIni) oIni.textContent = ini;
+  const oEm = $("#outreachProfileEmail"); if (oEm) oEm.textContent = email ?? "—";
 }
 
 $("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
 $("#signOut").onclick = doSignOut;
 $("#readsSignOut") && ($("#readsSignOut").onclick = doSignOut);
+$("#outreachSignOut") && ($("#outreachSignOut").onclick = doSignOut);
 $("#launcherSignOut").onclick = doSignOut;
 $("#tileSignal").onclick = () => showSurface("signal");
 $("#tileReads").onclick = () => showSurface("reads");
+$("#tileOutreach").onclick = () => showSurface("outreach");
 $("#readsHub").onclick = () => showSurface(null);
+$("#outreachHub") && ($("#outreachHub").onclick = () => showSurface(null));
 $("#railHome").onclick = () => showSurface(null);
 $("#railHome").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showSurface(null); } };
 $("#mHome").onclick = () => showSurface(null);
@@ -2429,6 +2947,7 @@ if (window.PublicKeyCredential) {
   $("#orRule").classList.remove("hide");
   $("#addPasskey").classList.remove("hide");
   $("#readsAddPasskey")?.classList.remove("hide");
+  $("#outreachAddPasskey")?.classList.remove("hide");
 }
 $("#passkeySignin").onclick = async () => {
   const btn = $("#passkeySignin");
@@ -2448,6 +2967,7 @@ async function addPasskeyFlow(btn) {
 }
 $("#addPasskey").onclick = () => addPasskeyFlow($("#addPasskey"));
 $("#readsAddPasskey") && ($("#readsAddPasskey").onclick = () => addPasskeyFlow($("#readsAddPasskey")));
+$("#outreachAddPasskey") && ($("#outreachAddPasskey").onclick = () => addPasskeyFlow($("#outreachAddPasskey")));
 
 /* ============================ data ============================ */
 async function load({ silent = false } = {}) {
@@ -2455,13 +2975,14 @@ async function load({ silent = false } = {}) {
   // and on a transient query error keep the last-good view instead of the error screen.
   if (!silent) { LOADING = true; renderSurface(); }
   const since = daysAgoISO(RANGE);
-  const [ov, ser, day, post, syn, reads] = await Promise.all([
+  const [ov, ser, day, post, syn, reads, outreach] = await Promise.all([
     sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
     sb.from("social_account_series").select("*").gte("day", since).order("day"),
     sb.from("social_daily_totals").select("*").gte("day", since).order("day"),
     sb.from("social_top_posts").select("*").order("published_at", { ascending:false, nullsFirst:false }).limit(200),
     sb.from("social_sync_health").select("*"),
     sb.from("reads_queue").select("*").order("created_at", { ascending:false }),
+    sb.from("outreach_queue").select("*").order("created_at", { ascending:false }),
   ]);
   const err = [ov, ser, day, post, syn].find((r) => r.error);
   LOADING = false;
@@ -2476,6 +2997,8 @@ async function load({ silent = false } = {}) {
     // Queue read failing shouldn't take the dashboard down with it -- the Reads
     // view shows its own error state instead.
     reads: reads.error ? null : (reads.data ?? []),
+    // Same treatment for Outreach; also null while outreach_queue isn't deployed yet.
+    outreach: outreach.error ? null : (outreach.data ?? []),
   };
   // A scope pointing at an account that no longer exists falls back to Overview.
   if (SCOPE.kind === "account" && !DATA.overview.some((a) => a.account_id === SCOPE.id)) {
