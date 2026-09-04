@@ -82,3 +82,13 @@ verify_jwt = true
 # SUPABASE_SERVICE_ROLE_KEY.
 [functions.insert-draft]
 verify_jwt = false
+
+# insert-prospect is how the HEADLESS daily prospecting task writes rows to outreach_queue
+# (both lanes) without holding the service-role key -- the twin of insert-draft. Gated on
+# PROSPECT_INSERT_SECRET (a separate secret, so one leak opens one queue) via a constant-time
+# check, so verify_jwt is OFF here -- the third deliberate verify_jwt=false after
+# oauth-callback and insert-draft. It inserts status='in_review' only and enforces the
+# outreach spine + hard-block hype scan server-side. REVIEW before deploy.
+# Secrets: PROSPECT_INSERT_SECRET, SUPABASE_SERVICE_ROLE_KEY.
+[functions.insert-prospect]
+verify_jwt = false
