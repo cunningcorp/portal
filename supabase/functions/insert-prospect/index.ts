@@ -24,8 +24,12 @@
 //     "Hi {first_name} —"; body carries the opt-out line
 //   * HARD-BLOCK hype words in subject/body -> 422 (a row that can never legally send must
 //     not enter the queue). Soft-warn words are recorded into voice_check.soft_warn, not refused.
+//   * word bracket: body 180-450 words (the skill aims 260-340). The floor exists because
+//     the old ~190-word template physically could not carry the "why you, why now" beat.
 //   * business + dd_complete=true  -> dossier.why_approach, dossier.hook,
-//                                     dossier.surface_map.fracture, confidence
+//                                     dossier.surface_map.fracture, confidence,
+//                                     dossier.trigger + dossier.trigger_source (a URL) --
+//                                     the sourced why-now, added 5 Sep 2026
 //     business + dd_complete=false -> dossier.thin_reason (a thin footprint may still reach
 //                                     the queue for a human call, but never silently)
 //     creator                      -> audit.five_second_read, audit.real_story_quote, audit.one_shift
@@ -51,7 +55,10 @@ const CONFIDENCES = ["high", "medium", "low"] as const;
 // mechanical list in VOICE-RULES.md and the portal's HYPE_BLOCK / HYPE_WARN in index.html --
 // if VOICE-RULES changes its list, change all three together.
 const HYPE_BLOCK = /\b(revolutionary|game[-\s]changing|game changer|unleash|supercharge|turbocharge|disrupt|disruptive|cutting[-\s]edge|next[-\s]level|world[-\s]class|effortless|mind[-\s]blowing|jaw[-\s]dropping|best[-\s]in[-\s]class|paradigm|synergy)\b/gi;
-const HYPE_WARN  = /\b(unlock|elevate|empower|seamless|leverage|delve)\b/gi;
+// "land/lands/make it land" added 5 Sep 2026 (Demetri): overused and vague -- it never says
+// what landing actually is. Soft-warn only, never blocked. \b guards mean "landlord",
+// "landmark" and "England" don't match.
+const HYPE_WARN  = /\b(unlock|elevate|empower|seamless|leverage|delve|land|lands|landing)\b/gi;
 
 // The locked spine (outreach-voice-reference.md, DECISIONS D1).
 const SUBJECT_PREFIX = /^Aubrey North\s+—\s+\S/;
@@ -127,6 +134,14 @@ function prepare(p: Record<string, unknown>): Outcome {
   if (!salutationOk) return bad(`body must open "Hi ${first} —" on its own line (DECISIONS D1)`);
   if (!OPT_OUT.test(body)) return bad("body must contain the opt-out line: If you'd rather not hear from me again, just say so and I'll leave it there.");
 
+  // Word bracket (5 Sep 2026). The skill aims at 260-340 words with a ~400 ceiling; these
+  // bounds are deliberately wider, because this is a regression guard, not the style rule.
+  // The floor exists because the old ~190-word template physically could not carry the
+  // "why you, why now" beat -- it was the word cap that squeezed the case out of the email.
+  const words = body.split(/\s+/).filter(Boolean).length;
+  if (words < 180) return bad(`body is ${words} words — too thin to carry the trigger and the case (min 180; aim 260–340)`);
+  if (words > 450) return bad(`body is ${words} words — over the ceiling (max 450; aim 260–340)`);
+
   // --- hype: hard-block refuses, soft-warn records -----------------------------------
   // The audit mechanism quotes the prospect's own words back to them ("Elevate your stay",
   // "world-class comfort"), so words INSIDE double quotes are theirs, not ours: they are
@@ -148,6 +163,11 @@ function prepare(p: Record<string, unknown>): Outcome {
         !str(dossier.hook) && "dossier.hook",
         !str(sm.fracture) && "dossier.surface_map.fracture",
         !oneOf(p.confidence, CONFIDENCES) && "confidence",
+        // The "why you, why now" beat (added 5 Sep 2026). An approach whose only reason for
+        // existing is that the company exists reads as a template, so the trigger is
+        // mandatory AND must carry a source URL -- it cannot be invented.
+        !str(dossier.trigger) && "dossier.trigger (the sourced why-now)",
+        !isUrl(dossier.trigger_source) && "dossier.trigger_source (must be an http(s) URL)",
       ].filter(Boolean);
       if (missing.length) return bad(`business row with dd_complete=true is missing: ${missing.join(", ")}`);
     } else if (!str(dossier.thin_reason)) {
