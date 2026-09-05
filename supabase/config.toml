@@ -92,3 +92,10 @@ verify_jwt = false
 # Secrets: PROSPECT_INSERT_SECRET, SUPABASE_SERVICE_ROLE_KEY.
 [functions.insert-prospect]
 verify_jwt = false
+
+# sign-coverage-script mints a short-lived (5 min) signed URL for an order's private script
+# PDF, called by the Orders tab on "View script". verify_jwt on (a signed-in portal session);
+# the coverage-scripts bucket stays fully private (zero policies) — this service-role function
+# is the only path to the file. Secret: SUPABASE_SERVICE_ROLE_KEY (auto-injected).
+[functions.sign-coverage-script]
+verify_jwt = true
