@@ -95,6 +95,10 @@ Deno.serve(async (req: Request) => {
   // --- insert as a draft (never a publish state) ------------------------------
   const { data, error } = await sb.from("reads_queue").insert({
     slug, title, lane, markdown,
+    // Freeze the AI draft as the learning-loop baseline (LEARNING-LOOP-SPEC Part 1). Written
+    // once here; the editor cannot touch it (original_markdown is not in the authenticated
+    // UPDATE column grant), so the original->final diff at publish is always honest.
+    original_markdown: markdown,
     description: typeof description === "string" ? description : null,
     body_markdown: typeof body_markdown === "string" ? body_markdown : null,
     target_query: typeof target_query === "string" ? target_query : null,
