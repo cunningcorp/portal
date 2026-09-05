@@ -886,6 +886,30 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .ostatus.approved,.ostatus.enrolling{color:var(--state-progress);border-color:rgba(142,139,216,.45)}
 .ostatus.enrolled,.ostatus.replied{color:var(--state-positive);border-color:rgba(200,162,76,.4)}
 .ostatus.rejected,.ostatus.bounced,.ostatus.failed,.ostatus.declined{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+/* Orders (Script Coverage) — status colours + list/detail; reuses .odetail/.ohrow/.oh4/.edcard */
+.ostatus.new{color:var(--brand-gold-soft);border-color:rgba(227,197,126,.4)}
+.ostatus.paid,.ostatus.in_progress{color:var(--state-progress);border-color:rgba(142,139,216,.45)}
+.ostatus.delivered{color:var(--state-positive);border-color:rgba(200,162,76,.4)}
+.ostatus.cancelled{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.orderlist{display:flex;flex-direction:column;gap:var(--space-2);max-width:760px}
+.ordercard{width:100%;text-align:left;background:var(--surface-overlay);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);cursor:pointer;display:block;transition:border-color var(--dur-fast)}
+.ordercard:hover{border-color:var(--border-strong)}
+.ordfoot{display:flex;align-items:center;gap:var(--space-3);margin-top:8px}
+.odue{font-size:var(--text-micro);color:var(--text-tertiary)}
+.odetail .ohrow{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-3) 0}
+.ogrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3) var(--space-5)}
+@media(max-width:640px){.ogrid{grid-template-columns:1fr}}
+.ofield{display:flex;flex-direction:column;gap:2px}
+.ofield .ol{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary)}
+.ofield .ov,.ofield.wide .ov{font-size:var(--text-label);color:var(--text-primary);line-height:1.55}
+.ofield .ov a{color:var(--brand-peri)}
+.odetail .ofield{margin-bottom:var(--space-2)}
+.onotes{width:100%;background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--radius-md);color:var(--text-primary);padding:.55rem .7rem;font:inherit;font-size:var(--text-label);line-height:1.6;resize:vertical}
+.orow{display:flex;align-items:center;gap:var(--space-3);margin-top:var(--space-2)}
+.ostatusrow{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.btn.danger{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.btn.danger:hover{border-color:var(--brand-terracotta)}
+.odetail{max-width:760px}
 .osaved{margin-left:auto;color:var(--text-tertiary);font-size:var(--text-micro)}
 .owho{margin-bottom:var(--space-4)}
 .owho .onm{font-family:var(--font-head);font-weight:300;font-size:28px;line-height:1.05;margin:0;color:var(--text-primary)}
@@ -1187,6 +1211,16 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
           <span class="stat" id="tileOutreachStatus">Loading…</span>
         </span>
       </button>
+      <button class="slab reads" id="tileOrders" aria-label="Open Orders">
+        <span class="sheen"></span><span class="edge"></span>
+        <span class="an cnr">AN</span>
+        <span class="body">
+          <span class="eyebrow">Aubrey North</span>
+          <span class="nm">Orders</span>
+          <span class="ds">Script Coverage orders. Open the script, and move each one through paid, in progress, delivered.</span>
+          <span class="stat" id="tileOrdersStatus">Loading…</span>
+        </span>
+      </button>
     </div>
   </div>
 </div>
@@ -1320,6 +1354,7 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
     <nav class="answ" aria-label="Aubrey North surface">
       <button class="answ-b" data-go="reads" aria-current="page">Reads</button>
       <button class="answ-b" data-go="outreach">Outreach</button>
+      <button class="answ-b" data-go="orders">Orders</button>
     </nav>
     <span class="spacer"></span>
     <span class="rcontext" id="readsCount">—</span>
@@ -1363,6 +1398,7 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
     <nav class="answ" aria-label="Aubrey North surface">
       <button class="answ-b" data-go="reads">Reads</button>
       <button class="answ-b" data-go="outreach" aria-current="page">Outreach</button>
+      <button class="answ-b" data-go="orders">Orders</button>
     </nav>
     <span class="spacer"></span>
     <span class="rcontext" id="outreachCount">—</span>
@@ -1389,6 +1425,50 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
     </div>
   </header>
   <main id="outreachView"></main>
+</div>
+
+<!-- ================= ORDERS SURFACE =================
+     Script Coverage orders (PORTAL-ORDERS-SPEC). Same AN shell as Reads/Outreach:
+     the shared header shape, the generic profile-menu / idle / passkey logic
+     (wireProfile, setProfile, addPasskeyFlow, doSignOut), and the Reads/Outreach/Orders
+     switch. List + detail render in the module script. Orders arrive only via the
+     submit-coverage-order intake; the portal reads/updates and re-signs the script link. -->
+<div id="orders" class="hide">
+  <header class="readtop">
+    <button class="brandhome" id="ordersHub" aria-label="Aubrey North Orders — home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      <span class="readid"><span class="an">Aubrey North</span><span class="pg">Orders</span></span>
+    </button>
+    <nav class="answ" aria-label="Aubrey North surface">
+      <button class="answ-b" data-go="reads">Reads</button>
+      <button class="answ-b" data-go="outreach">Outreach</button>
+      <button class="answ-b" data-go="orders" aria-current="page">Orders</button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="rcontext" id="ordersCount">—</span>
+    <div class="acctmenu">
+      <button class="avatar" id="ordersProfileBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Account and preferences"><span id="ordersProfileInitials">—</span></button>
+      <div class="menu hide" id="ordersProfileMenu" role="menu" aria-labelledby="ordersProfileBtn">
+        <div class="who"><span class="em" id="ordersProfileEmail">—</span><span class="rl">Signed in · invited access</span></div>
+        <button class="mi hide" id="ordersAddPasskey" role="menuitem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="8" cy="8" r="3.3"></circle><path d="M2.8 19c.5-3.2 2.6-5 5.2-5 .8 0 1.6.2 2.2.5"></path>
+            <circle cx="17.4" cy="12.2" r="2.4"></circle><path d="M15.5 13.7 12 17.2"></path><path d="M13.4 15.8l1.5 1.5M12 17.2l1.5 1.5"></path>
+          </svg>
+          <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span>
+        </button>
+        <div class="note">Signs out after 66 minutes without activity.</div>
+        <div class="rule"></div>
+        <button class="mi danger" id="ordersSignOut" role="menuitem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M14 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H14"></path><path d="M17 8.5 20.5 12 17 15.5M20.5 12H10"></path>
+          </svg>
+          <span>Sign out</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="ordersView"></main>
 </div>
 
 <div id="modalRoot"></div>
@@ -1464,9 +1544,11 @@ const GLYPH_TITLE = {
 /* ============================ state ============================ */
 let RANGE = 30;
 let SCOPE = { kind:"all" };            // {kind:'all'} | {kind:'platform',p} | {kind:'account',id}
-let SURFACE = null;                    // null = launcher (home) | 'signal' | 'reads' | 'outreach'
+let SURFACE = null;                    // null = launcher (home) | 'signal' | 'reads' | 'outreach' | 'orders'
 let OUTREACH_LANE = "all";             // all | business | creator  (Outreach triage lane filter)
 let OUTREACH_ID = null;                // open Outreach card id, or null (triage)
+let ORDERS_ID = null;                  // open Orders (Script Coverage) detail id, or null (list)
+let ORDERS_FILTER = "open";            // "open" (hide delivered/cancelled) | "all"
 let POSTTYPE = "all";
 let LOADING = true;
 let charts = {};
@@ -1525,10 +1607,12 @@ function readUrl() {
   const surf = q.get("surface");
   if (surf === "reads" || q.get("view") === "reads") SURFACE = "reads";   // legacy ?view=reads still works
   else if (surf === "outreach") SURFACE = "outreach";
+  else if (surf === "orders") SURFACE = "orders";
   else if (surf === "signal" || q.get("platform") || q.get("account") || q.get("type")) SURFACE = "signal";
   else SURFACE = null;                                                    // bare URL -> launcher
   OUTREACH_LANE = ["business","creator"].includes(q.get("lane")) ? q.get("lane") : "all";
   OUTREACH_ID = q.get("id") || null;
+  ORDERS_ID = q.get("order") || null;
   if (q.get("account")) SCOPE = { kind:"account", id:q.get("account") };
   else if (PLATFORMS.includes(q.get("platform"))) SCOPE = { kind:"platform", p:q.get("platform") };
   else SCOPE = { kind:"all" };
@@ -1541,6 +1625,10 @@ function writeUrl(push = true) {
     q.set("surface", "outreach");
     if (OUTREACH_LANE !== "all") q.set("lane", OUTREACH_LANE);
     if (OUTREACH_ID) q.set("id", OUTREACH_ID);
+  }
+  else if (SURFACE === "orders") {
+    q.set("surface", "orders");
+    if (ORDERS_ID) q.set("order", ORDERS_ID);
   }
   else if (SURFACE === "signal") {
     q.set("surface", "signal");
@@ -1571,10 +1659,12 @@ function applySurfaceVisibility() {
   $("#app").classList.toggle("hide", SURFACE !== "signal");
   $("#reads").classList.toggle("hide", SURFACE !== "reads");
   $("#outreach").classList.toggle("hide", SURFACE !== "outreach");
+  $("#orders").classList.toggle("hide", SURFACE !== "orders");
 }
 function renderSurface() {
   if (SURFACE === "reads") renderReadsSurface();
   else if (SURFACE === "outreach") renderOutreachSurface();
+  else if (SURFACE === "orders") renderOrdersSurface();
   else if (SURFACE === "signal") render();
   else renderLauncher();
 }
@@ -1603,6 +1693,14 @@ function renderLauncher() {
   else {
     const n = (DATA.outreach || []).filter((r) => r.status === "in_review").length;
     $("#tileOutreachStatus").textContent = LOADING ? "Loading…" : (n ? `${n} to review` : "Queue clear");
+  }
+  if (DATA.orders === null) $("#tileOrdersStatus").textContent = "Orders unavailable";
+  else {
+    const nw = (DATA.orders || []).filter((r) => r.status === "new").length;
+    const wip = (DATA.orders || []).filter((r) => ["paid","in_progress"].includes(r.status)).length;
+    $("#tileOrdersStatus").textContent = LOADING ? "Loading…"
+      : nw ? `${nw} new${wip ? ` · ${wip} in progress` : ""}`
+      : wip ? `${wip} in progress` : "No open orders";
   }
 }
 
@@ -1859,6 +1957,189 @@ function closeOutreach() {
   OUTREACH_ID = null; OUT_EDIT = false; writeUrl();
   renderOutreachSurface(); scrollTo(0, 0);
 }
+
+/* ============================ Orders (Script Coverage) ============================
+   PORTAL-ORDERS-SPEC. A work queue for orders placed at aubreynorth.com/script-coverage.
+   Orders arrive ONLY via the submit-coverage-order intake (service role); here we list,
+   read, move status (new -> paid -> in_progress -> delivered; cancel from any pre-delivered
+   state), edit notes, and open the script through a freshly-minted 5-min signed URL so the
+   link is never stale. quoted_total_gbp is server-computed — shown, never editable. */
+const ORDER_STATUS = {
+  new:         { label: "New" },
+  paid:        { label: "Paid" },
+  in_progress: { label: "In progress" },
+  delivered:   { label: "Delivered" },
+  cancelled:   { label: "Cancelled" },
+};
+const TIER_LABEL = { coverage: "Coverage", coverage_dev: "Coverage + Development", coverage_call: "Coverage + Call" };
+const ADDON_LABEL = { express: "Express", over_length: "Over length" };
+const NEXT_STATUS = { new: "paid", paid: "in_progress", in_progress: "delivered" };
+const NEXT_LABEL  = { paid: "Mark paid", in_progress: "Start — in progress", delivered: "Mark delivered" };
+
+function gbp(n) { return (typeof n === "number") ? "£" + n.toLocaleString("en-GB") : "—"; }
+function orderSummary(r) {
+  const addons = (Array.isArray(r.addons) ? r.addons : []).map((a) => ADDON_LABEL[a] ?? a);
+  return [TIER_LABEL[r.read_tier] ?? r.read_tier, ...addons].join(" · ");
+}
+
+function renderOrdersSurface() {
+  const v = $("#ordersView");
+  const all = DATA.orders;
+  const nw = (all || []).filter((r) => r.status === "new").length;
+  const wip = (all || []).filter((r) => ["paid","in_progress"].includes(r.status)).length;
+  $("#ordersCount").innerHTML = all === null ? "orders unavailable" : `<b>${nw} new</b> · ${wip} in progress`;
+  if (LOADING) { v.innerHTML = readsSkeleton(); return; }
+  if (all === null) {
+    v.innerHTML = `<div class="panel"><div class="empty"><h3>Orders could not be read</h3>
+      <div>Reload to try again. If it persists, the coverage_orders read policy is the place to look.</div>
+      <div class="connectrow"><button class="btn" data-retry>Reload</button></div></div></div>`;
+    v.querySelector("[data-retry]")?.addEventListener("click", load);
+    return;
+  }
+  const row = ORDERS_ID ? all.find((r) => r.id === ORDERS_ID) : null;
+  if (ORDERS_ID && !row) { ORDERS_ID = null; writeUrl(false); }
+  if (row) { v.innerHTML = orderDetailHtml(row); wireOrderDetail(row); }
+  else { v.innerHTML = ordersListHtml(all); wireOrdersList(); }
+}
+
+function ordersListHtml(all) {
+  const isOpen = (r) => !["delivered","cancelled"].includes(r.status);
+  const rows = (ORDERS_FILTER === "open" ? all.filter(isOpen) : all.slice())
+    .sort((a,b) => (b.created_at || "").localeCompare(a.created_at || ""));
+  const chips = [["open","Open"],["all","All"]]
+    .map(([k,l]) => `<button class="lanechip" data-filter="${k}" aria-pressed="${ORDERS_FILTER===k}">${l}</button>`).join("");
+  const cards = rows.length ? rows.map(orderCard).join("")
+    : `<div class="empty">${ORDERS_FILTER === "open" ? "No open orders." : "No orders yet."}</div>`;
+  return `<div class="qhead">
+    <div><h1 class="qtitle">Script Coverage orders</h1>
+      <p class="qsub">Open the script, and move each one through paid, in progress, delivered.</p></div>
+    <div class="lanechips">${chips}</div>
+  </div><div class="orderlist">${cards}</div>`;
+}
+
+function orderCard(r) {
+  return `<button class="tcard ordercard" data-open="${esc(r.id)}">
+    <span class="trow"><span class="lane">${esc(orderSummary(r))}</span><span class="date">${shortDate(r.created_at)}</span></span>
+    <span class="ttl">${esc(r.title || "Untitled")}</span>
+    <span class="meta">${esc(r.name || "—")}${r.page_count ? ` · ${r.page_count}pp` : ""} · ${gbp(r.quoted_total_gbp)}</span>
+    <span class="ordfoot"><span class="ostatus ${esc(r.status)}">${esc(ORDER_STATUS[r.status]?.label ?? r.status)}</span>${r.deadline ? `<span class="odue">Due ${esc(r.deadline)}</span>` : ""}</span>
+  </button>`;
+}
+
+function orderDetailHtml(r) {
+  const email = r.email || "";
+  const canCancel = !["delivered","cancelled"].includes(r.status);
+  const next = NEXT_STATUS[r.status];
+  const field = (label, val) => `<div class="ofield"><span class="ol">${esc(label)}</span><span class="ov">${val}</span></div>`;
+  return `<div class="odetail">
+    <button class="oback" data-back>← Orders</button>
+    <div class="ohrow">
+      <span class="ostatus ${esc(r.status)}">${esc(ORDER_STATUS[r.status]?.label ?? r.status)}</span>
+      <span class="grow"></span>
+      <button class="btn" data-viewscript>View script ↗</button>
+    </div>
+    <div class="owho">
+      <h1 class="onm">${esc(r.title || "Untitled")}</h1>
+      <div class="osub">${esc(orderSummary(r))} · <b>${gbp(r.quoted_total_gbp)}</b></div>
+    </div>
+    <div class="edcard">
+      <div class="oh4">The writer</div>
+      <div class="ogrid">
+        ${field("Name", esc(r.name || "—"))}
+        ${field("Email", email ? `<a href="mailto:${esc(email)}">${esc(email)}</a>` : "—")}
+        ${field("Format", esc(r.format || "—"))}
+        ${field("Pages", r.page_count ? esc(String(r.page_count)) : "—")}
+        ${field("Genre", esc(r.genre || "—"))}
+        ${field("Which draft", esc(r.draft_label || "—"))}
+        ${field("Deadline", esc(r.deadline || "—"))}
+        ${field("Placed", esc(shortDate(r.created_at)))}
+      </div>
+    </div>
+    <div class="edcard">
+      <div class="oh4">The intake</div>
+      <div class="ofield"><span class="ol">Goal</span><span class="ov">${esc(r.goal || "—")}</span></div>
+      <div class="ofield"><span class="ol">Where they feel stuck</span><span class="ov">${esc(r.stuck || "—")}</span></div>
+    </div>
+    <div class="edcard">
+      <div class="oh4">Notes</div>
+      <textarea id="orderNotes" class="onotes" rows="3" placeholder="Private notes, saved to this order">${esc(r.notes || "")}</textarea>
+      <div class="orow"><button class="btn" data-savenotes>Save notes</button><span class="osaved" id="ordSaved"></span></div>
+    </div>
+    <div class="edcard">
+      <div class="oh4">Status</div>
+      <div class="ostatusrow">
+        ${next ? `<button class="btn primary" data-next="${esc(next)}">${esc(NEXT_LABEL[next])}</button>`
+               : `<span class="ov">${r.status === "delivered" ? "Delivered — complete." : "Cancelled."}</span>`}
+        ${canCancel ? `<button class="btn danger" data-cancel>Cancel order</button>` : ""}
+      </div>
+    </div>
+  </div>`;
+}
+
+function openOrder(id) { const r = (DATA.orders || []).find((x) => x.id === id); if (!r) return; ORDERS_ID = id; writeUrl(); renderOrdersSurface(); scrollTo(0, 0); }
+function closeOrder() { ORDERS_ID = null; writeUrl(); renderOrdersSurface(); scrollTo(0, 0); }
+function wireOrdersList() {
+  $$("#ordersView .lanechip[data-filter]").forEach((b) => b.onclick = () => { ORDERS_FILTER = b.dataset.filter; renderOrdersSurface(); });
+  $$("#ordersView .ordercard[data-open]").forEach((b) => b.onclick = () => openOrder(b.dataset.open));
+}
+function wireOrderDetail(r) {
+  const V = $("#ordersView");
+  V.querySelector("[data-back]").onclick = closeOrder;
+  V.querySelector("[data-viewscript]").onclick = () => viewScript(r);
+  V.querySelector("[data-savenotes]").onclick = () => saveOrderNotes(r);
+  const nx = V.querySelector("[data-next]"); if (nx) nx.onclick = () => advanceOrder(r, nx.dataset.next);
+  const cn = V.querySelector("[data-cancel]"); if (cn) cn.onclick = () => cancelOrder(r);
+}
+
+async function updateOrder(r, patch, okMsg) {
+  const { error } = await sb.from("coverage_orders").update(patch).eq("id", r.id);
+  if (error) { toast(`Save failed: ${error.message}`, 6000); return false; }
+  const row = (DATA.orders || []).find((x) => x.id === r.id); if (row) Object.assign(row, patch);
+  if (okMsg) toast(okMsg, 4000);
+  return true;
+}
+async function advanceOrder(r, next) {
+  if (!NEXT_STATUS[r.status] || NEXT_STATUS[r.status] !== next) return;   // only the legit next step
+  if (!(await updateOrder(r, { status: next }, `Moved to ${ORDER_STATUS[next]?.label ?? next}.`))) return;
+  renderOrdersSurface();
+}
+async function cancelOrder(r) {
+  if (!confirm(`Cancel the order for “${r.title || "Untitled"}”? The record and the script are kept — this only marks it cancelled.`)) return;
+  if (!(await updateOrder(r, { status: "cancelled" }, "Order cancelled."))) return;
+  renderOrdersSurface();
+}
+async function saveOrderNotes(r) {
+  const val = $("#orderNotes")?.value ?? "";
+  if (!(await updateOrder(r, { notes: val }))) return;
+  const s = $("#ordSaved"); if (s) s.textContent = "Saved · just now";
+}
+
+/* Open the script via a freshly-minted 5-min signed URL. The bucket is private and has no
+   policies — sign-coverage-script (service role) mints the link on click, so it is never the
+   stale emailed one. Open a blank tab inside the click gesture first, then point it at the
+   URL, so the async fetch doesn't trip the popup blocker. */
+async function viewScript(r) {
+  const btn = $("#ordersView [data-viewscript]");
+  const w = window.open("about:blank", "_blank");
+  if (btn) { btn.disabled = true; btn.textContent = "Opening…"; }
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { if (w) w.close(); toast("Your session has expired — sign in again to open the script.", 6000); return; }
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/sign-coverage-script`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ order_id: r.id }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.url) { if (w) w.close(); toast(body.error ?? `Could not open the script (${res.status})`, 7000); return; }
+    if (w && !w.closed) w.location.href = body.url; else window.open(body.url, "_blank", "noopener");
+  } catch (e) {
+    if (w) w.close(); toast(`Could not open the script: ${e.message}`, 7000);
+  } finally {
+    const b = $("#ordersView [data-viewscript]"); if (b) { b.disabled = false; b.textContent = "View script ↗"; }
+  }
+}
+
 async function refreshOutreach() {
   const { data, error } = await sb.from("outreach_queue").select("*").order("created_at", { ascending:false });
   if (!error) { DATA.outreach = data ?? []; renderSurface(); }
@@ -2905,6 +3186,7 @@ function wireProfile(btnId, menuId) {
 wireProfile("profileBtn", "profileMenu");
 wireProfile("readsProfileBtn", "readsProfileMenu");
 wireProfile("outreachProfileBtn", "outreachProfileMenu");
+wireProfile("ordersProfileBtn", "ordersProfileMenu");
 // Aubrey North shell switch: Reads ⇄ Outreach (present in both surface headers).
 $$(".answ-b[data-go]").forEach((b) => b.onclick = () => showSurface(b.dataset.go));
 
@@ -2921,18 +3203,23 @@ function setProfile(email) {
   const rEm = $("#readsProfileEmail"); if (rEm) rEm.textContent = email ?? "—";
   const oIni = $("#outreachProfileInitials"); if (oIni) oIni.textContent = ini;
   const oEm = $("#outreachProfileEmail"); if (oEm) oEm.textContent = email ?? "—";
+  const odIni = $("#ordersProfileInitials"); if (odIni) odIni.textContent = ini;
+  const odEm = $("#ordersProfileEmail"); if (odEm) odEm.textContent = email ?? "—";
 }
 
 $("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
 $("#signOut").onclick = doSignOut;
 $("#readsSignOut") && ($("#readsSignOut").onclick = doSignOut);
 $("#outreachSignOut") && ($("#outreachSignOut").onclick = doSignOut);
+$("#ordersSignOut") && ($("#ordersSignOut").onclick = doSignOut);
 $("#launcherSignOut").onclick = doSignOut;
 $("#tileSignal").onclick = () => showSurface("signal");
 $("#tileReads").onclick = () => showSurface("reads");
 $("#tileOutreach").onclick = () => showSurface("outreach");
+$("#tileOrders").onclick = () => showSurface("orders");
 $("#readsHub").onclick = () => showSurface(null);
 $("#outreachHub") && ($("#outreachHub").onclick = () => showSurface(null));
+$("#ordersHub") && ($("#ordersHub").onclick = () => showSurface(null));
 $("#railHome").onclick = () => showSurface(null);
 $("#railHome").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showSurface(null); } };
 $("#mHome").onclick = () => showSurface(null);
@@ -2968,6 +3255,7 @@ async function addPasskeyFlow(btn) {
 $("#addPasskey").onclick = () => addPasskeyFlow($("#addPasskey"));
 $("#readsAddPasskey") && ($("#readsAddPasskey").onclick = () => addPasskeyFlow($("#readsAddPasskey")));
 $("#outreachAddPasskey") && ($("#outreachAddPasskey").onclick = () => addPasskeyFlow($("#outreachAddPasskey")));
+$("#ordersAddPasskey") && ($("#ordersAddPasskey").onclick = () => addPasskeyFlow($("#ordersAddPasskey")));
 
 /* ============================ data ============================ */
 async function load({ silent = false } = {}) {
@@ -2975,7 +3263,7 @@ async function load({ silent = false } = {}) {
   // and on a transient query error keep the last-good view instead of the error screen.
   if (!silent) { LOADING = true; renderSurface(); }
   const since = daysAgoISO(RANGE);
-  const [ov, ser, day, post, syn, reads, outreach] = await Promise.all([
+  const [ov, ser, day, post, syn, reads, outreach, orders] = await Promise.all([
     sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
     sb.from("social_account_series").select("*").gte("day", since).order("day"),
     sb.from("social_daily_totals").select("*").gte("day", since).order("day"),
@@ -2983,6 +3271,7 @@ async function load({ silent = false } = {}) {
     sb.from("social_sync_health").select("*"),
     sb.from("reads_queue").select("*").order("created_at", { ascending:false }),
     sb.from("outreach_queue").select("*").order("created_at", { ascending:false }),
+    sb.from("coverage_orders").select("*").order("created_at", { ascending:false }),
   ]);
   const err = [ov, ser, day, post, syn].find((r) => r.error);
   LOADING = false;
@@ -2999,6 +3288,8 @@ async function load({ silent = false } = {}) {
     reads: reads.error ? null : (reads.data ?? []),
     // Same treatment for Outreach; also null while outreach_queue isn't deployed yet.
     outreach: outreach.error ? null : (outreach.data ?? []),
+    // Script Coverage orders (Orders tab); null on error so the tab shows its own state.
+    orders: orders.error ? null : (orders.data ?? []),
   };
   // A scope pointing at an account that no longer exists falls back to Overview.
   if (SCOPE.kind === "account" && !DATA.overview.some((a) => a.account_id === SCOPE.id)) {
