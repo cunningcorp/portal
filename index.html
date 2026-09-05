@@ -486,49 +486,48 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .launchtop .lem{font-size:var(--text-micro);color:var(--text-tertiary);letter-spacing:.02em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:36ch}
 
-/* Two zones side by side; at ≤820px they stack, Signal above the Aubrey North list. */
-.lindex{display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.5fr);gap:var(--space-6) var(--space-7);align-items:start}
+/* One full-width column, two zones stacked: Cunning Corp (Signal), then Aubrey North (the
+   rooms). Each row gives its description the whole width, so nothing is choked into a narrow
+   column. (Design: Launcher.dc.html.) */
+.lindex{display:flex;flex-direction:column;gap:var(--space-7)}
 .lzone{display:flex;flex-direction:column}
-.zlabel{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-1);padding-bottom:var(--space-3)}
+.zlabel{display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-2);padding-bottom:var(--space-2)}
 .zlabel .zt{font-size:var(--text-micro);letter-spacing:.18em;text-transform:uppercase;font-weight:600}
 .zlabel .zr{flex:1;height:1px;background:var(--border-subtle)}
 .lzone.cc .zt{color:var(--brand-peri)}
 .lzone.an .zt{font-family:'Scenario',Georgia,serif;font-weight:700;letter-spacing:.1em;color:var(--brand-terracotta)}
 
-/* The row atom. Hairline between rows; the hover tint carries the 12px radius. */
-.irow{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:var(--space-4);
-  padding:var(--space-4) var(--space-3);border-top:1px solid #241B30;border-radius:12px;
+/* The row atom: a large Recoleta name with its status + arrow on the same line, and a
+   one-line description beneath spanning the full width. Signal carries the ring glyph inline;
+   the Aubrey North rooms are names alone (no per-row dot). Hairline between rows, soft hover. */
+.irow{all:unset;box-sizing:border-box;cursor:pointer;display:grid;
+  grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name meta" "desc desc";
+  align-items:center;column-gap:var(--space-5);row-gap:6px;
+  padding:var(--space-5) var(--space-3);border-top:1px solid var(--border-subtle);border-radius:12px;
   transition:background var(--dur-fast)}
 .irow:first-of-type{border-top:0}
 .irow:hover{background:#1E1628}
 .irow:focus-visible{outline:2px solid var(--state-progress);outline-offset:-2px}
-.irow .lead{width:22px;display:flex;align-items:center;justify-content:center;flex:none}
-.irow .imark{width:20px;height:20px}
-.irow .idot{width:7px;height:7px;border-radius:50%;background:var(--rdot,var(--text-tertiary))}
-.irow.signal{--rdot:var(--brand-peri)}
-.irow.reads,.irow.outreach,.irow.orders{--rdot:var(--brand-terracotta)}
-.irow.search{--rdot:var(--brand-teal)}
-.irow .ibody{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
-.irow .iname{font-family:var(--font-head);font-weight:300;font-size:22px;line-height:1.05;letter-spacing:-.01em;color:var(--text-primary)}
-.irow .idesc{font-size:var(--text-label);line-height:1.5;color:var(--text-tertiary);text-wrap:pretty}
-.imeta-grp{display:flex;align-items:center;gap:var(--space-3);flex:none}
+.irow .ibody{display:contents}
+.irow .iname{grid-area:name;display:inline-flex;align-items:center;gap:var(--space-3);
+  font-family:var(--font-head);font-weight:300;font-size:34px;line-height:1;letter-spacing:-.01em;color:var(--text-primary)}
+.irow .imark{width:22px;height:22px;flex:none}
+.irow .idesc{grid-area:desc;font-size:var(--text-label);line-height:1.5;color:var(--text-tertiary);text-wrap:pretty}
+.imeta-grp{grid-area:meta;display:flex;align-items:center;gap:var(--space-3);justify-self:end}
 .irow .istat{font-size:var(--text-micro);letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);white-space:nowrap}
 .irow .iarrow{color:var(--text-tertiary);font-size:16px;transition:transform var(--dur-fast),color var(--dur-fast)}
 .irow:hover .iarrow{transform:translateX(3px);color:var(--text-secondary)}
 
-@media(max-width:820px){ .lindex{grid-template-columns:1fr;gap:var(--space-6)} }
 @media(max-width:560px){
   #launcher{place-items:stretch;padding:var(--space-4);padding-top:calc(var(--space-4) + var(--safe-top,0px));
     padding-bottom:calc(var(--space-4) + var(--safe-bottom,0px))}
-  .launchwrap{gap:var(--space-5);justify-content:flex-start;flex:1}
+  .launchwrap{gap:var(--space-6);justify-content:flex-start;flex:1}
   .launchtop{gap:var(--space-2)}
   .launchtop .lem{display:none}                      /* email is in the profile menu */
   .launchtop .wm{font-size:10px;letter-spacing:.16em}
   .launchtop #launcherSignOut{flex:none;white-space:nowrap;padding:.5rem .9rem}
-  /* Each row wraps its meta to a full-width line beneath the name, so the one-line
-     description keeps the whole row rather than being choked into a narrow column. */
-  .irow{flex-wrap:wrap;padding:var(--space-4) var(--space-2)}
-  .imeta-grp{width:100%;justify-content:space-between;padding-left:calc(22px + var(--space-4))}
+  .irow{padding:var(--space-4) var(--space-2);column-gap:var(--space-3)}
+  .irow .iname{font-size:26px}
 }
 
 /* ============================ reads surface ============================
@@ -1252,10 +1251,9 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
       <section class="lzone cc" aria-label="Cunning Corp">
         <div class="zlabel"><span class="zt">Cunning Corp</span><span class="zr"></span></div>
         <button class="irow signal" id="tileSignal" aria-label="Open Signal">
-          <span class="lead"><svg class="imark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg></span>
           <span class="ibody">
-            <span class="iname">Signal</span>
-            <span class="idesc">Reach, watch time and posts across every channel.</span>
+            <span class="iname"><svg class="imark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>Signal</span>
+            <span class="idesc">Social intelligence — every channel, one view</span>
           </span>
           <span class="imeta-grp"><span class="istat" id="tileSignalStatus">Loading…</span><span class="iarrow" aria-hidden="true">→</span></span>
         </button>
@@ -1263,34 +1261,30 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
       <section class="lzone an" aria-label="Aubrey North">
         <div class="zlabel"><span class="zt">Aubrey North</span><span class="zr"></span></div>
         <button class="irow reads" id="tileReads" aria-label="Open Reads">
-          <span class="lead"><span class="idot"></span></span>
           <span class="ibody">
             <span class="iname">Reads</span>
-            <span class="idesc">Publish approved writing to aubreynorth.com.</span>
+            <span class="idesc">Approve and publish writing to aubreynorth.com</span>
           </span>
           <span class="imeta-grp"><span class="istat" id="tileReadsStatus">Loading…</span><span class="iarrow" aria-hidden="true">→</span></span>
         </button>
         <button class="irow outreach" id="tileOutreach" aria-label="Open Outreach">
-          <span class="lead"><span class="idot"></span></span>
           <span class="ibody">
             <span class="iname">Outreach</span>
-            <span class="idesc">The one email worth sending, researched.</span>
+            <span class="idesc">Researched emails — nothing sends without you</span>
           </span>
           <span class="imeta-grp"><span class="istat" id="tileOutreachStatus">Loading…</span><span class="iarrow" aria-hidden="true">→</span></span>
         </button>
         <button class="irow orders" id="tileOrders" aria-label="Open Orders">
-          <span class="lead"><span class="idot"></span></span>
           <span class="ibody">
             <span class="iname">Orders</span>
-            <span class="idesc">Script Coverage orders, from paid to delivered.</span>
+            <span class="idesc">Script Coverage from paid to delivered</span>
           </span>
           <span class="imeta-grp"><span class="istat" id="tileOrdersStatus">Loading…</span><span class="iarrow" aria-hidden="true">→</span></span>
         </button>
         <button class="irow search" id="tileSearch" aria-label="Open Search">
-          <span class="lead"><span class="idot"></span></span>
           <span class="ibody">
             <span class="iname">Search</span>
-            <span class="idesc">Whether the writing is earning the search.</span>
+            <span class="idesc">Did the writing earn its search — per Read</span>
           </span>
           <span class="imeta-grp"><span class="istat" id="tileSearchStatus">Loading…</span><span class="iarrow" aria-hidden="true">→</span></span>
         </button>
