@@ -534,7 +534,11 @@ td.t a:hover{color:var(--brand-gold-soft)}
    Reads is its own surface, not an analytics scope — so it drops the scope bar,
    range switcher, Sync now and briefing, and wears an Aubrey North header. */
 #reads{min-height:100vh;min-height:100dvh;background:var(--surface-base);display:flex;flex-direction:column}
-.readtop{display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4) var(--space-6);
+/* The header is full-bleed (sticky bar), but its content aligns to the same 1560px measure
+   as the view below via fluid side padding, so the wordmark/profile share the columns' edges
+   at every width (fixes the wide-screen drift where content inset past the header). */
+.readtop{display:flex;align-items:center;gap:var(--space-4);
+  padding:var(--space-4) max(var(--space-6),calc(50% - 780px + var(--space-6)));
   border-bottom:1px solid var(--border-subtle);background:var(--surface-raised);position:sticky;top:0;z-index:10;
   backdrop-filter:blur(12px);flex-wrap:wrap}
 /* Reads bar mirrors Signal's: mark + page name as the home link (left), context
@@ -548,7 +552,10 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .rcontext{font-size:var(--text-label);color:var(--text-tertiary);letter-spacing:.02em}
 .rcontext b{color:var(--brand-mute);font-weight:600}
 .readtop .spacer{flex:1}
-#readsView{flex:1;width:100%;max-width:1560px;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)}
+/* One shared content measure across all four Aubrey North surfaces — 1560px, centred, a
+   32px gutter — so Reads, Outreach, Orders and Search sit on identical edges (previously
+   Outreach/Orders were full-bleed <main> at 24px while Reads/Search capped at 1560). */
+#readsView,#outreachView,#ordersView,#searchView{flex:1;width:100%;max-width:1560px;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)}
 .monthhead{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;color:var(--text-tertiary);
   margin:var(--space-4) 0 var(--space-2);padding-bottom:var(--space-2);border-bottom:1px solid var(--border-subtle)}
 .monthhead:first-child{margin-top:0}
@@ -561,7 +568,7 @@ td.t a:hover{color:var(--brand-gold-soft)}
   .readtop .brandhome{order:1}
   .readtop .acctmenu{order:2;margin-left:auto}
   .readtop .rcontext{order:3;flex:1 1 100%}
-  #readsView{padding:var(--space-4)}
+  #readsView,#outreachView,#ordersView,#searchView{padding:var(--space-4)}
 }
 
 /* ---------- reads card + preview polish ---------- */
@@ -859,24 +866,31 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .tcol>h3 .n{margin-left:auto;font-weight:400;letter-spacing:0;font-size:var(--text-micro);color:var(--text-tertiary);font-variant-numeric:tabular-nums}
 .tcol.draft>h3{color:var(--text-tertiary)} .tcol.in_review>h3{color:var(--state-progress)}
 .tcol.ready>h3{color:var(--state-positive)} .tcol.published>h3{color:var(--brand-gold-soft)}
-.tcard{width:100%;text-align:left;background:var(--surface-overlay);border:1px solid var(--border-default);
-  border-radius:var(--radius-md);padding:var(--space-3);margin-bottom:var(--space-2);cursor:pointer;
-  display:block;transition:border-color var(--dur-fast)}
-.tcard:hover{border-color:var(--border-strong)}
+/* Calm P4: triage cards become the row atom — no fill, no border box; a hairline between
+   consecutive rows and a hover tint, so each column reads as a quiet list (shared by Reads,
+   Outreach and Orders). */
+.tcard{width:100%;text-align:left;background:none;border:0;border-radius:var(--radius-md);
+  padding:var(--space-3);cursor:pointer;display:block;transition:background var(--dur-fast)}
+.tcard + .tcard{border-top:1px solid var(--border-subtle)}
+.tcard:hover{background:var(--surface-overlay)}
 .tcard .trow{display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);margin-bottom:2px}
 .tcard .date{font-size:var(--text-micro);color:var(--text-tertiary);white-space:nowrap}
 .tcard .lane{font-size:var(--text-micro);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-terracotta)}
 .tcard .ttl{display:block;font-family:var(--font-head);font-weight:300;font-size:1.05rem;color:var(--text-primary);margin:2px 0}
 .tcard .meta{font-size:var(--text-micro);color:var(--text-tertiary)}
 .tcard .flags{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
-.tflag{font-size:var(--text-micro);border-radius:var(--radius-pill);padding:2px 8px;border:1px solid var(--border-default)}
-.tflag.fix{color:var(--state-progress);border-color:var(--state-progress)}
-.tflag.src{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
-/* Outreach triage flags + column headers (reuse the Reads triage system) */
-.tflag.need{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
-.tflag.warn{color:var(--brand-gold-soft);border-color:rgba(227,197,126,.45)}
-.tflag.thin{color:var(--text-tertiary);border-color:var(--border-strong)}
-.tflag.seq{color:var(--brand-peri);border-color:rgba(142,139,216,.45)}
+/* Calm P4: at-a-glance flags are a small coloured dot + neutral label, not a filled pill —
+   the colour keying (peri = fixes, terracotta = needed, gold = warn, …) moves to the dot. */
+.tflag{font-size:var(--text-micro);display:inline-flex;align-items:center;gap:5px;
+  color:var(--text-secondary);letter-spacing:.02em}
+.tflag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--fc,var(--text-tertiary));flex:none}
+.tflag.fix{--fc:var(--state-progress)}
+.tflag.src{--fc:var(--brand-terracotta)}
+/* Outreach triage flags reuse the same dot system */
+.tflag.need{--fc:var(--brand-terracotta)}
+.tflag.warn{--fc:var(--brand-gold-soft)}
+.tflag.thin{--fc:var(--text-tertiary)}
+.tflag.seq{--fc:var(--brand-peri)}
 .tcol.approved>h3{color:var(--state-progress)}
 .tcol.in_sequence>h3{color:var(--state-positive)}
 .tcol.closed>h3{color:var(--text-tertiary)}
@@ -885,19 +899,24 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .odetail{max-width:780px;margin:0 auto}
 .oback{background:none;border:0;color:var(--text-secondary);font-size:var(--text-label);cursor:pointer;padding:0;margin-bottom:var(--space-3)}
 .ohrow{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap}
-.ostatus{font-size:var(--text-micro);letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:var(--radius-pill);border:1px solid var(--border-strong);color:var(--text-secondary)}
-.ostatus.in_review,.ostatus.snoozed{color:var(--brand-gold-soft);border-color:rgba(227,197,126,.4)}
-.ostatus.approved,.ostatus.enrolling{color:var(--state-progress);border-color:rgba(142,139,216,.45)}
-.ostatus.enrolled,.ostatus.replied{color:var(--state-positive);border-color:rgba(200,162,76,.4)}
-.ostatus.rejected,.ostatus.bounced,.ostatus.failed,.ostatus.declined{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+/* Calm P4: status is a small coloured dot + a plain small-caps word, not a filled pill —
+   in the Orders list, the Outreach cards and the detail headers alike; the dot keys the state. */
+.ostatus{font-size:var(--text-micro);letter-spacing:.06em;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary)}
+.ostatus::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--sc,var(--text-tertiary));flex:none}
+.ostatus.in_review,.ostatus.snoozed{--sc:var(--brand-gold-soft)}
+.ostatus.approved,.ostatus.enrolling{--sc:var(--state-progress)}
+.ostatus.enrolled,.ostatus.replied{--sc:var(--state-positive)}
+.ostatus.rejected,.ostatus.bounced,.ostatus.failed,.ostatus.declined{--sc:var(--brand-terracotta)}
 /* Orders (Script Coverage) — status colours + list/detail; reuses .odetail/.ohrow/.oh4/.edcard */
-.ostatus.new{color:var(--brand-gold-soft);border-color:rgba(227,197,126,.4)}
-.ostatus.paid,.ostatus.in_progress{color:var(--state-progress);border-color:rgba(142,139,216,.45)}
-.ostatus.delivered{color:var(--state-positive);border-color:rgba(200,162,76,.4)}
-.ostatus.cancelled{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
+.ostatus.new{--sc:var(--brand-gold-soft)}
+.ostatus.paid,.ostatus.in_progress{--sc:var(--state-progress)}
+.ostatus.delivered{--sc:var(--state-positive)}
+.ostatus.cancelled{--sc:var(--brand-terracotta)}
 .orderlist{display:flex;flex-direction:column;gap:var(--space-2);max-width:760px}
-.ordercard{width:100%;text-align:left;background:var(--surface-overlay);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);cursor:pointer;display:block;transition:border-color var(--dur-fast)}
-.ordercard:hover{border-color:var(--border-strong)}
+/* Calm P4: Orders rows share the triage row atom (.tcard) — the extra bg/border box is
+   dropped so the list reads the same as Reads/Outreach; only the row padding differs. */
+.ordercard{padding:var(--space-3) var(--space-4)}
 .ordfoot{display:flex;align-items:center;gap:var(--space-3);margin-top:8px}
 .odue{font-size:var(--text-micro);color:var(--text-tertiary)}
 .odetail .ohrow{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-3) 0}
