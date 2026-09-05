@@ -172,8 +172,9 @@ input:-webkit-autofill:focus{border-color:var(--state-progress)}
    held, so signing back in reads as resuming rather than starting over. Gold, because a
    scheduled sign-out is routine; terracotta is for faults. */
 .notice{display:flex;gap:var(--space-3);padding:var(--space-4);margin:0 0 var(--space-5);
-  background:var(--surface-overlay);border:1px solid var(--border-default);
-  border-left:2px solid var(--brand-gold);border-radius:var(--radius-md)}
+  background:var(--surface-overlay);border:1px solid var(--border-default);border-radius:var(--radius-md)}
+/* Calm P3: the gold accent edge-bar is dropped; the gold icon already carries the meaning
+   (a scheduled sign-out is routine, not a fault) — colour in the marker, not a full bar. */
 .notice svg{width:16px;height:16px;flex:none;margin-top:1px;color:var(--brand-gold)}
 .notice .t{display:block;font-size:var(--text-label);font-weight:600;color:var(--text-primary);
   margin-bottom:var(--space-1)}
@@ -1069,7 +1070,9 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
 /* Design layout: Original and Suggested side by side in sunken boxes (terracotta /
    gold labels), pulsing LED + section in the header, tally right, reason bottom-left
    with the actions bottom-right. */
-.stepper{border:1px solid var(--border-strong);border-left:2px solid var(--state-progress);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-4);background:var(--surface-raised)}
+/* Calm P3: no periwinkle accent edge-bar — the .top row's peri eyebrow + pulsing led already
+   carry the "live" keying; the panel is a uniform hairline like every other. */
+.stepper{border:1px solid var(--border-strong);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-4);background:var(--surface-raised)}
 .stepper .top{display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-micro);font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--state-progress);margin-bottom:var(--space-3)}
 .stepper .top .led{width:7px;height:7px;border-radius:50%;background:var(--state-progress);animation:pulse 2.2s ease-in-out infinite;flex:none}
 .stepper .top .sec{font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-tertiary)}
@@ -1098,7 +1101,10 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
 
 /* Social panel (W3–W5) — gold-keyed, distinct from stepper periwinkle + sources terracotta */
 .grow{flex:1}
-.socialpanel{border-left:2px solid var(--brand-gold)}
+/* Calm P3: the gold accent edge-bar is replaced by a 6px gold dot on the panel's eyebrow —
+   the colour keying (gold = social) moves into the label, not a full bar. */
+.socialhead .eyebrow{display:inline-flex;align-items:center;gap:6px}
+.socialhead .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--brand-gold);flex:none}
 /* v3: sections grouped Long-form / Promotional / Micro under gold eyebrow headings */
 .sgroup{margin-top:var(--space-4)}
 .sgrouphd{font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;font-weight:600;color:var(--brand-gold);margin-bottom:var(--space-2)}
