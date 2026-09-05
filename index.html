@@ -50,6 +50,8 @@
   --brand-plum-sunk:#140E1B;
   --brand-gold:#C8A24C; --brand-gold-soft:#E3C57E; --brand-peri:#8E8BD8;
   --brand-paper:#FAF6EE; --brand-terracotta:#C0593B;
+  /* Productions/Publications accent — the Search surface's division colour (an-search-signal-SPEC §2). */
+  --brand-teal:#3E8E86; --brand-teal-deep:#1F5F5B;
   --brand-line:#372C47; --brand-line-soft:#2A2036; --brand-line-strong:#4A3C5E;
   --brand-mute:#B7AEC2; --brand-dim:#7D7290;
   --plat-youtube:#FF4E45; --plat-instagram:#E1477E; --plat-facebook:#4A8CFF; --plat-tiktok:#25E5D0;
@@ -479,7 +481,7 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .launchtop .spacer{flex:1}
 .launchtop .lem{font-size:var(--text-micro);color:var(--text-tertiary);letter-spacing:.02em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40ch}
-.slabrow{display:flex;gap:var(--space-5);justify-content:center}
+.slabrow{display:flex;flex-wrap:wrap;gap:var(--space-5);justify-content:center}
 .slab{all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;flex:1;max-width:380px;
   min-height:340px;border-radius:22px;display:flex;flex-direction:column;justify-content:flex-end;
   padding:var(--space-6);border:1px solid var(--border-default);box-shadow:0 26px 60px rgba(0,0,0,.5);
@@ -503,6 +505,13 @@ td.t a:hover{color:var(--brand-gold-soft)}
 .slab.reads .eyebrow{font-family:'Scenario',Georgia,serif;font-weight:700;letter-spacing:.1em;color:var(--brand-terracotta)}
 .slab.reads .stat{color:var(--brand-terracotta);border-color:rgba(192,89,59,.5)}
 .slab.reads:hover{transform:translateY(-5px);filter:brightness(1.06);box-shadow:0 34px 74px rgba(192,89,59,.26)}
+/* Search — the aubreynorth.com search scoreboard; teal division accent (Productions). */
+.slab.search{background:linear-gradient(155deg,#1B2E2C,#0F1B1A)}
+.slab.search .edge{background:var(--brand-teal);box-shadow:0 0 20px rgba(62,142,134,.7)}
+.slab.search .an{font-family:'Scenario',Georgia,serif;font-weight:700;font-size:21px;color:var(--brand-teal);letter-spacing:.01em}
+.slab.search .eyebrow{font-family:'Scenario',Georgia,serif;font-weight:700;letter-spacing:.1em;color:var(--brand-teal)}
+.slab.search .stat{color:var(--brand-teal);border-color:rgba(62,142,134,.5)}
+.slab.search:hover{transform:translateY(-5px);filter:brightness(1.06);box-shadow:0 34px 74px rgba(62,142,134,.26)}
 .slab:focus-visible{outline:2px solid var(--state-progress);outline-offset:3px}
 @media(max-width:720px){
   #launcher{place-items:stretch;padding:var(--space-4);padding-top:calc(var(--space-4) + var(--safe-top,0px));
@@ -980,6 +989,40 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
 .tcard.pub .publink{font-size:var(--text-micro);color:var(--brand-peri);text-decoration:none;white-space:nowrap;flex:none}
 .tcard.pub .publink:hover{text-decoration:underline}
 
+/* ===== Search surface (an-search-signal-SPEC) — the aubreynorth.com search scoreboard.
+   Reuses Signal's panel/kpi/grid shapes; teal is the only new accent. */
+#searchView{flex:1;width:100%;max-width:1560px;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-4)}
+#search .readid .an{color:var(--brand-teal)}
+#search .brandhome:hover .pg{color:var(--brand-teal)}
+/* KPI delta: position improving is good even though the number falls, so it gets its own
+   pair of classes rather than reusing up/down (which key off the sign). */
+.kpi .sub .rankup{color:var(--state-positive)} .kpi .sub .rankdown{color:var(--state-negative)}
+/* The Reads scoreboard — one row per published Read, its target query, and its standing. */
+.scoreboard{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.scoreboard th{text-align:left;font-size:var(--text-micro);letter-spacing:var(--track-label);text-transform:uppercase;
+  color:var(--text-tertiary);font-weight:600;padding:0 var(--space-3) var(--space-3);border-bottom:1px solid var(--border-default)}
+.scoreboard th.num,.scoreboard td.num{text-align:right}
+.scoreboard td{padding:var(--space-3);border-bottom:1px solid var(--border-subtle);vertical-align:top}
+.scoreboard tr:last-child td{border-bottom:0}
+.scoreboard .rtitle{color:var(--text-primary);font-weight:600}
+.scoreboard .rlane{font-size:var(--text-micro);letter-spacing:.04em;text-transform:uppercase;color:var(--text-tertiary)}
+.scoreboard .rquery{color:var(--text-secondary)}
+.scoreboard .rquery a{color:var(--text-secondary);text-decoration:none}
+.scoreboard .rquery a:hover{color:var(--brand-teal);text-decoration:underline}
+/* "not yet ranking" is a first-class state, never a zero pretending to be data (SPEC R4). */
+.notrank{display:inline-flex;align-items:center;gap:6px;font-size:var(--text-label);color:var(--text-tertiary)}
+.notrank .g{width:8px;height:8px;border-radius:50%;border:1px dashed var(--avail-absent);flex:none}
+.rankpill{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-head);font-weight:300;
+  font-size:var(--figure-sm);color:var(--text-primary);line-height:1}
+.qmini{display:flex;flex-direction:column;gap:var(--space-3)}
+.qmini .qrow{display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-4)}
+.qmini .qname{color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qmini .qval{color:var(--text-primary);font-variant-numeric:tabular-nums;flex:none}
+@media(max-width:720px){
+  #searchView{padding:var(--space-4)}
+  .scoreboard th.hidesm,.scoreboard td.hidesm{display:none}
+}
+
 /* editor */
 .edhead{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap}
 .edhead .back{background:none;border:0;color:var(--text-secondary);cursor:pointer;font:inherit;font-size:var(--text-label)}
@@ -1219,6 +1262,16 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
           <span class="nm">Orders</span>
           <span class="ds">Script Coverage orders. Open the script, and move each one through paid, in progress, delivered.</span>
           <span class="stat" id="tileOrdersStatus">Loading…</span>
+        </span>
+      </button>
+      <button class="slab search" id="tileSearch" aria-label="Open Search">
+        <span class="sheen"></span><span class="edge"></span>
+        <span class="an cnr">AN</span>
+        <span class="body">
+          <span class="eyebrow">Aubrey North</span>
+          <span class="nm">Search</span>
+          <span class="ds">Whether the writing is earning the search. Each Read against the query it was built to win.</span>
+          <span class="stat" id="tileSearchStatus">Loading…</span>
         </span>
       </button>
     </div>
@@ -1471,6 +1524,46 @@ textarea.oefield{min-height:240px;line-height:1.6;resize:vertical}
   <main id="ordersView"></main>
 </div>
 
+<!-- ================= SEARCH SURFACE =================
+     Aubrey North's search scoreboard (an-search-signal-SPEC). A launcher sibling to Signal
+     and Reads with its own teal (Productions) division accent, reached from the launcher, not
+     the AN Reads/Outreach/Orders switch. Read-only: the collector (sync-search) writes; this
+     surface only reads search_metrics_daily + read_search. Same shared header shell as the AN
+     surfaces (the generic profile-menu / idle / passkey logic — wireProfile, setProfile,
+     addPasskeyFlow, doSignOut — keyed on the search* ids). -->
+<div id="search" class="hide">
+  <header class="readtop">
+    <button class="brandhome" id="searchHub" aria-label="Aubrey North Search — home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="#8E8BD8" stroke-width="2"/><circle cx="16" cy="7" r="2.6" fill="#C8A24C"/></svg>
+      <span class="readid"><span class="an">Aubrey North</span><span class="pg">Search</span></span>
+    </button>
+    <span class="spacer"></span>
+    <span class="rcontext" id="searchContext">—</span>
+    <div class="acctmenu">
+      <button class="avatar" id="searchProfileBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Account and preferences"><span id="searchProfileInitials">—</span></button>
+      <div class="menu hide" id="searchProfileMenu" role="menu" aria-labelledby="searchProfileBtn">
+        <div class="who"><span class="em" id="searchProfileEmail">—</span><span class="rl">Signed in · invited access</span></div>
+        <button class="mi hide" id="searchAddPasskey" role="menuitem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="8" cy="8" r="3.3"></circle><path d="M2.8 19c.5-3.2 2.6-5 5.2-5 .8 0 1.6.2 2.2.5"></path>
+            <circle cx="17.4" cy="12.2" r="2.4"></circle><path d="M15.5 13.7 12 17.2"></path><path d="M13.4 15.8l1.5 1.5M12 17.2l1.5 1.5"></path>
+          </svg>
+          <span>Add a passkey<span class="sub">Sign in with Face ID next time</span></span>
+        </button>
+        <div class="note">Signs out after 66 minutes without activity.</div>
+        <div class="rule"></div>
+        <button class="mi danger" id="searchSignOut" role="menuitem">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <path d="M14 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H14"></path><path d="M17 8.5 20.5 12 17 15.5M20.5 12H10"></path>
+          </svg>
+          <span>Sign out</span>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main id="searchView"></main>
+</div>
+
 <div id="modalRoot"></div>
 <div id="idleRoot"></div>
 <div id="sheetRoot"></div>
@@ -1544,7 +1637,7 @@ const GLYPH_TITLE = {
 /* ============================ state ============================ */
 let RANGE = 30;
 let SCOPE = { kind:"all" };            // {kind:'all'} | {kind:'platform',p} | {kind:'account',id}
-let SURFACE = null;                    // null = launcher (home) | 'signal' | 'reads' | 'outreach' | 'orders'
+let SURFACE = null;                    // null = launcher (home) | 'signal' | 'reads' | 'outreach' | 'orders' | 'search'
 let OUTREACH_LANE = "all";             // all | business | creator  (Outreach triage lane filter)
 let OUTREACH_ID = null;                // open Outreach card id, or null (triage)
 let ORDERS_ID = null;                  // open Orders (Script Coverage) detail id, or null (list)
@@ -1608,6 +1701,7 @@ function readUrl() {
   if (surf === "reads" || q.get("view") === "reads") SURFACE = "reads";   // legacy ?view=reads still works
   else if (surf === "outreach") SURFACE = "outreach";
   else if (surf === "orders") SURFACE = "orders";
+  else if (surf === "search") SURFACE = "search";
   else if (surf === "signal" || q.get("platform") || q.get("account") || q.get("type")) SURFACE = "signal";
   else SURFACE = null;                                                    // bare URL -> launcher
   OUTREACH_LANE = ["business","creator"].includes(q.get("lane")) ? q.get("lane") : "all";
@@ -1630,6 +1724,7 @@ function writeUrl(push = true) {
     q.set("surface", "orders");
     if (ORDERS_ID) q.set("order", ORDERS_ID);
   }
+  else if (SURFACE === "search") q.set("surface", "search");
   else if (SURFACE === "signal") {
     q.set("surface", "signal");
     if (SCOPE.kind === "platform") q.set("platform", SCOPE.p);
@@ -1660,11 +1755,13 @@ function applySurfaceVisibility() {
   $("#reads").classList.toggle("hide", SURFACE !== "reads");
   $("#outreach").classList.toggle("hide", SURFACE !== "outreach");
   $("#orders").classList.toggle("hide", SURFACE !== "orders");
+  $("#search").classList.toggle("hide", SURFACE !== "search");
 }
 function renderSurface() {
   if (SURFACE === "reads") renderReadsSurface();
   else if (SURFACE === "outreach") renderOutreachSurface();
   else if (SURFACE === "orders") renderOrdersSurface();
+  else if (SURFACE === "search") renderSearchSurface();
   else if (SURFACE === "signal") render();
   else renderLauncher();
 }
@@ -1702,6 +1799,256 @@ function renderLauncher() {
       : nw ? `${nw} new${wip ? ` · ${wip} in progress` : ""}`
       : wip ? `${wip} in progress` : "No open orders";
   }
+  if (DATA.searchReads === null) $("#tileSearchStatus").textContent = "Search unavailable";
+  else {
+    const latest = latestReadSearch();
+    const tracked = latest.length;
+    const ranking = latest.filter(isRanking).length;
+    $("#tileSearchStatus").textContent = LOADING ? "Loading…"
+      : !tracked ? "No Reads tracked yet"
+      : ranking ? `${ranking} of ${tracked} ranking`
+      : `${plural(tracked, "Read", "Reads")} tracked · none ranking yet`;
+  }
+}
+
+/* ============================ search surface ============================
+   Aubrey North's search scoreboard (an-search-signal-SPEC). Read-only: it renders what
+   the sync-search collector has pulled from Google Search Console — site-wide daily
+   performance, top queries, and the differentiator, per-Read standing for the query each
+   Read was written to win. "Not yet ranking" is a first-class state (SPEC R4): a Read is
+   ranking only when it earned real impressions for its target query — position 0 is not a
+   rank, and a zero is never dressed up as data. */
+
+// A Read has begun to rank only when it earned impressions for its target query.
+const isRanking = (rs) => Number(rs?.q_impressions) > 0;
+
+// Newest snapshot per Read (DATA.readSearch is captured_on desc), keyed by read_id.
+function latestReadSearch() {
+  const seen = new Set(), out = [];
+  for (const rs of (DATA.readSearch || [])) {
+    if (seen.has(rs.read_id)) continue;
+    seen.add(rs.read_id);
+    out.push(rs);
+  }
+  return out;
+}
+// The prior snapshot for a Read, at least ~5 days before `on`, for the week-on-week move.
+function prevReadSearch(readId, on) {
+  const cutoff = new Date(on); cutoff.setUTCDate(cutoff.getUTCDate() - 5);
+  return (DATA.readSearch || []).find((rs) =>
+    rs.read_id === readId && rs.captured_on && new Date(rs.captured_on) <= cutoff) || null;
+}
+
+// Site-wide overall daily rows → this-week / last-week aggregates. Position is impression-
+// weighted; CTR and position stay null when nothing was seen (never a false zero).
+function searchAgg(subset) {
+  const clicks = subset.reduce((s, r) => s + (Number(r.clicks) || 0), 0);
+  const impr = subset.reduce((s, r) => s + (Number(r.impressions) || 0), 0);
+  const wpos = subset.reduce((s, r) => s + (Number(r.position) || 0) * (Number(r.impressions) || 0), 0);
+  return { clicks, impr, ctr: impr ? clicks / impr : null, pos: impr ? wpos / impr : null };
+}
+function searchWindow() {
+  const rows = (DATA.searchDaily || []).slice()
+    .sort((a, b) => (a.metric_date < b.metric_date ? -1 : 1));
+  return { rows, last: rows.at(-1)?.metric_date || null,
+    wk: searchAgg(rows.slice(-7)), prev: searchAgg(rows.slice(-14, -7)) };
+}
+function topSearchQueries(limit = 8) {
+  const m = new Map();
+  for (const r of (DATA.searchQueries || [])) {
+    const k = r.dim_value; if (!k) continue;
+    const e = m.get(k) || { q: k, clicks: 0, impr: 0, wpos: 0 };
+    e.clicks += Number(r.clicks) || 0; e.impr += Number(r.impressions) || 0;
+    e.wpos += (Number(r.position) || 0) * (Number(r.impressions) || 0);
+    m.set(k, e);
+  }
+  return [...m.values()].map((e) => ({ ...e, pos: e.impr ? e.wpos / e.impr : null }))
+    .sort((a, b) => b.impr - a.impr || b.clicks - a.clicks).slice(0, limit);
+}
+const pct = (x) => (x === null || x === undefined) ? "—" : (x * 100).toFixed(1) + "%";
+
+function renderSearchSurface() {
+  destroyCharts();
+  const view = $("#searchView");
+  if (LOADING) {
+    const kpi = `<div class="kpi"><div class="sk line" style="width:45%"></div>
+      <div class="sk fig"></div><div class="sk line" style="width:60%"></div></div>`;
+    view.innerHTML = `<div class="kpis">${kpi.repeat(4)}</div>
+      <div class="panel"><div class="sk line" style="width:25%;height:16px"></div>
+        <div class="sk block" style="margin-top:16px"></div></div>`;
+    $("#searchContext").textContent = "Loading…";
+    return;
+  }
+  if (DATA.searchReads === null) {
+    $("#searchContext").textContent = "Unavailable";
+    view.innerHTML = `<div class="panel"><div class="empty">
+      <h3>Search data could not be read</h3>
+      <div>Reload to try again. If it persists, the search_metrics_daily / read_search read
+      policies are the place to look — this surface only reads them.</div>
+      <div class="connectrow"><button class="btn" data-retry>Try again</button></div></div></div>`;
+    $("[data-retry]")?.addEventListener("click", load);
+    return;
+  }
+
+  const w = searchWindow();
+  const pub = (DATA.reads || []).filter((r) => r.status === "published" && r.slug);
+  const latest = latestReadSearch();
+  const snapById = new Map(latest.map((rs) => [rs.read_id, rs]));
+  const ranking = pub.filter((r) => isRanking(snapById.get(r.id))).length;
+
+  // Header context + the honest "latest complete day" label (GSC lags ~2–3 days).
+  $("#searchContext").innerHTML = w.last
+    ? `latest data <b>${shortDate(w.last)}</b> · ${plural(pub.length, "Read", "Reads")} tracked`
+    : `${plural(pub.length, "Read", "Reads")} tracked`;
+
+  // ---- lede (honest to the true state) ----
+  let lede, sub;
+  if (!w.rows.length) {
+    lede = "Search data hasn't arrived yet.";
+    sub = "The collector runs daily and Search Console lags two to three days. Once it has pulled a window, this is where the writing meets the search.";
+  } else if (!w.wk.impr && !searchAgg(w.rows).impr) {
+    lede = "Aubrey North hasn't surfaced in Google search yet.";
+    sub = `Across ${plural(w.rows.length, "day", "days")} of data the site earned no impressions — nothing is ranking, and that is the true state, not a gap in the data. New writing takes days to weeks to be indexed and ranked; the scoreboard below is what we are watching.`;
+  } else {
+    const posTxt = w.wk.pos ? `, average position ${w.wk.pos.toFixed(1)}` : "";
+    lede = `Aubrey North earned ${plural(w.wk.clicks, "click", "clicks")} from ${fmt(w.wk.impr)} impressions in the last seven days${posTxt}.`;
+    sub = ranking
+      ? `${ranking} of ${pub.length} published Reads ${ranking === 1 ? "is" : "are"} ranking for the query ${ranking === 1 ? "it was" : "they were"} written to win.`
+      : "No published Read is ranking for its target query yet — the site is earning impressions on other terms first.";
+  }
+
+  // ---- KPI row: clicks, impressions, avg position, CTR (week on week) ----
+  const dClicks = w.wk.clicks - w.prev.clicks;
+  const dImpr = w.wk.impr - w.prev.impr;
+  const hasPrev = w.prev.impr > 0;
+  // Position falling is an improvement, so it gets its own inverted colour pair.
+  const posDelta = (w.wk.pos != null && w.prev.pos != null)
+    ? (() => { const d = w.wk.pos - w.prev.pos;   // negative = climbed
+        return `<span class="${d < 0 ? "rankup" : d > 0 ? "rankdown" : "flat"}">${
+          d === 0 ? "no change" : `${d < 0 ? "▲" : "▼"} ${Math.abs(d).toFixed(1)}`}</span> vs last week`; })()
+    : `<span class="flat">no prior week yet</span>`;
+  const kpis = [
+    { l: "Clicks (7d)", v: fmt(w.wk.clicks),
+      s: hasPrev ? `<span class="${cls(dClicks)}">${signed(dClicks)}</span> vs last week`
+                 : `<span class="flat">no prior week yet</span>` },
+    { l: "Impressions (7d)", v: fmt(w.wk.impr),
+      s: hasPrev ? `<span class="${cls(dImpr)}">${signed(dImpr)}</span> vs last week`
+                 : `<span class="flat">no prior week yet</span>` },
+    { l: "Avg position (7d)", v: w.wk.pos ? w.wk.pos.toFixed(1) : "—", s: w.wk.pos ? posDelta : `<span class="flat">not ranking yet</span>` },
+    { l: "CTR (7d)", v: pct(w.wk.ctr), s: w.wk.impr ? `${plural(w.wk.clicks, "click", "clicks")} on ${fmt(w.wk.impr)} impressions` : `<span class="flat">no impressions yet</span>` },
+  ];
+  const kpiHtml = kpis.map((c) =>
+    `<div class="kpi"><div class="label">${c.l}</div><div class="value">${c.v}</div>
+     <div class="sub">${c.s}</div></div>`).join("");
+
+  // ---- trend + top queries ----
+  const totalImpr = searchAgg(w.rows).impr;
+  const trend = `<div class="panel">
+    <div class="phead"><h2>Search trend</h2><span class="cad lag">Daily · lags 2–3d</span></div>
+    <p class="hint">Clicks and impressions from Google Search Console. Up to 16 months of history is available; a line begins where the data does.</p>
+    ${w.rows.length && totalImpr
+      ? `<div class="chartbox"><canvas id="chSearch"></canvas></div>`
+      : `<div class="empty"><span class="g none"></span><div>${w.rows.length
+          ? "No clicks or impressions recorded in this window yet."
+          : "No data pulled yet."}</div></div>`}
+  </div>`;
+
+  const tq = topSearchQueries();
+  const queries = `<div class="panel">
+    <div class="phead"><h2>Top queries</h2><span class="cad lag">Search Console</span></div>
+    <p class="hint">The terms actually driving the site, by impressions.</p>
+    ${tq.length
+      ? `<div class="qmini">${tq.map((q) => `<div class="qrow">
+          <span class="qname" title="${esc(q.q)}">${esc(q.q)}</span>
+          <span class="qval">${fmt(q.clicks)} clk · ${fmt(q.impr)} imp${q.pos ? ` · p${q.pos.toFixed(1)}` : ""}</span>
+        </div>`).join("")}</div>`
+      : `<div class="empty"><span class="g none"></span>
+          <div>No queries yet — the site hasn't appeared in search for any term.</div></div>`}
+  </div>`;
+
+  // ---- Reads scoreboard (the centrepiece) ----
+  const rows = pub.map((r) => {
+    const rs = snapById.get(r.id) || null;
+    const prev = rs ? prevReadSearch(r.id, rs.captured_on) : null;
+    const rank = isRanking(rs);
+    let move = "";
+    if (rank && prev && isRanking(prev) && prev.q_position && rs.q_position) {
+      const d = Number(rs.q_position) - Number(prev.q_position);
+      move = d === 0 ? `<span class="flat">—</span>`
+        : `<span class="${d < 0 ? "rankup" : "rankdown"}">${d < 0 ? "▲" : "▼"} ${Math.abs(d).toFixed(0)}</span>`;
+    } else if (rank && prev && !isRanking(prev)) {
+      move = `<span class="rankup">new</span>`;
+    } else {
+      move = `<span class="flat">—</span>`;
+    }
+    return { r, rs, rank,
+      pos: rank ? Number(rs.q_position) : Infinity,
+      impr: rank ? Number(rs.q_impressions) : 0, move };
+  }).sort((a, b) => (a.rank === b.rank)
+      ? (a.rank ? a.pos - b.pos : a.r.title.localeCompare(b.r.title))
+      : (a.rank ? -1 : 1));
+
+  const board = `<div class="panel">
+    <div class="phead"><h2>Reads scoreboard</h2><span class="cad lag">Per-Read</span></div>
+    <p class="hint">Every published Read against the query it was written to win. This is the whole point: did the idea land in search, not just the site's traffic.</p>
+    ${pub.length ? `<div style="overflow-x:auto"><table class="scoreboard">
+      <thead><tr>
+        <th>Read</th><th>Target query</th>
+        <th class="num">Position</th><th class="num hidesm">Move</th>
+        <th class="num hidesm">Impressions</th><th class="num hidesm">Clicks</th><th class="num">CTR</th>
+      </tr></thead>
+      <tbody>${rows.map(({ r, rs, rank, move }) => `<tr>
+        <td><div class="rtitle">${esc(r.title)}</div><div class="rlane">${esc(LANE_LABEL[r.lane] ?? r.lane)}</div></td>
+        <td class="rquery">${r.target_query
+          ? `<a href="https://aubreynorth.com/reads/${esc(r.slug)}/" target="_blank" rel="noopener">${esc(r.target_query)}</a>`
+          : `<span class="flat">no target query</span>`}</td>
+        <td class="num">${rank
+          ? `<span class="rankpill">${Number(rs.q_position).toFixed(1)}</span>`
+          : `<span class="notrank"><span class="g"></span>not yet ranking</span>`}</td>
+        <td class="num hidesm">${rank ? move : `<span class="flat">—</span>`}</td>
+        <td class="num hidesm">${rank ? fmt(rs.q_impressions) : "—"}</td>
+        <td class="num hidesm">${rank ? fmt(rs.q_clicks) : "—"}</td>
+        <td class="num">${rank ? pct(rs.q_ctr) : "—"}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>`
+    : `<div class="empty"><span class="g none"></span>
+        <div>No published Reads yet. A Read joins the scoreboard the moment it goes live.</div></div>`}
+  </div>`;
+
+  view.innerHTML = `
+    <div style="padding:0 var(--space-1)">
+      <p class="lede">${esc(lede)}</p>
+      <p class="lede-sub" style="margin-bottom:var(--space-5)">${esc(sub)}</p>
+    </div>
+    <div class="kpis">${kpiHtml}</div>
+    <div class="grid2">${trend}${queries}</div>
+    ${board}`;
+
+  if (w.rows.length && totalImpr) drawSearchTrend(w.rows);
+}
+
+function drawSearchTrend(rows) {
+  const el = $("#chSearch");
+  if (!el) return;
+  const days = rows.map((r) => r.metric_date);
+  const teal = cssVar("--brand-teal"), gold = cssVar("--brand-gold");
+  charts.s = new Chart(el, {
+    data: { labels: days.map(shortDate), datasets: [
+      { type: "bar", label: "Impressions", yAxisID: "y1", order: 3,
+        data: rows.map((r) => Number(r.impressions) || 0),
+        backgroundColor: teal + "44", borderRadius: 2, borderSkipped: false },
+      { type: "line", label: "Clicks", yAxisID: "y", order: 1,
+        data: rows.map((r) => Number(r.clicks) || 0),
+        borderColor: gold, backgroundColor: gold + "22", borderWidth: 2,
+        pointRadius: 0, pointHoverRadius: 4, tension: .3, fill: true },
+    ] },
+    options: { ...BASE, scales: {
+      x: AXIS,
+      y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, callback: (v) => fmt(v) } },
+      y1: { ...AXIS, position: "right", beginAtZero: true, grid: { display: false },
+        ticks: { ...AXIS.ticks, callback: (v) => fmt(v) } },
+    } },
+  });
 }
 
 /* ============================ outreach surface ============================
@@ -3187,6 +3534,7 @@ wireProfile("profileBtn", "profileMenu");
 wireProfile("readsProfileBtn", "readsProfileMenu");
 wireProfile("outreachProfileBtn", "outreachProfileMenu");
 wireProfile("ordersProfileBtn", "ordersProfileMenu");
+wireProfile("searchProfileBtn", "searchProfileMenu");
 // Aubrey North shell switch: Reads ⇄ Outreach (present in both surface headers).
 $$(".answ-b[data-go]").forEach((b) => b.onclick = () => showSurface(b.dataset.go));
 
@@ -3205,6 +3553,8 @@ function setProfile(email) {
   const oEm = $("#outreachProfileEmail"); if (oEm) oEm.textContent = email ?? "—";
   const odIni = $("#ordersProfileInitials"); if (odIni) odIni.textContent = ini;
   const odEm = $("#ordersProfileEmail"); if (odEm) odEm.textContent = email ?? "—";
+  const sIni = $("#searchProfileInitials"); if (sIni) sIni.textContent = ini;
+  const sEm = $("#searchProfileEmail"); if (sEm) sEm.textContent = email ?? "—";
 }
 
 $("#email").addEventListener("keydown", (e) => { if (e.key === "Enter") $("#sendLink").click(); });
@@ -3212,14 +3562,17 @@ $("#signOut").onclick = doSignOut;
 $("#readsSignOut") && ($("#readsSignOut").onclick = doSignOut);
 $("#outreachSignOut") && ($("#outreachSignOut").onclick = doSignOut);
 $("#ordersSignOut") && ($("#ordersSignOut").onclick = doSignOut);
+$("#searchSignOut") && ($("#searchSignOut").onclick = doSignOut);
 $("#launcherSignOut").onclick = doSignOut;
 $("#tileSignal").onclick = () => showSurface("signal");
 $("#tileReads").onclick = () => showSurface("reads");
 $("#tileOutreach").onclick = () => showSurface("outreach");
 $("#tileOrders").onclick = () => showSurface("orders");
+$("#tileSearch").onclick = () => showSurface("search");
 $("#readsHub").onclick = () => showSurface(null);
 $("#outreachHub") && ($("#outreachHub").onclick = () => showSurface(null));
 $("#ordersHub") && ($("#ordersHub").onclick = () => showSurface(null));
+$("#searchHub") && ($("#searchHub").onclick = () => showSurface(null));
 $("#railHome").onclick = () => showSurface(null);
 $("#railHome").onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showSurface(null); } };
 $("#mHome").onclick = () => showSurface(null);
@@ -3235,6 +3588,8 @@ if (window.PublicKeyCredential) {
   $("#addPasskey").classList.remove("hide");
   $("#readsAddPasskey")?.classList.remove("hide");
   $("#outreachAddPasskey")?.classList.remove("hide");
+  $("#ordersAddPasskey")?.classList.remove("hide");
+  $("#searchAddPasskey")?.classList.remove("hide");
 }
 $("#passkeySignin").onclick = async () => {
   const btn = $("#passkeySignin");
@@ -3256,6 +3611,7 @@ $("#addPasskey").onclick = () => addPasskeyFlow($("#addPasskey"));
 $("#readsAddPasskey") && ($("#readsAddPasskey").onclick = () => addPasskeyFlow($("#readsAddPasskey")));
 $("#outreachAddPasskey") && ($("#outreachAddPasskey").onclick = () => addPasskeyFlow($("#outreachAddPasskey")));
 $("#ordersAddPasskey") && ($("#ordersAddPasskey").onclick = () => addPasskeyFlow($("#ordersAddPasskey")));
+$("#searchAddPasskey") && ($("#searchAddPasskey").onclick = () => addPasskeyFlow($("#searchAddPasskey")));
 
 /* ============================ data ============================ */
 async function load({ silent = false } = {}) {
@@ -3263,7 +3619,7 @@ async function load({ silent = false } = {}) {
   // and on a transient query error keep the last-good view instead of the error screen.
   if (!silent) { LOADING = true; renderSurface(); }
   const since = daysAgoISO(RANGE);
-  const [ov, ser, day, post, syn, reads, outreach, orders] = await Promise.all([
+  const [ov, ser, day, post, syn, reads, outreach, orders, smd, sq, rsx] = await Promise.all([
     sb.from("social_accounts_overview").select("*").order("followers", { ascending:false, nullsFirst:false }),
     sb.from("social_account_series").select("*").gte("day", since).order("day"),
     sb.from("social_daily_totals").select("*").gte("day", since).order("day"),
@@ -3272,6 +3628,11 @@ async function load({ silent = false } = {}) {
     sb.from("reads_queue").select("*").order("created_at", { ascending:false }),
     sb.from("outreach_queue").select("*").order("created_at", { ascending:false }),
     sb.from("coverage_orders").select("*").order("created_at", { ascending:false }),
+    // Search Signal (an-search-signal-SPEC): GSC daily overall + top queries + the per-Read
+    // tie-in. Read-only; the collector owns the writes. Fails soft like reads/outreach/orders.
+    sb.from("search_metrics_daily").select("*").eq("dimension", "overall").order("metric_date"),
+    sb.from("search_metrics_daily").select("*").eq("dimension", "query").order("metric_date").limit(2000),
+    sb.from("read_search").select("*").order("captured_on", { ascending:false }),
   ]);
   const err = [ov, ser, day, post, syn].find((r) => r.error);
   LOADING = false;
@@ -3290,6 +3651,12 @@ async function load({ silent = false } = {}) {
     outreach: outreach.error ? null : (outreach.data ?? []),
     // Script Coverage orders (Orders tab); null on error so the tab shows its own state.
     orders: orders.error ? null : (orders.data ?? []),
+    // Search Signal: GSC daily (overall), top-query rows, and per-Read snapshots. A single
+    // error flag drives the surface's own "unavailable" state, like the queues above.
+    searchDaily: smd.error ? [] : (smd.data ?? []),
+    searchQueries: sq.error ? [] : (sq.data ?? []),
+    readSearch: rsx.error ? [] : (rsx.data ?? []),
+    searchReads: (smd.error && rsx.error) ? null : true,
   };
   // A scope pointing at an account that no longer exists falls back to Overview.
   if (SCOPE.kind === "account" && !DATA.overview.some((a) => a.account_id === SCOPE.id)) {
