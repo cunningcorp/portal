@@ -128,3 +128,12 @@ verify_jwt = true
 # https://qeafetctmtnqonhwhhlw.supabase.co/functions/v1/search-connect
 [functions.search-connect]
 verify_jwt = false
+
+# list-read-edits is the READ the weekly learning pass calls to pull recent read_edits rows
+# (LEARNING-LOOP-SPEC Part 2). read_edits is authenticated-SELECT only and the pass is a
+# headless task with no user session, so it reads via the service role here, gated on a
+# constant-time LEARNING_PASS_SECRET check -- so verify_jwt is OFF, the fifth deliberate
+# verify_jwt=false after oauth-callback, insert-draft, insert-prospect and list-prospects.
+# It WRITES NOTHING. Secrets: LEARNING_PASS_SECRET, SUPABASE_SERVICE_ROLE_KEY.
+[functions.list-read-edits]
+verify_jwt = false
