@@ -1,66 +1,58 @@
 // sync-search -- the Aubrey North Search Signal collector (an-search-signal-SPEC, Phase 1).
-// Pulls Google Search Console performance into Supabase on a daily cadence: site-wide, per
-// query, and per page, PLUS the differentiator -- for each published Read, its standing for
-// its own target_query and its page URL. GSC-only in Phase 1 (GA4 + PageSpeed come in P2).
+// Pulls Google Search Console performance into Supabase: site-wide, per query, and per page,
+// PLUS the differentiator -- for each published Read, its standing for its own target_query
+// and its page URL. GSC-only in Phase 1 (GA4 + PageSpeed come in P2).
 //
 //   POST /functions/v1/sync-search        -> trailing ~30 days (the daily run)
 //   POST /functions/v1/sync-search {days:480}  -> one-off backfill (up to 16 months)
 //
-// Auth: verify_jwt=true, same as the sync-youtube family (a signed-in portal session or the
-// service key on the cron). Writes via the service role; the search tables are read-only for
-// the client (RLS: authenticated SELECT only).
+// Auth to Google: USER-CONSENT OAUTH (the org blocks downloadable service-account keys), the
+// same GOOGLE_CLIENT_ID/SECRET the YouTube path uses. The site owner's Search Console refresh
+// token lives in public.search_oauth (connect once via oauth-start?platform=search); this mints
+// a short-lived access token from it. No SA key, no org-policy change.
 //
-// Secrets:
-//   GOOGLE_SA_JSON   the Google service-account key JSON (whole blob). The SA email must be
-//                    added as a user in Search Console (Restricted read is enough).
-//   (config) GSC_PROPERTY  env; defaults to the domain property sc-domain:aubreynorth.com.
-// It mints a short-lived JWT from the SA key and exchanges it for a read-only GSC token; the
-// key never leaves the function. Degrades independently -- a per-Read tie-in failure does not
-// fail the site pull -- and logs the run in social.sync_runs with platform='search'.
+// Auth to the function: verify_jwt=true (a signed-in portal session or the cron). CORS locked
+// to the portal origin. Writes via the service role; the search tables are read-only for the
+// client. Degrades independently; logs to social.sync_runs as platform='search'.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 const SITE = "https://aubreynorth.com";
-const GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
 const LAG_DAYS = 3;      // GSC data is ~2-3 days behind; end the window there
 const TIE_WINDOW = 7;    // per-Read standing is a trailing-7-day aggregate (meaningful WoW)
 
-// ---- service-account JWT -> access token (RS256 via Web Crypto) -------------
-function pemToBuf(pem: string): ArrayBuffer {
-  const b64 = pem.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "");
-  const bin = atob(b64);
-  const u = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
-  return u.buffer;
-}
-function b64url(data: string | Uint8Array | ArrayBuffer): string {
-  const bytes = typeof data === "string" ? new TextEncoder().encode(data)
-    : data instanceof Uint8Array ? data : new Uint8Array(data);
-  let bin = ""; for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
-}
-async function accessToken(saJson: string): Promise<string> {
-  const sa = JSON.parse(saJson);
-  const now = Math.floor(Date.now() / 1000);
-  const unsigned = `${b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }))}.` +
-    b64url(JSON.stringify({ iss: sa.client_email, scope: GSC_SCOPE, aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 }));
-  const key = await crypto.subtle.importKey("pkcs8", pemToBuf(sa.private_key),
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
-  const sig = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(unsigned));
-  const jwt = `${unsigned}.${b64url(sig)}`;
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: jwt }),
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok || !body.access_token) throw new Error(`SA token exchange ${res.status}: ${JSON.stringify(body).slice(0, 200)}`);
-  return body.access_token;
-}
-
-// ---- GSC Search Analytics ---------------------------------------------------
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 function daysAgo(n: number): Date { const d = new Date(); d.setUTCDate(d.getUTCDate() - n); return d; }
+const num = (v: unknown) => (typeof v === "number" ? v : null);
+
+// Mint a Google access token from the stored Search Console refresh token (reuse the cached
+// one until it's within 2 min of expiry). Refresh-token grant, same client as YouTube.
+async function getAccessToken(sb: SupabaseClient): Promise<string> {
+  const { data: row } = await sb.from("search_oauth").select("*").eq("id", 1).maybeSingle();
+  if (!row?.refresh_token) {
+    throw new Error("Search is not connected -- connect Google Search Console from the portal (oauth-start?platform=search).");
+  }
+  if (row.access_token && row.expires_at && new Date(row.expires_at).getTime() - Date.now() > 120_000) {
+    return row.access_token as string;
+  }
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: Deno.env.get("GOOGLE_CLIENT_ID") ?? "",
+      client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET") ?? "",
+      refresh_token: row.refresh_token, grant_type: "refresh_token",
+    }),
+  });
+  const tok = await res.json().catch(() => ({}));
+  if (!res.ok || !tok.access_token) throw new Error(`token refresh ${res.status}: ${JSON.stringify(tok).slice(0, 200)}`);
+  await sb.from("search_oauth").update({
+    access_token: tok.access_token,
+    expires_at: new Date(Date.now() + (tok.expires_in ?? 3600) * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  }).eq("id", 1);
+  return tok.access_token as string;
+}
 
 async function gsc(token: string, property: string, body: Record<string, unknown>): Promise<any> {
   const url = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(property)}/searchAnalytics/query`;
@@ -72,23 +64,24 @@ async function gsc(token: string, property: string, body: Record<string, unknown
   if (!res.ok) throw new Error(`GSC ${res.status}: ${JSON.stringify(j).slice(0, 300)}`);
   return j;
 }
-const num = (v: unknown) => (typeof v === "number" ? v : null);
 
+const CORS = {
+  "Access-Control-Allow-Origin": "https://portal.cunningcorp.com",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
 function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body, null, 2), { status, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(body, null, 2), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok");
-  const saJson = Deno.env.get("GOOGLE_SA_JSON");
-  if (!saJson) return json({ error: "GOOGLE_SA_JSON secret is not set" }, 500);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   const property = Deno.env.get("GSC_PROPERTY") ?? "sc-domain:aubreynorth.com";
   const { days } = (await req.json().catch(() => ({}))) as { days?: number };
   const windowDays = Math.min(Math.max(Number(days) || 30, 1), 480);
 
   const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
 
-  // open a run record
   const { data: run } = await sb.schema("social").from("sync_runs")
     .insert({ platform: "search", started_at: new Date().toISOString(), status: "running" }).select("id").maybeSingle();
   const finish = async (status: string, rows: number, message: string) => {
@@ -102,10 +95,10 @@ Deno.serve(async (req: Request) => {
   let written = 0;
 
   let token: string;
-  try { token = await accessToken(saJson); }
+  try { token = await getAccessToken(sb); }
   catch (e) { const m = String(e instanceof Error ? e.message : e); await finish("failed", 0, m); return json({ error: m }, 502); }
 
-  // --- site/query/page passes → search_metrics_daily -------------------------
+  // --- site/query/page passes -> search_metrics_daily -------------------------
   const passes: Array<{ dimension: "overall" | "query" | "page"; dims: string[] }> = [
     { dimension: "overall", dims: ["date"] },
     { dimension: "query", dims: ["date", "query"] },
@@ -130,8 +123,7 @@ Deno.serve(async (req: Request) => {
     } catch (e) { errors.push(`${p.dimension}: ${e instanceof Error ? e.message : e}`); }
   }
 
-  // --- per-Read tie-in → read_search (the differentiator) --------------------
-  // Trailing-7-day standing for each published Read's page and its target_query.
+  // --- per-Read tie-in -> read_search (the differentiator) --------------------
   const tieEnd = endDate, tieStart = iso(daysAgo(LAG_DAYS + TIE_WINDOW));
   try {
     const { data: reads } = await sb.from("reads_queue")
