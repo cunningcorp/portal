@@ -99,3 +99,14 @@ verify_jwt = false
 # is the only path to the file. Secret: SUPABASE_SERVICE_ROLE_KEY (auto-injected).
 [functions.sign-coverage-script]
 verify_jwt = true
+
+# list-prospects is the DEDUPE READ for the headless daily prospecting task. (It began as an
+# Apollo seed function, but Apollo's mixed_people/api_search proved paid-only on Demetri's
+# Free plan -- see the function header -- so discovery moved into the task via web search and
+# this returns what's already queued so DD is never spent on a company we already hold.) It
+# WRITES NOTHING (reads outreach_queue via the service role, returns dedupe keys only). Gated
+# on LIST_PROSPECTS_SECRET via a constant-time check, so verify_jwt is OFF -- the fourth
+# deliberate verify_jwt=false after oauth-callback, insert-draft and insert-prospect.
+# Secrets: LIST_PROSPECTS_SECRET, SUPABASE_SERVICE_ROLE_KEY (no Apollo key).
+[functions.list-prospects]
+verify_jwt = false
