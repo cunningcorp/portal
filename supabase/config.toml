@@ -110,3 +110,12 @@ verify_jwt = true
 # Secrets: LIST_PROSPECTS_SECRET, SUPABASE_SERVICE_ROLE_KEY (no Apollo key).
 [functions.list-prospects]
 verify_jwt = false
+
+# sync-search is the Aubrey North Search Signal collector (an-search-signal-SPEC): pulls
+# Google Search Console performance (site/query/page + the per-Read target_query tie-in) into
+# public.search_metrics_daily / read_search on a daily cadence. verify_jwt on, same as the
+# sync-youtube family. Writes via the service role; the search tables are read-only for the
+# client. Secret: GOOGLE_SA_JSON (service-account key). Config: GSC_PROPERTY env
+# (default sc-domain:aubreynorth.com). GA4 + PageSpeed are added in Phase 2.
+[functions.sync-search]
+verify_jwt = true
