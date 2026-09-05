@@ -111,6 +111,19 @@ verify_jwt = true
 [functions.list-prospects]
 verify_jwt = false
 
+# propose-voice-rules is the WRITE path of the weekly learning pass -- the twin of
+# list-read-edits. It turns the pass's conclusions into a branch + commit + pull request
+# against VOICE-RULES.md in cunningcorp/aubreynorth, because a Cowork scheduled task has no
+# git credentials. The GitHub PAT lives only here (same posture as publish-read); the task
+# authenticates with the lesser LEARNING_PASS_SECRET, so verify_jwt is OFF -- the fifth
+# deliberate verify_jwt=false after oauth-callback, oauth-start, insert-draft,
+# insert-prospect and list-prospects. Guardrails in the function header: the path is
+# HARD-LOCKED to VOICE-RULES.md, main is never written to, and branches must be prefixed
+# "learning-pass/". Propose, never apply -- the PR is the gate.
+# Secrets: LEARNING_PASS_SECRET, GITHUB_TOKEN.
+[functions.propose-voice-rules]
+verify_jwt = false
+
 # sync-search is the Aubrey North Search Signal collector (an-search-signal-SPEC): pulls
 # Google Search Console performance (site/query/page + the per-Read target_query tie-in) into
 # public.search_metrics_daily / read_search on a daily cadence. verify_jwt on, same as the
