@@ -119,3 +119,12 @@ verify_jwt = false
 # (default sc-domain:aubreynorth.com). GA4 + PageSpeed are added in Phase 2.
 [functions.sync-search]
 verify_jwt = true
+
+# search-connect is the one-shot OAuth connect for the Search Signal collector (isolated from
+# the shared oauth-* functions). verify_jwt=false -- Google's redirect carries no JWT -- gated
+# on a single-use CSRF state in social.oauth_states, and it proves GSC property access before
+# storing the token. Reuses GOOGLE_CLIENT_ID/SECRET; stores the refresh token in
+# public.search_oauth. Redirect URI to register on the Google OAuth client:
+# https://qeafetctmtnqonhwhhlw.supabase.co/functions/v1/search-connect
+[functions.search-connect]
+verify_jwt = false
