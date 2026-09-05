@@ -554,9 +554,13 @@ td.t a:hover{color:var(--brand-gold-soft)}
   .readtop{padding:calc(var(--space-3) + var(--safe-top)) var(--space-4) var(--space-3);
     flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-3)}
   .readtop .spacer{display:none}
+  /* Row 1: the Aubrey North wordmark on the left, the profile on the right. Row 2: the
+     Reads/Outreach/Orders switch on its own full-width line beneath. Row 3: the context
+     line. (The switch previously defaulted to order:0 and sat left of the wordmark.) */
   .readtop .brandhome{order:1}
   .readtop .acctmenu{order:2;margin-left:auto}
-  .readtop .rcontext{order:3;flex:1 1 100%}
+  .readtop .answ{order:3;flex:1 1 100%;margin-left:0}
+  .readtop .rcontext{order:4;flex:1 1 100%}
   #readsView{padding:var(--space-4)}
 }
 
